@@ -1,0 +1,367 @@
+<%
+	// Computed
+	// Room name
+	let roomName = 'Goblet shuffle';
+	if (room && room.name) {
+		roomName = room.name;
+	} else if (room && room.admin.name) {
+		roomName = `${room.admin.name}'s room`;
+	}
+
+	// Players
+	let lurkers = [];
+	let participants = [];
+	if (room && room.players && Array.isArray(room.players)) {
+		room.players.forEach(player => {
+			player.participates ? participants.push(player) : lurkers.push(player);
+		});
+	}
+
+	// Time
+	let initialTime = GAME_CONSTANTS.defaultCountdown;
+	if (room.settings.gameMode.mode === GAME_MODE.COUNTDOWN) {
+		initialTime = room.settings.gameMode.countdown;
+	}
+	if (room.isPlaying) {
+		// Get current time by substracting the difference of time between game start and now
+		let diff = Date.now() - room.gameStart; // Game has started 'diff' ms ago
+		initialTime =- diff;
+	}
+	const initialTimeStr = utils.secondsToTimeStr(initialTime);
+%>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=3.0">
+		<meta name="theme-color" content="#222">
+		<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css">
+		<link rel="stylesheet" type="text/css" href="static/css/main.css">
+		<link rel="stylesheet" type="text/css" href="static/css/multi.css">
+		<title><%= roomName %></title>
+		<script src="https://cdn.socket.io/3.1.3/socket.io.min.js" integrity="sha384-cPwlPLvBTa3sKAgddT6krw0cJat7egBga3DJepJyrLl4Q9/5WLra3rrnMcyTyOnh" crossorigin="anonymous"></script>
+		<script type="text/javascript">			
+			// Game constants
+			const GAME_CONSTANTS = <%- JSON.stringify(GAME_CONSTANTS) %>;
+			const GAME_MODE = <%- JSON.stringify(GAME_MODE) %>;
+			const MULTIPLAYER = true;
+
+			// Game variables
+			let isAdmin = <%= isAdmin %>;
+			let settings = <%- JSON.stringify(room.settings) %>;
+
+			// Initial players
+			let players = <%- JSON.stringify(room.players); %>
+			// Initial time
+			let initialTime = <%- initialTime %>;
+
+			// Utils
+			<%- 
+				Object.values(utils).reduce((acc, func) => {
+					return acc + `${func.toString()}`;
+				}, '');
+			%>
+		</script>
+		<script type="text/javascript">
+			// Socket client
+			var socket;
+			window.addEventListener('load', function () {
+				socket = io('<%= DOMAIN %>', { query: "roomID=<%= room.id %>" });
+				socket.on('connect', () => console.log('Connecté !'));
+			}, false);
+		</script>
+	</head>
+	<body>
+		<div class="app">
+			<header class="app-header">
+				<a href="/" class="to-solo">
+					&#8592;&nbsp;Solo
+				</a>
+				<h1>
+					Welcome to <span class="app-name" title="<%= roomName %>"><%= roomName %></span>
+				</h1>
+			</header>
+			<main class="app-body">
+				<div class="game">
+					<section id="goblets-container">
+						<div class="goblet" data-offset-x="0" data-offset-y="0"></div>
+						<div class="goblet" data-offset-x="0" data-offset-y="0"></div>
+						<div class="goblet" data-offset-x="0" data-offset-y="0"></div>
+						<div class="goblet" data-offset-x="0" data-offset-y="0"></div>
+						<div class="ball init" id="ball"></div>
+					</section>
+					<section class="options-section">
+						<nav class="game-options">
+							<header>
+								<div>
+									<h3 title="Score">Score</h3>
+									<p style="margin: .5rem 0 0 0; text-align: right;">
+										<strong id="score">0</strong>
+									</p>
+								</div>
+								<div 
+									id="time-output"
+									style="display: 
+										<%= room.settings.gameMode.mode === GAME_MODE.COUNTDOWN ? 'block' : 'none' %>
+									;"
+								>
+									<h3 title="Time" style="text-align: left;">Time</h3>
+									<p
+										class="time-field <%= room.isPlaying ? 'active' : '' %>"
+										id="time-output-para"
+										style="margin: .5rem 0 0 0;"
+									>
+										<span id="time-output-m">
+											<%= initialTimeStr.m %>
+										</span>
+										<span style="opacity: .5;" class="colon">
+											:
+										</span>
+										<span id="time-output-s">
+											<%= initialTimeStr.s %>
+										</span>
+									</p>
+								</div>
+							</header>
+							<% if (isAdmin) { %>
+								<main style="order: -1";>
+									<section class="settings">
+										<h3 onclick="(function () {
+											// Collapse list
+											var list = document.getElementById('game-settings-options-list');
+											var btn = document.getElementById('game-settings-options-list-toggle-btn');
+											list.classList.toggle('collapsed');
+											btn.classList.toggle('active');
+										})()" style="cursor: pointer;" title="Settings">
+											Settings
+										</h3>
+										<button class="collapse-btn active" id="game-settings-options-list-toggle-btn" onclick="(function (btn) {
+											// Collapse list
+											var list = document.getElementById('game-settings-options-list');
+											list.classList.toggle('collapsed');
+											btn.classList.toggle('active');
+										})(this)">
+										</button>
+										<ul style="margin: 0; padding: 0; list-style: none;" class="options-list collapsed" id="game-settings-options-list">
+											<li>
+												<label for="goblet-number">Goblets:</label>
+												<input
+													type="number"
+													name="goblet-number"
+													value="<%= settings.goblets %>"
+													onchange="changeSetting('goblets-count', this);"
+													min="2"
+													max="8"
+													id="gobletsNumSelector"
+												>
+											</li>
+											<li>
+												<label for="shuffle-count">Shuffle count:</label>
+												<input
+													type="number"
+													name="shuffle-count"
+													value="<%= settings.shuffleCount %>"
+													onchange="changeSetting('shuffle-count', this);"
+													min="2"
+													max="15"
+													id="shuffleCountSelector"
+												>
+											</li>
+											<li>
+												<label for="shuffle-speed">Speed:</label>
+												<input
+													type="range"
+													name="shuffle-speed"
+													value="<%= settings.shuffleSpeed %>"
+													onchange="changeSetting('shuffle-speed', this);"
+													min="0.2"
+													max="1"
+													step="0.01"
+													id="shuffleSpeedSelector"
+													style="transform: rotate(180deg);"
+												>
+											</li>
+											<li class="game-mode">
+												<h4>Mode</h4>
+												<ul style="padding: 0; margin: 0;">
+													<li>
+														<label for="reach-score-mode" onclick="window.setTimeout(function () {
+															var target = document.getElementById('score-to-reach');
+															if (target && target.focus) {
+																 target.focus();
+															}
+														}, 20);">
+															Reach score
+														</label>
+														<input
+															type="radio"
+															onchange="changeSetting('game-mode', this);"
+															name="game-mode"
+															id="reach-score-mode"
+															value="<%= GAME_MODE.REACH_SCORE %>"
+															style="display: none;"
+															checked="<%= room.settings.gameMode.mode === GAME_MODE.REACH_SCORE %>"
+														>
+														<input
+															type="number"
+															id="score-to-reach"
+															name="<%= GAME_MODE.REACH_SCORE %>"
+															min="<%= GAME_CONSTANTS.minScoreToReach %>"
+															max="<%= GAME_CONSTANTS.maxScoreToReach %>"
+															step="10"
+															value="<%= room.settings.gameMode.mode === GAME_MODE.REACH_SCORE ? room.settings.gameMode.scoreToReach : GAME_CONSTANTS.defaultScoreToReach %>"
+															style="max-width: 4rem;"
+															onchange="changeSetting('score-to-reach', this);"
+															<%= room.settings.gameMode.mode !== GAME_MODE.REACH_SCORE ? 'disabled' : '' %>
+														>
+													</li>
+													<li>
+														<label for="countdown-mode" onclick="window.setTimeout(function () {
+															var target = document.getElementById('countdown-mode-m');
+															if (target && target.focus) {
+																 target.focus();
+															}
+														}, 20);">
+															Countdown
+														</label>
+														<input
+															type="radio"
+															onchange="changeSetting('game-mode', this);"
+															name="game-mode"
+															id="countdown-mode"
+															value="<%= GAME_MODE.COUNTDOWN %>"
+															style="display: none;"
+															checked="<%= room.settings.gameMode.mode === GAME_MODE.COUNTDOWN %>"
+														>
+														<fieldset class="time-field">
+															<input
+																type="number"
+																name="<%= GAME_MODE.COUNTDOWN %>"
+																min="0" 
+																max="30"
+																value="<%= initialTimeStr.m %>"
+																id="countdown-mode-m"
+																oninput="changeSetting('countdown', this);"
+																<%= room.settings.gameMode.mode !== GAME_MODE.COUNTDOWN ? 'disabled' : '' %>
+															>
+															<span class="colon" style="font-weight: 700; color: white;">:</span>
+															<input
+																type="number" 
+																name="<%= GAME_MODE.COUNTDOWN %>"
+																min="0" 
+																max="59" 
+																value="<%= initialTimeStr.s %>" 
+																id="countdown-mode-s"
+																oninput="changeSetting('countdown', this);"
+																<%= room.settings.gameMode.mode !== GAME_MODE.COUNTDOWN ? 'disabled' : '' %>
+															>
+														</fieldset>
+													</li>
+												</ul>
+											</li>
+										</ul>
+									</section>
+								</main>
+							<% } %>
+							<footer>
+								<button onclick="onPlay();" id="playBTN">
+									<span>Start</span>
+								</button>
+							</footer>
+						</nav>
+					</section>
+					<section id="players-section" style="font-size: 1rem">
+						<div class="lurkers-section">
+							<h3
+								class="player-list-name"
+								title="Lurkers (<%= lurkers.length %>)"
+								id="lurkers-list-name"
+								data-number="<%= lurkers.length %>"
+							>
+								Lurkers (<%= lurkers.length %>)
+							</h3>
+							<ul id="lurkers-list" class="players-list">
+								<%
+									for (let i = 0; i < lurkers.length; i++) {
+										const player = lurkers[i];
+										const adminClass = player.role === PLAYER_ROLE.ADMIN ? 'admin' : '';
+								%>
+										<li class="player lurker <%= adminClass %>" id="player_<%= player.socketID %>">
+											<h4 class="player-name" 
+											id="player_<%= player.name %>_name" title="<%= player.name %> <%= adminClass.toUpperCase() %>">
+												<%= player.name %>
+											</h4>
+										</li>
+								<%
+									}
+								%>
+							</ul>
+						</div>
+						<div class="participants-section">
+							<h3
+								class="player-list-name"
+								title="Participants (<%= participants.length %>)"
+								id="participants-list-name"
+								data-number="<%= participants.length %>"
+							>
+								Participants (<%= participants.length %>)
+							</h3>
+							<ul id="participants-list" class="players-list">
+								<%
+									for (let i = 0; i < participants.length; i++) {
+										const player = participants[i];
+										const adminClass = player.role === PLAYER_ROLE.ADMIN ? 'admin' : '';
+								%>
+										<li class="player participant <%= adminClass %>" id="player_<%= player.socketID %>">
+											<h4 class="player-name" 
+											id="player_<%= player.name %>_name" title="<%= player.name %> <%= adminClass.toUpperCase() %>">
+												<%= player.name %>
+											</h4>
+											<% if (room.isPlaying) { %>
+												<strong class="player-score"><%= player.score %></strong>
+											<% } else if (room.settings.gameMode.mode === GAME_MODE.REACH_SCORE) { %>
+												<strong class="player-score">
+													<span class="player-current-score">
+														<%= player.score %>
+													</span>
+													<span class="player-score-to-reach">
+														/<%= room.settings.gameMode.scoreToReach %>
+													</span>
+												</strong>
+											<% } %>
+										</li>
+								<%
+									}
+								%>
+							</ul>
+						</div>
+					</section>
+				</div>
+				<article id="game-info-message">
+					<% if (isAdmin) { %>
+						<% if (!room.isPlaying) { %>
+							<p>Invite your friends by sending them this link:</p>
+							<button onclick="(function () {
+								if(saveToClipboard(location.href + '<%= room.id  %>')) {
+									alert('Copied !');
+								} else {
+									alert('Failed copying to clipboard')
+								}
+							})();">
+								Copy <strong>link</strong> to clipboard
+							</button>
+							<p>So far you can still change the game's settings. Wait until everyone is ready and start the game</p>
+						<% } %>
+					<% } else { %>
+						<% if (!room.isPlaying) { %>
+							<p></p>
+						<% } %>
+					<% } %>
+				</article>
+			</main>
+			<footer class="app-footer"></footer>
+		</div>
+		<script type="text/javascript" src="static/js/app.js"></script>
+		<script type="text/javascript" src="static/js/multi.js"></script>
+	</body>
+</html>

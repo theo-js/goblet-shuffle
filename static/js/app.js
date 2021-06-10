@@ -1,0 +1,777 @@
+'use strict';
+
+// Client utils
+function randomizeTheme () {
+	var violet = randomColor(30, 255);
+	var purpleR = randomInt(30, 255);
+	var purpleG = randomInt(30, 255);
+	var purpleB = randomInt(30, 255);
+	var lighten = 20;
+	var pinkR = purpleR + lighten;
+	var pinkG = purpleG + lighten;
+	var pinkB = purpleB + lighten;
+
+	document.documentElement.style.setProperty('--pink', 'rgb(' + pinkR + ', ' + pinkG + ', ' + pinkB + ')');
+	document.documentElement.style.setProperty('--purple', 'rgb(' + purpleR + ', ' + purpleG + ', ' + purpleB + ')');
+	document.documentElement.style.setProperty('--violet', violet);
+
+	// --pink-yellow-blend is a blend between --light-yellow & --pink
+	var pyR = Math.round(avg(purpleR, 255));
+	var pyG = Math.round(avg(purpleG, 238));
+	var pyB = Math.round(avg(purpleB, 153));
+	document.documentElement.style.setProperty('--pink-yellow-blend', 'rgb(' + pyR + ', ' + pyG + ', ' + pyB + ')');
+}
+
+function saveToClipboard (text) {
+	try {
+		var copyText = document.createElement('input');
+		copyText.value = text;
+		document.body.appendChild(copyText);
+		copyText.select();
+		copyText.setSelectionRange(0, 99999); /* For mobile devices */
+		document.execCommand('copy');
+		document.body.removeChild(copyText);
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+
+// DOM
+var gobletsContainer = document.getElementById('goblets-container');
+var goblets = document.getElementsByClassName('goblet');
+
+var gobletsNumSelector = document.getElementById('gobletsNumSelector');
+var shuffleCountSelector = document.getElementById('shuffleCountSelector');
+var shuffleSpeedSelector = document.getElementById('shuffleSpeedSelector');
+var reachScoreModeSelector = document.getElementById('reach-score-mode');
+var scoreToReachSelector = document.getElementById('score-to-reach')
+var countdownModeSelector = document.getElementById('countdown-mode');
+var countdownSelectorM = document.getElementById('countdown-mode-m');
+var countdownSelectorS = document.getElementById('countdown-mode-s');
+var gameSettingsSelectors = [
+	gobletsNumSelector, 
+	shuffleCountSelector, 
+	shuffleSpeedSelector, 
+	reachScoreModeSelector, 
+	scoreToReachSelector,
+	countdownModeSelector,
+	countdownSelectorM,
+	countdownSelectorS
+];
+
+var playBTN = document.getElementById('playBTN');
+var scoreOutput = document.getElementById('score');
+var timeOutput = document.getElementById('time-output');
+var timeOutputPara = document.getElementById('time-output-para');
+var timeOutputM = document.getElementById('time-output-m');
+var timeOutputS = document.getElementById('time-output-s');
+
+// Global variables
+var ballStr = '<div class="ball init" id="ball"></div>';
+var ballOffset = { left: 0, top: 0 };
+
+var isInGame = false;
+var canPickGoblet = false;
+var correctGoblet = null;
+var scoreGainDefault = 100;
+var scoreLossDefault = 50;
+var score = 0;
+var successes = 0; var fails = 0;
+
+// Timers
+var ballZIndexTM = null;
+var ballScaleTM = null;
+var gobletAnimTM = null;
+var shuffleTM = null;
+var gameTimeInterval = null; var gameTime = 0;
+var countdownTimer = null;
+var timers = [ballZIndexTM, ballScaleTM, gobletAnimTM, shuffleTM, countdownTimer, gameTimeInterval];
+function clearTimers () {
+	timers.forEach(function (timer) {
+		window.clearTimeout(timer);
+	});
+}
+var countdownInterval = null;
+
+// Goblet related functions
+function setGoblets (number) {
+	if (!isInGame && isAdmin) {
+		var n = number;
+		// Limit goblets
+		if (number < GAME_CONSTANTS.minGoblets) {
+			n = GAME_CONSTANTS.minGoblets;
+		} else if (number > GAME_CONSTANTS.maxGoblets) {
+			n = GAME_CONSTANTS.maxGoblets;
+		} else {
+			n = number;
+		}
+
+		// Override global var (side effect)
+		settings.currentGoblets = n;
+		// Memorize number of goblets
+		if (!MULTIPLAYER) {
+			localStorage.setItem('currentGoblets', n);
+		}
+
+		// Replace HTML
+		var gobletsStr = '';
+		for (var i = 0; i < n; i++) {
+			gobletsStr += '<div class="goblet" data-offset-x="0" data-offset-y="0" onclick="pickGoblet();" style="animation-delay: ' + i/20 + 's"></div>';
+		}
+		gobletsStr += ballStr;
+		gobletsContainer.innerHTML = gobletsStr;
+		// Make grid responsive
+		if (n <= 4) {
+			gobletsContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
+		} else if (n <= 9) {
+			gobletsContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
+		} else {
+			gobletsContainer.style.gridTemplateColumns = 'repeat(4, 1fr)';
+		}
+		// Attach event handlers
+		Array.from(goblets).forEach(function (goblet) {
+			goblet.onclick = pickGoblet;
+		});
+	}
+}
+function getGobletOffset (goblet) {
+	if (goblet) {
+		var gobletBoundingRect = goblet.getBoundingClientRect();
+		var offset = gobletsContainer.getBoundingClientRect();
+		var left = gobletBoundingRect.left - offset.left; // distance between goblet and the left border of its container
+		var top = gobletBoundingRect.top - offset.top; // distance between goblet and the top border of its container
+		return {
+			left: left,
+			top: top,
+			width: gobletBoundingRect.width,
+			height: gobletBoundingRect.height
+		};
+	} else {
+		return null;
+	}
+}
+function turnDownGoblets (down) {
+	var arr = Array.from(goblets);
+	if (down) {
+		arr.forEach(function (goblet) {
+			goblet.classList.add('down');
+			goblet.classList.remove('hidden');
+		});
+	} else {
+		arr.forEach(function (goblet) {
+			goblet.classList.remove('down');
+			goblet.style.transform = null;
+			goblet.setAttribute('data-offset-x', 0);
+			goblet.setAttribute('data-offset-y', 0);
+		});
+	}
+}
+function getRandomGoblet () {
+	var randomGobletNum = randomInt(0, settings.currentGoblets - 1);
+	var randomGoblet = Array.from(goblets)[randomGobletNum];
+	return {
+		goblet: randomGoblet,
+		gobletNum: randomGobletNum
+	}
+}
+function shuffleGoblets () {
+	return new Promise (function (resolve, reject) {
+		// Pick random goblets to interchange
+		var getRandomGobletResult = getRandomGoblet();
+		var fromGoblet = getRandomGobletResult.goblet;
+		var fromGobletNum = getRandomGobletResult.gobletNum;
+
+		getRandomGobletResult = getRandomGoblet();
+		var toGoblet = getRandomGobletResult.goblet;
+		var toGobletNum = getRandomGobletResult.gobletNum;
+		// If "from" goblet was picked twice, try again until a different one was picked
+		while (toGobletNum === fromGobletNum) {
+			getRandomGobletResult = getRandomGoblet();
+			toGoblet = getRandomGobletResult.goblet;
+			toGobletNum = getRandomGobletResult.gobletNum;
+		}
+
+		// Get each goblet's coords
+		var from = getGobletOffset(fromGoblet);
+		var to = getGobletOffset(toGoblet);
+
+		// Calculate the translation to each other's position
+		var fromLeft = from.left - parseInt(fromGoblet.dataset.offsetX);
+		var toLeft = to.left - parseInt(toGoblet.dataset.offsetX);
+		var fromGobletTranslateX = toLeft - fromLeft;
+		var toGobletTranslateX = -1*(toLeft - fromLeft);
+		if (fromLeft > toLeft) {
+			fromGobletTranslateX = -1*(fromLeft - toLeft);
+			toGobletTranslateX = fromLeft - toLeft;
+		}
+		var fromTop = from.top - parseInt(fromGoblet.dataset.offsetY);
+		var toTop = to.top - parseInt(toGoblet.dataset.offsetY);
+		var fromGobletTranslateY = toTop - fromTop;
+		var toGobletTranslateY = -1*(toTop - fromTop);
+		if (fromTop > toTop) {
+			fromGobletTranslateY = -1*(fromTop - toTop);
+			toGobletTranslateY = fromTop - toTop;
+		}
+		// Take new offset into account
+		fromGoblet.setAttribute('data-offset-x', fromGobletTranslateX);
+		toGoblet.setAttribute('data-offset-x', toGobletTranslateX);
+		fromGoblet.setAttribute('data-offset-y', fromGobletTranslateY);
+		toGoblet.setAttribute('data-offset-y', toGobletTranslateY);
+
+		// Apply translations
+		fromGoblet.style.transform = 'translate(' + fromGobletTranslateX + 'px, ' + fromGobletTranslateY + 'px) rotate(180deg)';
+		toGoblet.style.transform = 'translate(' + toGobletTranslateX + 'px, ' + toGobletTranslateY + 'px) rotate(180deg)';
+
+		// Move ball if one of the goblets has it (after goblet translation)
+		if (correctGoblet && (correctGoblet.gobletNum === fromGobletNum || correctGoblet.gobletNum === toGobletNum)) {
+			ballScaleTM = window.setTimeout(function () {
+				var clientRect = getGobletOffset(correctGoblet.goblet);
+				ballOffset.left = clientRect.left;
+				ballOffset.top = clientRect.top;
+				// Move ball
+				var ballElem = document.getElementById('ball');
+				if (ballElem) {
+					ballElem.style.transform = 'translate(' + ballOffset.left + 'px, ' + ballOffset.top + 'px)';
+				}
+			}, 500 * settings.shuffleSpeed);
+		}
+
+		// Resolve promise
+		shuffleTM = window.setTimeout(resolve, 1000 * settings.shuffleSpeed);
+	});
+}
+// Pick goblet
+async function pickGoblet (clickEvent) {
+	if (canPickGoblet) {
+		canPickGoblet = false;
+
+		// Get all goblets that are in the same position
+		var targetOffset = getGobletOffset(clickEvent.target);
+		var targetGoblets = [];
+		Array.from(goblets).forEach(function (goblet, index) {
+			//goblet.classList.remove('pickable');
+			var gobletOffset = getGobletOffset(goblet);
+			if (gobletOffset.left === targetOffset.left && gobletOffset.top === targetOffset.top) {
+				targetGoblets.push(goblet);
+			}
+		});
+
+		// Find out if one of the target goblets has the ball
+		targetGoblets.includes(correctGoblet.goblet) ? await succeed(targetGoblets) : await fail(targetGoblets);
+	}
+}
+
+// Reset ball
+function resetBall () {
+	var ballElem = document.getElementById('ball');
+	if (ballElem) {
+		ballElem.style.zIndex = 4;
+		ballElem.style.opacity = 1;
+		ballElem.classList.add('init');
+	}
+}
+
+// Game processes
+function enableOptions (enable) {
+	if (typeof enable !== 'boolean') {
+		return false;
+	}
+	gameSettingsSelectors.forEach(function (input) {
+		if (input) {
+			// Do not enable game mode specific selectors of unselected mode
+			const isModeSpecificSelector = Object.values(GAME_MODE).includes(input.name);
+			if (
+				enable &&
+				isModeSpecificSelector &&
+				settings.gameMode.mode !== input.name
+			) {
+				return;
+			} else {
+				input.disabled = !enable;
+			}
+		}
+	});
+}
+
+function changeSetting(type, element) {
+	if (isAdmin && !isInGame) {
+		var value = element.value;
+		switch (type) {
+			case 'goblets-count':
+				setGoblets(value);
+				break;
+			case 'shuffle-count':
+				// Validate value
+				if (
+					value >= GAME_CONSTANTS.minShuffleCount && 
+					value <= GAME_CONSTANTS.maxShuffleCount
+				) {
+					settings.shuffleCount = value;
+					// Memorize setting
+					if (!MULTIPLAYER) {
+						localStorage['shuffleCount'] = value;
+					}
+				}
+				break;
+			case 'shuffle-speed':
+				// Validate value
+				if (
+					value >= GAME_CONSTANTS.minShuffleSpeed && 
+					value <= GAME_CONSTANTS.maxShuffleSpeed
+				) {
+					settings.shuffleSpeed = value;
+					// Memorize setting
+					if (!MULTIPLAYER) {
+						localStorage['shuffleSpeed'] = value;
+					}
+				}
+				break;
+			case 'game-mode':
+				switch (value) {
+					case GAME_MODE.REACH_SCORE:
+						if (element.checked) {
+							// Disable other inputs
+							if (countdownSelectorM && countdownSelectorS) {
+								countdownSelectorM.disabled = true;
+								countdownSelectorS.disabled = true;
+							}
+							// Enable my number input
+							if (scoreToReachSelector) {
+								scoreToReachSelector.removeAttribute('disabled');
+							}
+							// Make time field inactive
+							var timeField = countdownSelectorM.parentElement;
+							if (timeField && timeField.classList.contains('active')) {
+								timeField.classList.remove('active');
+							}
+							// Hide timer
+							if (timeOutput) {
+								timeOutput.style.display = 'none';
+							}
+							// Update gameMode
+							var scoreToReach = scoreToReachSelector.value;
+							settings.gameMode = {
+								mode: GAME_MODE.REACH_SCORE,
+								scoreToReach: scoreToReach
+							};
+						}
+						break;
+					case GAME_MODE.COUNTDOWN:
+						if (element.checked) {
+							// Disable other inputs
+							if (scoreToReachSelector) {
+								scoreToReachSelector.disabled = true;
+							}
+							// Enable my time field
+							if (countdownSelectorM && countdownSelectorS) {
+								countdownSelectorM.removeAttribute('disabled');
+								countdownSelectorS.removeAttribute('disabled');
+							}
+							// Make time field blink
+							var timeField = countdownSelectorM.parentElement;
+							if (timeField && !timeField.classList.contains('active')) {
+								timeField.classList.add('active');
+							}
+							// Update gameMode
+							var m = parseInt(countdownSelectorM.value); 
+							var s = parseInt(countdownSelectorS.value);
+							var countdown = 60*m + s;
+							// Validation
+							if (typeof countdown !== 'number' || Number.isNaN(countdown)) {
+								countdown = GAME_CONSTANTS.defaultCountdown;
+							}
+							if (countdown < GAME_CONSTANTS.minCountdown) {
+								countdown = GAME_CONSTANTS.minCountdown;
+							}
+							if (countdown > GAME_CONSTANTS.maxCountdown) {
+								countdown = GAME_CONSTANTS.maxCountdown;
+							}
+							settings.gameMode = { mode: GAME_MODE.COUNTDOWN, countdown };
+							// Display timer
+							if (timeOutput) {
+								timeOutput.style.display = 'block';
+								timeOutput.className = 'fade-in';
+							}
+						}
+						break;
+					default: return;
+				}
+				break;
+			case 'score-to-reach':
+				value = window.parseInt(value);
+				// Validation
+				if (Number.isNaN(value + 1)) {
+					break;
+				}
+				if (value < GAME_CONSTANTS.minScoreToReach) {
+					value = GAME_CONSTANTS.minScoreToReach;
+				}
+				if (value > GAME_CONSTANTS.maxScoreToReach) {
+					value = GAME_CONSTANTS.maxScoreToReach;
+				}
+				settings.gameMode = { 
+					mode: GAME_MODE.REACH_SCORE,
+					scoreToReach: value
+				};
+				break;
+			case 'countdown': {
+				if (!countdownSelectorM || !countdownSelectorS) {
+					break;
+				}
+				// Get seconds
+				var m = window.parseInt(countdownSelectorM.value);
+				var s = window.parseInt(countdownSelectorS.value);
+				var countdown = m*60 + s;
+
+				// Validation
+				if (Number.isNaN(countdown) || typeof countdown !== 'number') {
+					break;
+				}
+				if (countdown < GAME_CONSTANTS.minCountdown) {
+					countdown = GAME_CONSTANTS.minCountdown;
+				}
+				if (countdown > GAME_CONSTANTS.maxCountdown) {
+					countdown = GAME_CONSTANTS.maxCountdown;
+				}
+				
+				// Update settings
+				settings.gameMode = { mode: GAME_MODE.COUNTDOWN, countdown };
+				initialTime = countdown;
+
+				// Update user interface
+				if (timeOutputM && timeOutputS) {
+					var timeString = secondsToTimeStr(countdown);
+					timeOutputM.textContent = timeString.m;
+					timeOutputS.textContent = timeString.s;
+				}
+				break;
+			} default: return;
+		}
+	}
+}
+
+function startCountDown (boolean) {
+	if (settings.gameMode.mode === GAME_MODE.COUNTDOWN) {
+		function updateUI (seconds) {
+			// Update time output
+			var timeStr = secondsToTimeStr(seconds);
+			timeOutputM.textContent = timeStr.m;
+			timeOutputS.textContent = timeStr.s;
+
+			// Make output blink when remaining time is low
+			if (seconds <= 60 && seconds < settings.gameMode.countdown/3) {
+				timeOutputPara.classList.add('active')
+			}
+		}
+		function stopCountdown () {
+			// Clear and reset timeout and interval
+			window.clearTimeout(countdownTimer);
+			window.clearInterval(countdownInterval);
+			countdownTimer = null; countdownInterval = null;
+			// User interface
+			updateUI(settings.gameMode.countdown);
+			timeOutputPara.classList.remove('active');
+		}
+
+		if (boolean) {
+			// Start countdown
+			let currentSec = initialTime;
+
+			countdownTimer = window.setTimeout(function () {
+				// Countdown is over
+				stopCountdown();
+				endGame()
+			}, initialTime * 1000);
+
+			// Start interval
+			countdownInterval = window.setInterval(function () {
+				// Update user interface every second
+				currentSec--;
+				updateUI(currentSec);
+			}, 1000);
+		} else {
+			stopCountdown();
+		}
+	}
+}
+
+
+// Success or fail
+function succeed (targetGoblets) {
+	return new Promise (function (resolve, reject) {
+		try {
+			// Increment successes
+			successes++
+
+			// Add to score
+			var gainCoeff = targetGoblets.length/settings.shuffleSpeed  || 1;
+			var scoreGain = Math.round(scoreGainDefault * gainCoeff);
+			score += scoreGain;
+			scoreOutput.textContent = score;
+
+			// Reveal ball
+			var ball = document.getElementById('ball');
+			ball.style.opacity = 1;
+			ball.style.zIndex = 4;
+			// Hide all goblets
+			Array.from(goblets).forEach(function (goblet) {
+				goblet.classList.remove('pickable');
+				goblet.classList.add('hidden');
+			})
+
+			// Reset ball and goblets DOM
+			ballZIndexTM = window.setTimeout(function () {
+				setGoblets(settings.currentGoblets);
+				resetBall();
+			}, 500);
+
+			// If player reached sufficient score
+			if (
+				settings.gameMode.mode === GAME_MODE.REACH_SCORE &&
+				score >= settings.gameMode.scoreToReach
+			) {
+				endGame();
+			} else {
+				// Go to next turn
+				ballScaleTM = window.setTimeout(function () {
+					turnDownGoblets(); randomizeTheme();
+					startNewGame();
+				}, 800);
+			}
+
+			resolve();
+		} catch (err) {
+			reject();
+		}
+	});
+}
+function fail (goblets) {
+	return new Promise (function (resolve, reject) {
+		try {
+			// Increment fails
+			fails++;
+
+			// Lose score
+			var lossCoeff = 1/settings.shuffleSpeed || 1;
+			var scoreLoss = Math.round(scoreLossDefault * lossCoeff);
+			score -= scoreLoss;
+			if (score < 0) {
+				score = 0;
+			}
+			scoreOutput.textContent = score;
+
+			// Fade goblets
+			goblets.forEach(function (goblet) {
+				goblet.style.transition = '.3s all ease !important';
+				goblet.style.opacity = 0;
+			});
+			gobletAnimTM = window.setTimeout(function () {
+				goblets.forEach(function (goblet) {
+					goblet.classList.remove('pickable');
+					goblet.classList.add('hidden');
+				})
+				canPickGoblet = true;
+			}, 300);
+			resolve();
+		} catch (err) {
+			reject();
+		}
+	});
+}
+
+function startNewGame () {
+	window.setTimeout(function () {
+		// Rotate all goblets
+		turnDownGoblets(true)
+
+		// Pick random goblet
+		var getRandomGobletResult = getRandomGoblet();
+		var randomGoblet = getRandomGobletResult.goblet;
+		var randomGobletNum = getRandomGobletResult.gobletNum;
+		correctGoblet = {
+			goblet: randomGoblet,
+			gobletNum: randomGobletNum
+		};
+
+
+		// Calculate goblet position
+		var offset = getGobletOffset(randomGoblet);
+		var left = offset.left;
+		var top = offset.top;
+		ballOffset = { left: left, top: top };
+		var translate = 'translate(' + left + 'px, calc(' + top + 'px + .25em))';
+
+		// Move the ball to that goblet
+		var ballElem = document.getElementById('ball');
+		if (ballElem) {
+			ballElem.classList.remove('init');
+			ballElem.style.transform = translate;
+			ballScaleTM = window.setTimeout(function () {
+				ballElem.style.transform = translate + ' scale(1.5)';
+			}, 600);
+		}
+
+		// Lift goblet
+		randomGoblet.style.transition = '.6s ease all';
+		randomGoblet.style.animation = 'blink .25s linear infinite alternate';
+		randomGoblet.style.transform = 'rotate(180deg) translateY(.5em)';
+		ballZIndexTM = window.setTimeout(function () {
+			ballElem.style.zIndex = 2;
+			ballElem.style.transform = 'translate(' + left + 'px, ' + top + 'px)';
+			ballElem.style.opacity = 0;
+			randomGoblet.style.transform = null;
+		}, 900);
+
+		// Put goblet down
+		gobletAnimTM = window.setTimeout(function () {
+			randomGoblet.style.animation = null;
+			randomGoblet.style.transition = '.3s ease all';
+		}, 1500);
+
+		// Shuffle goblets
+		var currentCount = settings.shuffleCount;
+		function shuffleGobletsAtLeastOnce () {
+			shuffleGoblets().then(function () {
+				currentCount--;
+				if (currentCount > 0 && isInGame) {
+					shuffleGobletsAtLeastOnce();
+				} else {
+					// Shuffling is completed
+					// Make all goblets opaque
+					Array.from(goblets).forEach(function (goblet) {
+						goblet.style.opacity = 1;
+					});
+					if (isInGame) {
+						// Game is not aborted
+						canPickGoblet = true;
+						Array.from(goblets).forEach(function (goblet) {
+							goblet.classList.add('pickable');
+						});
+					}
+				}
+			})
+		}
+		shuffleTM = window.setTimeout(function () {
+			// Set appropriate translation speed
+			Array.from(goblets).forEach(function (goblet) {
+				goblet.style.transition = .5*settings.shuffleSpeed + 's all ease';
+				goblet.style.opacity = .5;
+			});
+			// Shuffle
+			shuffleGobletsAtLeastOnce();
+		}, 1800);
+	}, 300);
+}
+
+function onPlay () {
+	if (typeof MULTIPLAYER !== undefined) {
+		if (MULTIPLAYER === false) {
+			// Solo mode
+			clearTimers();
+			if (isInGame) {
+				// Stop game / give up
+				isInGame = false;
+				canPickGoblet = false;
+				enableOptions(true);
+				playBTN.innerHTML = '<span>Start</span>';
+				turnDownGoblets(false);
+				setGoblets(settings.currentGoblets);
+				resetBall();
+				// Reset game stats
+				score = 0;
+				scoreOutput.textContent = 0;
+				successes = 0;
+				fails = 0;
+				gameTime = 0;
+				// Reset goblets translation speed
+				Array.from(goblets).forEach(function (goblet) {
+					goblet.style.transition = '.3s all ease';
+					goblet.classList.remove('pickable');
+				});
+				// Reset countdown
+				startCountDown(false);
+			} else {
+				// New game
+				isInGame = true;
+				enableOptions(false);
+				playBTN.innerHTML = '<span>Give up</span>';
+				startCountDown(true);
+				startNewGame();
+
+				if (settings.gameMode.mode === GAME_MODE.REACH_SCORE) {
+					gameTimeInterval = window.setInterval(function () {
+						gameTime++;
+					}, 1000);
+				}
+			}
+		} else {
+			// Multiplayer mode
+		}
+	}
+}
+
+function endGame () {
+	switch (settings.gameMode.mode) {
+		case GAME_MODE.REACH_SCORE: {
+			var timeStr = secondsToTimeStr(gameTime);
+			var msg = 'Finish !\nIt took you ' + timeStr.m + '\'' + timeStr.s + 
+			'\'\' to reach ' + settings.gameMode.scoreToReach + 'pts' +
+			'\nSuccesses: ' + successes + '\nFails: ' + fails;
+			alert(msg);
+			break;
+		} case GAME_MODE.COUNTDOWN: {
+			var timeStr = secondsToTimeStr(settings.gameMode.countdown);
+			var msg = 'Finish !\nIn ' + timeStr.m + '\'' + timeStr.s + '\'\'' +
+			'you\'ve managed to earn ' + score + 'pts' +
+			'\nSuccesses: ' + successes + '\nFails: ' + fails;
+			alert(msg);
+			break;
+		} default: return;
+	}
+	onPlay()
+}
+
+// Initialize game
+(function () {
+	// Initialize DOM
+	// Settings
+	if (gobletsNumSelector) {
+		gobletsNumSelector.min = GAME_CONSTANTS.minGoblets;
+		gobletsNumSelector.max = GAME_CONSTANTS.maxGoblets;
+	}
+	if (shuffleCountSelector) {
+		shuffleCountSelector.min = GAME_CONSTANTS.minShuffleCount;
+		shuffleCountSelector.max = GAME_CONSTANTS.maxShuffleCount;
+	}
+	if (shuffleSpeedSelector) {
+		shuffleSpeedSelector.min = GAME_CONSTANTS.minShuffleSpeed;
+		shuffleSpeedSelector.max = GAME_CONSTANTS.maxShuffleSpeed;
+	}
+
+	// Reset memorized game settings (in solo mode only)
+	if (!MULTIPLAYER) {
+	var lsCurrentGoblets = localStorage['currentGoblets'];
+		if (lsCurrentGoblets) {
+			settings.currentGoblets = lsCurrentGoblets;
+			gobletsNumSelector.value = lsCurrentGoblets;
+			setGoblets(lsCurrentGoblets);
+		}
+		var lsShuffleCount = localStorage['shuffleCount'];
+		if (lsShuffleCount) {
+			settings.shuffleCount = lsShuffleCount;
+			shuffleCountSelector.value = lsShuffleCount;
+		}
+		var lsShuffleSpeed = localStorage['shuffleSpeed'];
+		if (lsShuffleSpeed) {
+			settings.shuffleSpeed = lsShuffleSpeed;
+			shuffleSpeedSelector.value = lsShuffleSpeed;
+		}
+	}
+
+	// Attach event handlers
+	Array.from(goblets).forEach(function (goblet) {
+		goblet.onclick = pickGoblet;
+	});
+})()

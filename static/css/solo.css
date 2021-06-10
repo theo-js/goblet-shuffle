@@ -1,0 +1,183 @@
+.options-section > .invite {
+	margin-top: 1rem;
+}
+.options-section > .invite > button {
+	float: right;
+	border: none; border-radius: 999px;
+	color: var(--black); background-color: transparent;
+	font-weight: 700;
+	white-space: nowrap;
+	transition: .5s all ease;
+}
+.options-section > .invite > button:hover,
+.options-section > .invite > button:focus {
+	background-color: var(--black); color: white;
+	padding: .5rem 1rem;
+	box-shadow: 0 0 0 .125rem var(--light-yellow), 0 0 0 .25rem var(--black), 0 .25rem .5rem .25rem #2225;
+	animation: invite-btn-scale .3s 1 normal 0s ease-out forwards, invite-btn-rotate 1s infinite alternate .3s linear;
+}
+.options-section > .invite > button:active {
+	filter: brightness(1.2);
+	opacity: .9;
+	transition: none;
+}
+
+.invite-form {
+	width: 550px; 
+	max-width: calc(100vw - 4rem);
+	max-height: calc(100vh - 7.5rem);
+	overflow: auto;
+	margin: 1rem auto; padding: 1rem;
+	border-radius: .5rem;
+	background-color: var(--black);
+	opacity: .95;
+	box-shadow: 1px .5rem 1rem 0 #2225;
+	animation: raise .5s ease 1;
+	transition: transform ease .5s;
+}
+
+.invite-form .label {
+	background: linear-gradient(white, var(--light-yellow));
+	background-clip: text;
+	-webkit-background-clip: text;
+	color: transparent;
+	white-space: nowrap;
+	cursor: pointer;
+}
+.invite-form .label.center {
+	margin-left: auto; margin-right: auto;
+}
+.invite-form legend {
+	color: rgba(255, 255, 255, .5);
+	text-decoration: underline; text-align: center;
+	font-family: 'Parisienne', cursive;
+	font-size: 1.25em; margin-top: -.25rem;
+}
+.invite-form label {
+	display: flex;
+	max-width: 100%;
+}
+.invite-form input {
+	display: block;
+	width: 50%;
+	flex-grow: 1;
+	background: none;
+	color: white;
+	border: none; border-bottom: 1px solid var(--violet);
+}
+.invite-form input[type="number"],
+.invite-form input[type="range"],
+.invite-form input[type="time"] {
+	max-width: 50%; margin-left: auto; text-align: center;
+}
+.invite-form input[type="radio"] {
+	width: 1rem; margin: 0 1rem 0 .5rem;
+}
+.invite-form input[type="number"]:disabled {
+	color: rgba(255, 255, 255, .5);
+}
+.invite-form input::placeholder {
+	color: rgba(255, 255, 255, .5);
+}
+.invite-form input:focus {
+	outline: none;
+}
+.invite-form .time-fiel {
+	white-space: nowrap;
+}
+.invite-form .time-field .colon {
+	text-align: center;
+	width: 2rem;
+	display: inline-block;
+	color: white;
+	font-weight: 700;
+	opacity: .25;
+}
+.invite-form .time-field .colon.active {
+	animation: fade .5s ease-out alternate infinite;
+}
+
+.description {
+	color: rgba(255, 255, 255, .5);
+	margin: .5rem 0 0 0;
+	font-size: .75rem; font-style: italic;
+}
+
+.invite-form .button {
+	background: linear-gradient(to bottom, var(--purple), var(--violet) 37.5%);
+	border: 2px groove var(--violet);
+	padding: 0 .5rem;
+	color: white;
+	cursor: pointer;
+	font-weight: bold;
+	transition: .2s all ease;
+}
+.invite-form .button:hover,
+.invite-form .button:focus {
+	filter: brightness(1.2);
+	color: var(--light-yellow);
+	opacity: .9;
+}
+.invite-form .button:active {
+	filter: brightness(1.3);
+	opacity: .85;
+	transition: none;
+}
+.invite-form .button.round-right {
+	border-radius: 0 999px 999px 0;
+	padding-right: .75rem;
+}
+.invite-form .button.submit {
+	float: right;
+	border-radius: 999px;
+	transition: all ease-out .5s;
+	padding: .5rem 1rem;
+}
+.invite-form .button.submit::after { content: ' \279F'; }
+.invite-form .button.submit:disabled {
+	opacity: .5;
+	filter: brightness(.8);
+	cursor: default;
+}
+.invite-form .button.submit:disabled::after { display: none; }
+
+.invite-form .invite-form-footer {
+	position: sticky; bottom: 0; width: 100%;
+	transform: translateY(1rem); margin: -2rem 0; padding: 1rem 0;
+	background: inherit;
+}
+
+
+@media screen and ( max-width: 500px ) {
+	.invite-form legend {
+		text-align: right;
+		font-size: .875rem;
+		margin-bottom: .75rem;
+	}
+}
+
+@keyframes invite-btn-scale {
+	to {
+		transform: scale(1.125) translate(-.25rem, .25rem);
+	}
+}
+
+@keyframes invite-btn-rotate {
+	from {
+		transform: scale(1.125) translate(-.25rem, .25rem);
+	} 33% {
+		transform: rotate(-1deg) scale(1.125) translate(-.25rem, .25rem);
+	} 66% {
+		transform: rotate(1deg) scale(1.125) translate(-.25rem, .25rem);
+	} to {
+		transform: scale(1.125) translate(-.25rem, .25rem);
+	}
+}
+
+@keyframes raise {
+	from {
+		transform: translateY(2rem);
+	} to {
+		transform: translateY(0);
+	}
+}

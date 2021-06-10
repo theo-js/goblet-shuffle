@@ -1,0 +1,142 @@
+.app-header h1 {
+	max-width: calc(100% - 106px - 4rem); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0 auto;
+}
+
+.game {
+	grid-template-areas: "goblets options" "goblets players";
+}
+
+/* Players */
+#players-section {
+	grid-area: players;
+}
+#players-section .player-list-name {
+	display: flex; align-items: center;
+	white-space: nowrap;
+	font-size: .75em; font-family: 'Parisienne', cursive;
+	margin: 0; padding: .125rem .5rem;
+	background-color: var(--black); color: white;
+	border-radius: 1px;
+}
+#players-section .player-list-name::before {
+	content: '';
+	display: inline-block; margin: auto.5rem auto 0;
+	width: .25rem; height: .25rem; border-radius: 50%;
+	filter: blur(1px); box-shadow: 0 0 1px 0 white;
+	animation: blink .333s infinite linear alternate;
+}
+.participants-section > .player-list-name::before {
+	background: lightgreen;
+	box-shadow: 0 0 3px 1px lightgreen !important;
+}
+.lurkers-section > .player-list-name::before {
+	background: #F94;
+	box-shadow: 0 0 3px 1px #FA5 !important;
+}
+.players-list {
+	list-style: none; padding: .5em; margin: 0;
+	min-height: 35px;
+	display: flex; flex-direction: column; gap: .5rem;
+	overflow: auto;
+}
+#participants-list {
+}
+.lurkers-section {
+}
+#lurkers-list {
+}
+.player:nth-child(odd) * {
+	color: var(--violet);
+}
+.player:nth-child(even) * {
+	color: var(--purple);
+}
+.player .player-name {
+	font-size: 1rem; margin: 0;
+	white-space: nowrap;
+	max-width: 10em; overflow: hidden; text-overflow: ellipsis;
+}
+.player.me {
+	display: inline-flex;
+	height: 19px;
+	color: red;
+}
+.player input.player-name {
+	height: inherit;
+	background-color: transparent;
+	border: none; border-radius: 1px;
+	padding: 0;
+	max-width: 100px;
+	text-decoration: underline;
+	cursor: pointer;
+}
+.player input.player-name:hover {
+	text-decoration: none;
+}
+.player input.player-name:hover:focus {
+	cursor: unset;
+}
+.player input.player-name:focus {
+	background-color: white;
+}
+.player.admin {
+	order: -1; /* admin comes after me, at least as long as the game is not playing */
+}
+.player.me {
+	order: -2; /* I come first, at least as long as the game is not playing */
+}
+.player.admin .player-name::before {
+	content: '\265A';
+}
+
+.player .player-score {
+	display: block; text-align: center;
+}
+.player .player-current-score {
+	opacity: .75;
+}
+
+
+@media screen and ( min-width: 601px ) {
+	#players-section {
+		display: flex; flex-direction: row-reverse;
+		margin-top: 2rem;
+	}
+
+	.players-list {
+		min-height: calc(100% - 43px);
+		padding-top: 0; margin-top: .5rem;
+	}
+	#players-section .player-list-name {
+		justify-content: center;
+	}
+	#lurkers-list {
+		border-left: .5px solid #2222;
+	}
+}
+
+@media screen and ( max-width: 600px ) {
+	.game {
+		display: -ms-grid;
+		-ms-grid-columns: 1fr;
+		display: grid;
+		grid-template-columns: 1fr;
+		grid-template-areas: "options" "players" "goblets";
+	}
+
+	#players-section {
+		max-width: calc(100vw - 3rem);
+	}
+
+	.players-list {
+		flex-direction: row; align-items: center;
+		padding-left: 0; padding-right: 0;
+	}
+}
+
+@media screen and ( max-width: 500px ) {
+	.app-header h1 {
+		max-width: calc(100% - 53px - 3rem);
+		margin-right: 1rem;
+	}
+}

@@ -1,0 +1,71 @@
+const router = require('express').Router();
+
+// Constants
+const {
+	DOMAIN,
+    GAME_CONSTANTS,
+    GAME_MODE,
+    PLAYER_ROLE,
+    ROOM_ID_LENGTH
+} = require('../constants');
+
+const { secondsToTime, timeToStr, secondsToTimeStr } = require('../utils/date');
+const { randomInt, avg } = require('../utils/math');
+const { generateRoomID, randomChar, randomColor, sanitizeStr } = require('../utils/string');
+const { urlErrMsg } = require('../utils/validate/errors.js');
+const gameUtils = {
+	secondsToTime, timeToStr, secondsToTimeStr,
+	randomColor,
+	randomInt, avg
+};
+
+// Join room (multiplayer)
+router.get('/:roomID', (req, res) => {
+	try {
+		// Validate param
+		const { roomID } = req.params;
+		if (!roomID || roomID.length !== ROOM_ID_LENGTH) return res.redirect(301, `/?err=0`);
+	
+		const room = global.rooms.find(room => room.id === roomID);
+		if (!!room) {
+			// Room exists
+			// Find out if current user is admin
+			const isAdmin = room.admin.ip === req.ip;
+			res.render('multi', {
+				room,
+				isAdmin,
+				DOMAIN,
+				PLAYER_ROLE,
+				GAME_MODE,
+				GAME_CONSTANTS,
+				utils: {
+					...gameUtils,
+					sanitizeStr
+				}
+			});
+		} else return res.redirect(301, `/?err=1`);
+	} catch (err) {
+		res.redirect(301, `/`);
+	}
+});
+
+// Solo
+router.get('/', (req, res) => {
+	res.render('solo', {
+		err: urlErrMsg(req.query.err),
+		GAME_CONSTANTS, GAME_MODE,
+		ROOM_ID_LENGTH,
+		utils: {
+            ...gameUtils,
+			generateRoomID, randomChar
+		}
+	});
+});
+
+
+// Redirect other URLs to root
+router.get('*', (req, res) => {
+	res.redirect(308, '/');
+});
+
+module.exports = router;

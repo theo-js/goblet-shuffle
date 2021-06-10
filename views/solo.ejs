@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=3.0">
+		<meta name="theme-color" content="#222">
+		<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css">
+		<link rel="stylesheet" type="text/css" href="static/css/main.css">
+		<link rel="stylesheet" type="text/css" href="static/css/solo.css">
+		<script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+		<script type="text/javascript">
+			// Game constants
+			const GAME_CONSTANTS = <%- JSON.stringify(GAME_CONSTANTS) %>;
+			const GAME_MODE = <%- JSON.stringify(GAME_MODE) %>;
+			const MULTIPLAYER = false;
+			const isAdmin = true;
+			const ROOM_ID_LENGTH = <%= ROOM_ID_LENGTH %>
+
+			// Game variables
+			// Settings
+			var settings = {
+				goblets: 4,
+				shuffleCount: 4,
+				shuffleGoblets: .5,
+				gameMode: {
+					mode: GAME_MODE.REACH_SCORE,
+					scoreToReach: GAME_CONSTANTS.defaultScoreToReach
+				}
+			}
+			let initialTime = 30;
+
+			// Utils
+			<%- 
+				Object.values(utils).reduce((acc, func) => {
+					return acc + `${func.toString()}`;
+				}, '');
+			%>
+		</script>
+		<title>Goblet shuffle</title>
+	</head>
+	<body>
+		<div class="app">
+			<header class="app-header">
+				<h1>Welcome to <span class="app-name">Goblet Shuffle</span></h1>
+			</header>
+			<main class="app-body">
+				<% if (err) { %>
+					<br />
+					<p class="alert alert-danger" style="position: relative;">
+						<%= err %> :(
+						<button
+							onclick="(function (btn) {
+								if (btn.parentElement && btn.parentElement.parentElement) {
+									if (btn.parentElement.previousElementSibling) {
+										btn.parentElement.parentElement.removeChild(btn.parentElement.previousElementSibling);
+									}
+									btn.parentElement.parentElement.removeChild(btn.parentElement);
+								}
+							})(this);"
+							class="close-btn"
+						>&times;</button>
+					</p>
+				<% } %>
+				<div class="game">
+					<section id="goblets-container">
+						<div class="goblet" data-offset-x="0" data-offset-y="0"></div>
+						<div class="goblet" data-offset-x="0" data-offset-y="0"></div>
+						<div class="goblet" data-offset-x="0" data-offset-y="0"></div>
+						<div class="goblet" data-offset-x="0" data-offset-y="0"></div>
+						<div class="ball init" id="ball"></div>
+					</section>
+					<section class="options-section">
+						<nav class="game-options">
+							<header>
+								<div>
+									<h3 title="score">Score</h3>
+									<p style="margin: .5rem 0 0 0; text-align: right;">
+										<strong id="score">0</strong>
+									</p>
+								</div>
+								<div id="time-output" style="display: none;">
+									<h3 title="score" style="text-align: left;">Time</h3>
+									<p class="time-field" id="time-output-para" style="margin: .5rem 0 0 0;">
+										<span id="time-output-m">00</span>
+										<span style="opacity: .5;" class="colon">
+											:
+										</span>
+										<span id="time-output-s">30</span>
+									</p>
+								</div>
+							</header>
+							<main style="order: -1;">
+								<section class="settings">
+									<h3 title="Change game settings" onclick="(function () {
+										// Collapse list
+										var list = document.getElementById('game-settings-options-list');
+										var btn = document.getElementById('game-settings-options-list-toggle-btn');
+										list.classList.toggle('collapsed');
+										btn.classList.toggle('active');
+									})()" style="cursor: pointer;" title="Settings">
+										Settings
+									</h3>
+									<button class="collapse-btn active" id="game-settings-options-list-toggle-btn" title="Change game settings" onclick="(function (btn) {
+										// Collapse list
+										var list = document.getElementById('game-settings-options-list');
+										list.classList.toggle('collapsed');
+										btn.classList.toggle('active');
+									})(this)">
+									</button>
+									<ul style="margin: 0; padding: 0; list-style: none;" class="options-list collapsed" id="game-settings-options-list">
+										<li>
+											<label for="gobletsNumSelector">Goblets:</label>
+											<input
+												type="number"
+												name="goblet-number"
+												value="4"
+												oninput="changeSetting('goblets-count', this);"
+												min="2"
+												max="8"
+												id="gobletsNumSelector"
+											>
+										</li>
+										<li>
+											<label for="shuffleCountSelector">Shuffle count:</label>
+											<input
+												type="number"
+												name="shuffle-count"
+												value="4"
+												oninput="changeSetting('shuffle-count', this);"
+												min="2"
+												max="15"
+												id="shuffleCountSelector"
+											>
+										</li>
+										<li>
+											<label for="shuffleSpeedSelector">Speed:</label>
+											<input
+												type="range"
+												name="shuffle-speed"
+												value=".5"
+												oninput="changeSetting('shuffle-speed', this);"
+												min="0.2"
+												max="1"
+												step="0.01"
+												id="shuffleSpeedSelector"
+												style="transform: rotate(180deg);"
+											>
+										</li>
+										<li class="game-mode">
+											<h4>Mode</h4>
+											<ul style="padding: 0; margin: 0;">
+												<li>
+													<label for="reach-score-mode" onclick="window.setTimeout(function () {
+														var target = document.getElementById('score-to-reach');
+														if (target && target.focus) {
+															 target.focus();
+														}
+													}, 20);">
+														Reach score
+													</label>
+													<input
+														type="radio"
+														onchange="changeSetting('game-mode', this);"
+														name="game-mode"
+														id="reach-score-mode"
+														value="<%= GAME_MODE.REACH_SCORE %>"
+														style="display: none;"
+														checked
+													>
+													<input
+														type="number"
+														id="score-to-reach"
+														name="<%= GAME_MODE.REACH_SCORE %>"
+														min="<%= GAME_CONSTANTS.minScoreToReach %>"
+														max="<%= GAME_CONSTANTS.maxScoreToReach %>"
+														step="10"
+														value="<%= GAME_CONSTANTS.defaultScoreToReach %>"
+														style="max-width: 4rem;"
+														oninput="changeSetting('score-to-reach', this);"
+													>
+												</li>
+												<li>
+													<label for="countdown-mode" onclick="window.setTimeout(function () {
+														var target = document.getElementById('countdown-mode-m');
+														if (target && target.focus) {
+															 target.focus();
+														}
+													}, 20);">
+														Countdown
+													</label>
+													<input
+														type="radio"
+														onchange="changeSetting('game-mode', this);"
+														name="game-mode"
+														id="countdown-mode"
+														value="<%= GAME_MODE.COUNTDOWN %>"
+														style="display: none;"
+													>
+													<fieldset class="time-field">
+														<input
+															type="number"
+															name="<%= GAME_MODE.COUNTDOWN %>"
+															min="0" max="30" 
+															value="0" 
+															id="countdown-mode-m" 
+															oninput="changeSetting('countdown', this);"
+															disabled
+														>
+														<span class="colon" style="font-weight: 700; color: #FFFA;">:</span>
+														<input
+															type="number"
+															name="<%= GAME_MODE.COUNTDOWN %>"
+															min="0" max="59"
+															value="30"
+															id="countdown-mode-s"
+															oninput="changeSetting('countdown', this);"
+															disabled
+														>
+													</fieldset>
+												</li>
+											</ul>
+										</li>
+									</ul>
+								</section>
+							</main>
+							<footer>
+								<button onclick="onPlay();" id="playBTN">
+									<span>Start</span>
+								</button>
+							</footer>
+						</nav>
+						<aside class="invite">
+							<button class="link" onclick="openInviteModal(true);">
+								<span style="color: green">&plus;👤</span>&nbsp;
+								Invite friends
+							</button>
+						</aside>
+					</section>
+				</div>
+				<article id="game-info-msg">
+					<p>Find the <strong style="color: var(--yellow);">ball</strong> !</p>
+				</article>
+			</main>
+			<footer class="app-footer"></footer>
+		</div>
+		<script type="text/javascript" src="static/js/app.js"></script>
+		<script type="text/javascript" src="static/js/solo.js"></script>
+	</body>
+</html>
