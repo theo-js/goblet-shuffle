@@ -19,14 +19,8 @@ function generateRoomID (lengthParam) {
     return id;
 }
 
-function sanitizeStr (str) {
-	const re = new RegExp(/['"/\\<>(){}]/, 'g');
-	return str.replaceAll(re, '');
-}
-
 module.exports = {
     randomChar,
     randomColor,
-    generateRoomID,
-    sanitizeStr
+    generateRoomID
 }

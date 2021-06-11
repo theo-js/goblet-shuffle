@@ -11,12 +11,14 @@ const {
 
 const { secondsToTime, timeToStr, secondsToTimeStr } = require('../utils/date');
 const { randomInt, avg } = require('../utils/math');
-const { generateRoomID, randomChar, randomColor, sanitizeStr } = require('../utils/string');
+const { generateRoomID, randomChar, randomColor } = require('../utils/string');
 const { urlErrMsg } = require('../utils/validate/errors.js');
+const { sanitizeStr, isValidNum, limitNum } = require('../utils/validate')
 const gameUtils = {
 	secondsToTime, timeToStr, secondsToTimeStr,
 	randomColor,
-	randomInt, avg
+	randomInt, avg,
+	isValidNum, limitNum
 };
 
 // Join room (multiplayer)

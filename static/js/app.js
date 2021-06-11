@@ -99,6 +99,14 @@ var countdownInterval = null;
 function setGoblets (number) {
 	if (!isInGame && isAdmin) {
 		var n = number;
+		if (!isValidNum(
+			n,
+			GAME_CONSTANTS.minGoblets,
+			GAME_CONSTANTS.maxGoblets
+		)) {
+			return;
+		}
+		
 		// Limit goblets
 		if (number < GAME_CONSTANTS.minGoblets) {
 			n = GAME_CONSTANTS.minGoblets;
@@ -109,7 +117,7 @@ function setGoblets (number) {
 		}
 
 		// Override global var (side effect)
-		settings.currentGoblets = n;
+		settings.goblets = n;
 		// Memorize number of goblets
 		if (!MULTIPLAYER) {
 			localStorage.setItem('currentGoblets', n);
@@ -169,7 +177,7 @@ function turnDownGoblets (down) {
 	}
 }
 function getRandomGoblet () {
-	var randomGobletNum = randomInt(0, settings.currentGoblets - 1);
+	var randomGobletNum = randomInt(0, settings.goblets - 1);
 	var randomGoblet = Array.from(goblets)[randomGobletNum];
 	return {
 		goblet: randomGoblet,
@@ -299,15 +307,17 @@ function changeSetting(type, element) {
 	if (isAdmin && !isInGame) {
 		var value = element.value;
 		switch (type) {
-			case 'goblets-count':
-				setGoblets(value);
+			case 'goblets-count': {
+				setGoblets(parseInt(value));
 				break;
-			case 'shuffle-count':
+			} case 'shuffle-count': {
 				// Validate value
-				if (
-					value >= GAME_CONSTANTS.minShuffleCount && 
-					value <= GAME_CONSTANTS.maxShuffleCount
-				) {
+				value = limitNum(
+					parseInt(value),
+					GAME_CONSTANTS.minShuffleCount,
+					GAME_CONSTANTS.maxShuffleCount
+				);
+				if (value !== false) {
 					settings.shuffleCount = value;
 					// Memorize setting
 					if (!MULTIPLAYER) {
@@ -315,12 +325,14 @@ function changeSetting(type, element) {
 					}
 				}
 				break;
-			case 'shuffle-speed':
+			} case 'shuffle-speed': {
 				// Validate value
-				if (
-					value >= GAME_CONSTANTS.minShuffleSpeed && 
-					value <= GAME_CONSTANTS.maxShuffleSpeed
-				) {
+				value = limitNum(
+					parseInt(value),
+					GAME_CONSTANTS.minShuffleSpeed,
+					GAME_CONSTANTS.maxShuffleSpeed
+				);
+				if (value !== false) {
 					settings.shuffleSpeed = value;
 					// Memorize setting
 					if (!MULTIPLAYER) {
@@ -328,9 +340,9 @@ function changeSetting(type, element) {
 					}
 				}
 				break;
-			case 'game-mode':
+			} case 'game-mode': {
 				switch (value) {
-					case GAME_MODE.REACH_SCORE:
+					case GAME_MODE.REACH_SCORE: {
 						if (element.checked) {
 							// Disable other inputs
 							if (countdownSelectorM && countdownSelectorS) {
@@ -351,14 +363,17 @@ function changeSetting(type, element) {
 								timeOutput.style.display = 'none';
 							}
 							// Update gameMode
-							var scoreToReach = scoreToReachSelector.value;
+							var scoreToReach = parseInt(scoreToReachSelector.value);
 							settings.gameMode = {
 								mode: GAME_MODE.REACH_SCORE,
-								scoreToReach: scoreToReach
+								scoreToReach
 							};
+							// Memorize settings
+							localStorage['game-mode'] = GAME_MODE.REACH_SCORE;
+							localStorage['score-to-reach'] = scoreToReach;
 						}
 						break;
-					case GAME_MODE.COUNTDOWN:
+					} case GAME_MODE.COUNTDOWN: {
 						if (element.checked) {
 							// Disable other inputs
 							if (scoreToReachSelector) {
@@ -377,18 +392,22 @@ function changeSetting(type, element) {
 							// Update gameMode
 							var m = parseInt(countdownSelectorM.value); 
 							var s = parseInt(countdownSelectorS.value);
-							var countdown = 60*m + s;
+							var countdown = limitNum(
+								60*m + s,
+								GAME_CONSTANTS.minCountdown,
+								GAME_CONSTANTS.maxCountdown
+							);
+
 							// Validation
-							if (typeof countdown !== 'number' || Number.isNaN(countdown)) {
+							if (countdown === false) {
 								countdown = GAME_CONSTANTS.defaultCountdown;
 							}
-							if (countdown < GAME_CONSTANTS.minCountdown) {
-								countdown = GAME_CONSTANTS.minCountdown;
-							}
-							if (countdown > GAME_CONSTANTS.maxCountdown) {
-								countdown = GAME_CONSTANTS.maxCountdown;
-							}
 							settings.gameMode = { mode: GAME_MODE.COUNTDOWN, countdown };
+
+							// Memorize settings
+							localStorage['game-mode'] = GAME_MODE.COUNTDOWN;
+							localStorage['countdown'] = countdown;
+							
 							// Display timer
 							if (timeOutput) {
 								timeOutput.style.display = 'block';
@@ -396,49 +415,53 @@ function changeSetting(type, element) {
 							}
 						}
 						break;
-					default: return;
+					} default: return;
 				}
 				break;
-			case 'score-to-reach':
-				value = window.parseInt(value);
-				// Validation
-				if (Number.isNaN(value + 1)) {
+			} case 'score-to-reach': {
+				value = limitNum(
+					parseInt(value),
+					GAME_CONSTANTS.minScoreToReach,
+					GAME_CONSTANTS.maxScoreToReach
+				);
+				if (value === false) {
 					break;
 				}
-				if (value < GAME_CONSTANTS.minScoreToReach) {
-					value = GAME_CONSTANTS.minScoreToReach;
-				}
-				if (value > GAME_CONSTANTS.maxScoreToReach) {
-					value = GAME_CONSTANTS.maxScoreToReach;
-				}
+
+				// Update settings
 				settings.gameMode = { 
 					mode: GAME_MODE.REACH_SCORE,
 					scoreToReach: value
 				};
+				// Memorize settings
+				localStorage['game-mode'] = GAME_MODE.REACH_SCORE;
+				localStorage['score-to-reach'] = value;
 				break;
-			case 'countdown': {
+			} case 'countdown': {
 				if (!countdownSelectorM || !countdownSelectorS) {
 					break;
 				}
 				// Get seconds
 				var m = window.parseInt(countdownSelectorM.value);
 				var s = window.parseInt(countdownSelectorS.value);
-				var countdown = m*60 + s;
+				var countdown = limitNum(
+					m*60 + s,
+					GAME_CONSTANTS.minCountdown,
+					GAME_CONSTANTS.maxCountdown
+				);
 
 				// Validation
-				if (Number.isNaN(countdown) || typeof countdown !== 'number') {
+				if (countdown === false) {
 					break;
-				}
-				if (countdown < GAME_CONSTANTS.minCountdown) {
-					countdown = GAME_CONSTANTS.minCountdown;
-				}
-				if (countdown > GAME_CONSTANTS.maxCountdown) {
-					countdown = GAME_CONSTANTS.maxCountdown;
 				}
 				
 				// Update settings
 				settings.gameMode = { mode: GAME_MODE.COUNTDOWN, countdown };
 				initialTime = countdown;
+
+				// Memorize settings
+				localStorage['game-mode'] = GAME_MODE.COUNTDOWN;
+				localStorage['countdown'] = countdown;
 
 				// Update user interface
 				if (timeOutputM && timeOutputS) {
@@ -523,7 +546,7 @@ function succeed (targetGoblets) {
 
 			// Reset ball and goblets DOM
 			ballZIndexTM = window.setTimeout(function () {
-				setGoblets(settings.currentGoblets);
+				setGoblets(settings.goblets);
 				resetBall();
 			}, 500);
 
@@ -537,7 +560,7 @@ function succeed (targetGoblets) {
 				// Go to next turn
 				ballScaleTM = window.setTimeout(function () {
 					turnDownGoblets(); randomizeTheme();
-					startNewGame();
+					startNewTurn();
 				}, 800);
 			}
 
@@ -581,7 +604,7 @@ function fail (goblets) {
 	});
 }
 
-function startNewGame () {
+function startNewTurn () {
 	window.setTimeout(function () {
 		// Rotate all goblets
 		turnDownGoblets(true)
@@ -677,7 +700,7 @@ function onPlay () {
 				enableOptions(true);
 				playBTN.innerHTML = '<span>Start</span>';
 				turnDownGoblets(false);
-				setGoblets(settings.currentGoblets);
+				setGoblets(settings.goblets);
 				resetBall();
 				// Reset game stats
 				score = 0;
@@ -685,6 +708,8 @@ function onPlay () {
 				successes = 0;
 				fails = 0;
 				gameTime = 0;
+				window.clearInterval(gameTimeInterval);
+				gameTimeInterval = null;
 				// Reset goblets translation speed
 				Array.from(goblets).forEach(function (goblet) {
 					goblet.style.transition = '.3s all ease';
@@ -698,7 +723,7 @@ function onPlay () {
 				enableOptions(false);
 				playBTN.innerHTML = '<span>Give up</span>';
 				startCountDown(true);
-				startNewGame();
+				startNewTurn();
 
 				if (settings.gameMode.mode === GAME_MODE.REACH_SCORE) {
 					gameTimeInterval = window.setInterval(function () {
@@ -724,7 +749,7 @@ function endGame () {
 		} case GAME_MODE.COUNTDOWN: {
 			var timeStr = secondsToTimeStr(settings.gameMode.countdown);
 			var msg = 'Finish !\nIn ' + timeStr.m + '\'' + timeStr.s + '\'\'' +
-			'you\'ve managed to earn ' + score + 'pts' +
+			' you\'ve managed to earn ' + score + 'pts' +
 			'\nSuccesses: ' + successes + '\nFails: ' + fails;
 			alert(msg);
 			break;
@@ -752,21 +777,75 @@ function endGame () {
 
 	// Reset memorized game settings (in solo mode only)
 	if (!MULTIPLAYER) {
-	var lsCurrentGoblets = localStorage['currentGoblets'];
-		if (lsCurrentGoblets) {
-			settings.currentGoblets = lsCurrentGoblets;
+		// Goblets count
+		var lsCurrentGoblets = parseInt(localStorage['currentGoblets']);
+		if (isValidNum(
+			lsCurrentGoblets, 
+			GAME_CONSTANTS.minGoblets, 
+			GAME_CONSTANTS.maxGoblets
+		)) {
+			settings.goblets = lsCurrentGoblets;
 			gobletsNumSelector.value = lsCurrentGoblets;
 			setGoblets(lsCurrentGoblets);
 		}
-		var lsShuffleCount = localStorage['shuffleCount'];
-		if (lsShuffleCount) {
+		// Shuffle count
+		var lsShuffleCount = parseInt(localStorage['shuffleCount']);
+		if (isValidNum(
+			lsShuffleCount,
+			GAME_CONSTANTS.minShuffleCount,
+			GAME_CONSTANTS.maxShuffleCount
+		)) {
 			settings.shuffleCount = lsShuffleCount;
 			shuffleCountSelector.value = lsShuffleCount;
 		}
-		var lsShuffleSpeed = localStorage['shuffleSpeed'];
-		if (lsShuffleSpeed) {
+		// Speed
+		var lsShuffleSpeed = parseFloat(localStorage['shuffleSpeed']);
+		if (isValidNum(
+			lsShuffleSpeed,
+			GAME_CONSTANTS.minShuffleSpeed,
+			GAME_CONSTANTS.maxShuffleSpeed
+		)) {
 			settings.shuffleSpeed = lsShuffleSpeed;
 			shuffleSpeedSelector.value = lsShuffleSpeed;
+		}
+		// Score
+		var lsScoreToReach = parseInt(localStorage['score-to-reach']);
+		if (isValidNum(
+			lsScoreToReach,
+			GAME_CONSTANTS.minScoreToReach,
+			GAME_CONSTANTS.maxScoreToReach
+		)) {
+			settings.gameMode.scoreToReach = lsScoreToReach;
+			scoreToReachSelector.value = lsScoreToReach;
+		}
+		// Countdown
+		var lsCountdown = parseInt(localStorage['countdown']);
+		if (isValidNum(
+			lsCountdown,
+			GAME_CONSTANTS.minCountdown,
+			GAME_CONSTANTS.maxCountdown
+		)) {
+			settings.gameMode.countdown = lsCountdown;
+			// Update input values
+			var timeStr = secondsToTimeStr(lsCountdown);
+			countdownSelectorM.value = timeStr.m;
+			countdownSelectorS.value = timeStr.s;
+			// Update output
+			changeSetting('countdown', countdownSelectorM);
+		}
+		// Game mode
+		var lsGameMode = localStorage['game-mode'];
+		if (Object.values(GAME_MODE).includes(lsGameMode)) {
+			// Check corresponding radio input
+			var radios = Array.from(document.getElementsByName('game-mode'));
+			radios.forEach(function (radio) {
+				if (radio.value === lsGameMode) {
+					radio.checked = true;
+					changeSetting('game-mode', radio);
+				} else {
+					radio.removeAttribute('checked');
+				}
+			});
 		}
 	}
 

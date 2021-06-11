@@ -1,5 +1,5 @@
 const multiplayerRouter = require('express').Router();
-const { validateStr } = require('../../utils/validate');
+const { validateStr, isValidNum } = require('../../utils/validate');
 const {
 	GAME_CONSTANTS,
 	GAME_MODE,
@@ -127,7 +127,7 @@ multiplayerRouter.post('/create-room', (req, res) => {
 			return res.status(400).json({ success: false, msg: 'Invalid room id' });
 		}
 		if (!adminName || adminName.length === 0) adminName = 'Player_1';
-		if (adminName.length > GAME_CONSTANTS.maxPlayerNameLength) {
+		if (!isValidNum(adminName.length, 1, GAME_CONSTANTS.maxPlayerNameLength)) {
 			return res.status(400).json({ success: false, msg: 'Your name is too long ...' });
 		}
 		if (!validateStr(adminName)) {
@@ -140,19 +140,26 @@ multiplayerRouter.post('/create-room', (req, res) => {
 			return res.status(400).json({ success: false, msg: 'Your room name contains forbidden characters; please change it to continue' });
 		} 
 		const roomName = name ? name.trim() : `${adminName}'s room`;
-		if (
-			goblets > GAME_CONSTANTS.maxGoblets || 
-			shuffleCount > GAME_CONSTANTS.maxShuffleCount || 
-			shuffleSpeed > GAME_CONSTANTS.maxShuffleSpeed
-		) {
-			return res.status(400).json({ success: false, msg: 'One of the settings is too high' });
+		if (!isValidNum(
+			goblets,
+			GAME_CONSTANTS.minGoblets,
+			GAME_CONSTANTS.maxGoblets
+		)) {
+			return res.status(400).json({ success: false, msg: 'The goblets count setting does not fall in the correct range' });
 		}
-		if (
-			goblets < GAME_CONSTANTS.minGoblets || 
-			shuffleCount < GAME_CONSTANTS.minShuffleCount || 
-			shuffleSpeed < GAME_CONSTANTS.minShuffleSpeed
-		) {
-			return res.status(400).json({ success: false, msg: 'One of the settings is too low' });
+		if (!isValidNum(
+			shuffleCount,
+			GAME_CONSTANTS.minShuffleCount,
+			GAME_CONSTANTS.maxShuffleCount
+		)) {
+			return res.status(400).json({ success: false, msg: 'The shuffle count setting does not fall in the correct range' });
+		}
+		if (!isValidNum(
+			shuffleSpeed,
+			GAME_CONSTANTS.minShuffleSpeed,
+			GAME_CONSTANTS.maxShuffleSpeed
+		)) {
+			return res.status(400).json({ success: false, msg: 'The speed setting does not fall in the correct range' });
 		}
 
 		// Validate game mode
@@ -165,10 +172,10 @@ multiplayerRouter.post('/create-room', (req, res) => {
 				case GAME_MODE.REACH_SCORE:
 					if (typeof gameMode.scoreToReach !== 'number') return res.status(403).json({ success: false, msg: 'Score to reach is invalid !' });
 					if (gameMode.scoreToReach < GAME_CONSTANTS.minScoreToReach) {
-						return res.status(403).json({ success: false, msg: 'Score to reach should be at least 100' });
+						return res.status(403).json({ success: false, msg: `Score to reach should be at least ${GAME_CONSTANTS.minScoreToReach}` });
 					}
 					if (gameMode.scoreToReach > GAME_CONSTANTS.maxScoreToReach) {
-						return res.status(403).json({ success: false, msg: 'Score to reach should be max 999999' });
+						return res.status(403).json({ success: false, msg: `Score to reach should be max ${GAME_CONSTANTS.maxScoreToReach}` });
 					}
 
 					gameModeValidated = gameMode;
@@ -176,10 +183,10 @@ multiplayerRouter.post('/create-room', (req, res) => {
 				case GAME_MODE.COUNTDOWN:
 					if (typeof gameMode.countdown !== 'number') return res.status(403).json({ success: false, msg: 'Countdown timer value is invalid !' });
 					if (gameMode.countdown < GAME_CONSTANTS.minCountdown) {
-						return res.status(403).json({ success: false, msg: 'Cannot set countdown lower than 2 seconds' });
+						return res.status(403).json({ success: false, msg: `Cannot set countdown lower than ${GAME_CONSTANTS.minCountdown} seconds` });
 					}
 					if (gameMode.countdown > GAME_CONSTANTS.maxCountdown) {
-						return res.status(403).json({ success: false, msg: 'Cannot set countdown higher than 30 minutes' });
+						return res.status(403).json({ success: false, msg: `Cannot set countdown higher than 30 minutes` });
 					}
 
 					gameModeValidated = gameMode;

@@ -1,7 +1,7 @@
 var playerName = localStorage['player-name'] || '';
 var roomName = '';
 
-var isInviteSubmitDisabled = !playerName;
+var isInviteSubmitDisabled = false;
 var isInviteSubmitDisabledStr = isInviteSubmitDisabled ? 'disabled' : '';
 
 var inviteModalHTMLContent = '<form class="invite-form scrollbar scrollbar-black" id="invite-form">' +
@@ -368,6 +368,7 @@ async function handleInviteFormSubmit (formEvent) {
 				shuffleCount: roomSettingsShuffleCountValue,
 				shuffleSpeed: roomSettingsShuffleSpeedValue
 			};
+
 			// Validate game mode
 			switch (gameMode) {
 				case 'REACH_SCORE':
@@ -441,6 +442,7 @@ async function handleInviteFormSubmit (formEvent) {
 
 			// Close invite modal
 			openInviteModal(false);
+
 		} catch (err) {
 			console.log({err});
 			if (err.response && err.response.data) {
