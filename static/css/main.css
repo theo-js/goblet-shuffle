@@ -9,6 +9,7 @@
 	--light-yellow: rgb(255, 238, 153);
 	--orange: #FA2;
 	--pink-yellow-blend: rgb(246.5, 170, 170);
+	--purple-box-border: 0 0 0 .125rem var(--pink), 0 0 0 .25rem var(--black), 0 .25rem .25rem .25rem #2225;
 }
 
 ::selection {
@@ -49,7 +50,7 @@ body::before {
 
 .my-modal {
 	position: fixed; top: 0; left: 0; height: 100%; width: 100%;
-	z-index: 5;
+	z-index: 6;
 	display: flex; justify-content: center; align-items: center;
 	background: #FFFA;
 	animation: fade .5s ease;
@@ -63,7 +64,7 @@ body::before {
 	height: 20px; width: 20px;
 	font-size: 1.5rem;
 	color: #f8d7da; background: #842029;
-	transform: translate(.25rem, 3px);
+	/*transform: translate(.25rem, 3px);*/
 	cursor: pointer;
 	transition: all ease .1s;
 
@@ -119,7 +120,7 @@ br {
 
 .app-header {
 	position: sticky; top: 0;
-	z-index: 6;
+	z-index: 10;
 	background-color: #222;
 	background-color: var(--black);
 	color: #FFF;
@@ -158,12 +159,13 @@ br {
 }
 
 .game {
-	padding: 1rem;
-	display: -ms-grid; -ms-grid-columns: 4fr 1fr;
+	position: relative;
+	display: -ms-grid; -ms-grid-columns: 1fr 200px;
 	display: grid;
 	grid-template-columns: 4fr 1fr;
 	grid-template-areas: "goblets options";
-	grid-gap: 0;
+	grid-gap: 1rem;
+	margin: 1rem;
 	font-size: 100px;
 	min-height: 382px;
 }
@@ -185,7 +187,7 @@ br {
 
 	-moz-box-shadow: 0 0 0 .125rem rgb(238, 102, 187), 0 0 0 .25rem #222, 0 .25rem .25rem .25rem #2225;
 	-webkit-box-shadow: 0 0 0 .125rem rgb(238, 102, 187), 0 0 0 .25rem #222, 0 .25rem .25rem .25rem #2225;
-	box-shadow: 0 0 0 .125rem var(--pink), 0 0 0 .25rem var(--black), 0 .25rem .25rem .25rem #2225;
+	box-shadow: var(--purple-box-border);
 }
 .game-options > main > section h3, .game-options > header h3,
 .game-options .options-list > .game-mode > h4 {
@@ -348,9 +350,16 @@ br {
 }
 
 
-#goblets-container {
+.goblets-section {
 	position: relative;
 	grid-area: goblets;
+	display: flex; align-items: center;
+	min-height: 424px;
+}
+
+#goblets-container {
+	position: relative;
+	width: fit-content;
 	display: -ms-grid; display: grid;
 	-ms-grid-columns: 1fr 1fr; grid-template-columns: repeat(2, 1fr);
 	grid-auto-rows: 1em;
@@ -420,7 +429,7 @@ br {
 }
 
 
-@media screen and ( max-width: 600px ) {
+@media screen and ( max-width: 650px ) {
 	.hide600- {
 		display: none;
 	}
@@ -450,7 +459,7 @@ br {
 	}
 
 	.ball.init {
-		transform: translate(1.5em, 3.25em) !important;
+		transform: translate(-.25em, -1.25em) !important;
 	}
 
 	#playBTN {
@@ -458,12 +467,17 @@ br {
 	}
 }
 
+
 @media screen and ( max-width: 500px ) {
 	.hide500- {
 		display: none;
 	}
+
+	#goblets-container {
+		font-size: 20vw;
+	}
 }
-@media screen and ( max-width: 4 ) {
+@media screen and ( max-width: 400px ) {
 	.hide400- {
 		display: none;
 	}

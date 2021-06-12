@@ -1,11 +1,46 @@
 var participantsUL = document.getElementById('participants-list');
 var lurkersUL = document.getElementById('lurkers-list');
 
+var getReadySection = document.getElementById('get-ready-section');
+
+// Game start countdown
+var startMultiPlayerGameBtn = document.getElementById('start-multiplayer-game-btn');
+var countdownBfGame = document.getElementById('countdown-before-game');
+var gameStartTimer = null;
+var gameStartInterval = null;
+function resetGameStartCountdown () {
+	window.clearInterval(gameStartInterval);
+	gameStartInterval = null;
+	window.clearTimeout(gameStartTimer);
+	gameStartTimer = null;
+	gameStartCountdown = GAME_START_COUNTDOWN;
+	countdownBfGame.textContent = GAME_START_COUNTDOWN;
+	countdownBfGame.classList.add('hidden');
+}
+
+function createPercentageBar (score, scoreToReach) {
+	var percentageBar = document.createElement('div');
+	percentageBar.className = 'percentage-bar';
+	var content = document.createElement('div');
+	var percentage = (score / scoreToReach) * 100;
+	content.style.width = percentage + '%';
+	percentageBar.appendChild(content);
+	return percentageBar;
+}
+
 function addPlayer (player, ul, addClasses) {
 	// Check that player is not already there
 	var idAttribute = 'player_' + player.socketID;
 	if (!!document.getElementById(idAttribute)) {
 		return false;
+	}
+
+	// Add player to lists in state
+	players.push(player);
+	if (ul == participantsUL) {
+		participants.push(player);
+	} else if (ul == lurkersUL) {
+		lurkers.push(player);
 	}
 
 	// Create new li element
@@ -38,6 +73,12 @@ function addPlayer (player, ul, addClasses) {
 			e.target.value = sanitized;
 		}
 		playerName.onchange = function (e) { // On player name change
+			if (!e.target.value) {
+				// Reset to previous name if input is empty
+				e.target.value = player.name;
+				return;
+			}
+
 			localStorage['player-name'] = e.target.value;
 			e.target.title = e.target.value + ' (YOU)';
 			socket.emit('player change', { 
@@ -49,6 +90,7 @@ function addPlayer (player, ul, addClasses) {
 		playerName.setAttribute('autofocus', true);
 	} else {
 		// This player is not me
+		li.classList.add('other');
 		// Player name is a 4th lvl title
 		playerName = document.createElement('h4');
 		playerName.textContent = player.name;
@@ -59,7 +101,26 @@ function addPlayer (player, ul, addClasses) {
 	// Set ID attribute on li (socketID)
 	li.setAttribute('id', idAttribute);
 
-	// Append to ul
+	// Do additional stuff depending on which list we're adding player to
+	if (ul === participantsUL) {
+		// Adding to participants
+		if (settings.gameMode.mode === GAME_MODE.REACH_SCORE) {
+			// Playing in REACH_SCORE mode
+			// Append percentage bar to li
+			var percentageBar = createPercentageBar(
+				player.score,
+				settings.gameMode.scoreToReach
+			);
+			li.appendChild(percentageBar);
+		}
+		// Append score to li
+		var scoreStr = document.createElement('strong');
+		scoreStr.className = 'player-score';
+		scoreStr.textContent = player.score;
+		li.appendChild(scoreStr);
+	}
+
+	// Append li to ul
 	if (ul.appendChild) {
 		ul.appendChild(li);
 	}
@@ -91,7 +152,26 @@ function removePlayer (socketID) {
 				title.textContent = replaced;
 				title.setAttribute('title', replaced);
 			}
+			// Remove player from lists in state
+			players = players.filter(function (player) {
+				return player.socketID !== socketID;
+			});
+			if (ul == lurkersUL) {
+				lurkers = lurkers.filter(function (player) {
+					return player.socketID !== socketID;
+				});
+			} else if (ul == participantsUL) {
+				participants = participants.filter(function (player) {
+					return player.socketID !== socketID;
+				});
+			}
 		}
+	}
+
+	// Check if there are enough participants for a game during gamestart countdown
+	if ( gameStartTimer !== null && participants.length < 2 ) {
+		// Stop countdown and reset counter
+		resetGameStartCountdown();
 	}
 }
 
@@ -105,6 +185,16 @@ function participate (boolean) {
 	}
 }
 
+function triggerGameStartCountdown () {
+	if (
+		gameStartTimer === null && gameStartInterval === null
+		&& !isPlaying && participants.length > 1
+	) {
+		socket.emit('start game');
+	}
+}
+
+function handleMultiPlayerError (err) {}
 
 
 // React to websocket events
@@ -121,7 +211,6 @@ window.addEventListener('load', function () {
 
 	// Player was renamed
 	socket.on('player renamed', function (id, name) {
-		console.log('renamed')
 		var playerTitle = document.getElementById('player_' + id + '_name');
 		if (playerTitle) {
 			playerTitle.textContent = name;
@@ -131,15 +220,84 @@ window.addEventListener('load', function () {
 
 	// Player was accepted as a participant
 	socket.on('participates', function (player) {
-		console.log('react to\'participates\' event')
 		removePlayer(player.socketID);
 		addPlayer(player, participantsUL);
-
+		// Change join btn
+		var joinGameBtn = document.getElementById('join-game-btn');
+		if (joinGameBtn) {
+			joinGameBtn.textContent = 'Leave';
+			joinGameBtn.className = 'btn btn-danger leave';
+			joinGameBtn.onclick = function () {
+				participate(false);
+			};
+		}
 	});
 
 	// Player gave up
 	socket.on('gave up', function (player) {
 		removePlayer(player.socketID);
 		addPlayer(player, lurkersUL);
+		// Change button
+		var joinGameBtn = document.getElementById('join-game-btn');
+		if (joinGameBtn) {
+			joinGameBtn.textContent = 'Join';
+			joinGameBtn.className = 'btn btn-primary join';
+			joinGameBtn.onclick = function () {
+				participate(true);
+			};
+		}
+	});
+
+	// Admin started countdown before game
+	socket.on('game start countdown', function () {
+		// Change start button
+		startMultiPlayerGameBtn.onclick = function () {
+			socket.emit('abort game start');
+		}
+		startMultiPlayerGameBtn.className = 'btn btn-danger start-game';
+		startMultiPlayerGameBtn.textContent = 'Abort start';
+
+		// Start countdown
+		countdownBfGame.classList.remove('hidden');
+		const ms = GAME_START_COUNTDOWN*1000;
+
+		gameStartInterval = window.setInterval(function () {
+			gameStartCountdown--;
+			countdownBfGame.textContent = gameStartCountdown;
+		}, 1000);
+
+		// Stop interval after correct time
+		gameStartTimer = window.setTimeout(function () {
+			resetGameStartCountdown();
+			// Start game (should receive 'game start' event)
+		}, ms);
+	});
+
+	// Admin cancelled game start during countdown
+	socket.on('abort game start', function () {
+		resetGameStartCountdown();
+		startMultiPlayerGameBtn.onclick = triggerGameStartCountdown;
+		startMultiPlayerGameBtn.className = 'btn btn-success start-game';
+		startMultiPlayerGameBtn.textContent = 'Start game';
+	});
+
+	// Game started
+	socket.on('game start', function () {
+		console.log('Game started')
+		var amParticipating = participants.find(function (participant) {
+			return participant.socketID === socket.id;
+		});
+		if (!!amParticipating) {
+			// I am participating
+			isPlaying = true;
+			getReadySection.classList.add('hidden');
+			onPlay();
+		} else {
+			// I'm not participating
+		}
+	});
+
+	// User receives an error
+	socket.on('error', function (error) {
 	});
 }, false);

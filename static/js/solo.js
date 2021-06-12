@@ -438,7 +438,7 @@ async function handleInviteFormSubmit (formEvent) {
 			}
 
 			// Open multiplayer room in new tab
-			window.open('/' + roomID, '_blank');
+			location.assign('/' + roomID, '_blank');
 
 			// Close invite modal
 			openInviteModal(false);
@@ -449,9 +449,8 @@ async function handleInviteFormSubmit (formEvent) {
 
 				if (err.response.data.success && err.response.data.roomID && err.response.data.errcode) {
 					// Redirect to room owned by user
-					window.open(
+					location.assign(
 						'/'+err.response.data.roomID+'?err='+err.response.data.errcode,
-						'_blank'
 					);
 					// Close invite modal
 					openInviteModal(false);

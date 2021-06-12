@@ -37,6 +37,17 @@ function saveToClipboard (text) {
 	}
 }
 
+function getOffsetPage (el) {
+    var x = 0;
+    var y = 0;
+    while( el && !isNaN( el.offsetLeft ) && !isNaN( el.offsetTop ) ) {
+		x += el.offsetLeft - el.scrollLeft;
+		y += el.offsetTop - el.scrollTop;
+		el = el.offsetParent;
+    }
+    return { top: y, left: x };
+}
+
 
 // DOM
 var gobletsContainer = document.getElementById('goblets-container');
@@ -328,7 +339,7 @@ function changeSetting(type, element) {
 			} case 'shuffle-speed': {
 				// Validate value
 				value = limitNum(
-					parseInt(value),
+					parseFloat(value),
 					GAME_CONSTANTS.minShuffleSpeed,
 					GAME_CONSTANTS.maxShuffleSpeed
 				);
@@ -434,7 +445,6 @@ function changeSetting(type, element) {
 					scoreToReach: value
 				};
 				// Memorize settings
-				localStorage['game-mode'] = GAME_MODE.REACH_SCORE;
 				localStorage['score-to-reach'] = value;
 				break;
 			} case 'countdown': {
@@ -460,7 +470,6 @@ function changeSetting(type, element) {
 				initialTime = countdown;
 
 				// Memorize settings
-				localStorage['game-mode'] = GAME_MODE.COUNTDOWN;
 				localStorage['countdown'] = countdown;
 
 				// Update user interface
@@ -555,6 +564,9 @@ function succeed (targetGoblets) {
 				settings.gameMode.mode === GAME_MODE.REACH_SCORE &&
 				score >= settings.gameMode.scoreToReach
 			) {
+				// Limit score
+				score = settings.gameMode.scoreToReach;
+				// End this game
 				endGame();
 			} else {
 				// Go to next turn
@@ -690,7 +702,7 @@ function startNewTurn () {
 
 function onPlay () {
 	if (typeof MULTIPLAYER !== undefined) {
-		if (MULTIPLAYER === false) {
+		if (/*MULTIPLAYER === false*/true) {
 			// Solo mode
 			clearTimers();
 			if (isInGame) {
@@ -698,10 +710,11 @@ function onPlay () {
 				isInGame = false;
 				canPickGoblet = false;
 				enableOptions(true);
-				playBTN.innerHTML = '<span>Start</span>';
 				turnDownGoblets(false);
 				setGoblets(settings.goblets);
 				resetBall();
+				playBTN.innerHTML = '<span>Start</span>';
+
 				// Reset game stats
 				score = 0;
 				scoreOutput.textContent = 0;
@@ -710,21 +723,36 @@ function onPlay () {
 				gameTime = 0;
 				window.clearInterval(gameTimeInterval);
 				gameTimeInterval = null;
+
 				// Reset goblets translation speed
 				Array.from(goblets).forEach(function (goblet) {
 					goblet.style.transition = '.3s all ease';
 					goblet.classList.remove('pickable');
 				});
+				
 				// Reset countdown
 				startCountDown(false);
 			} else {
 				// New game
 				isInGame = true;
 				enableOptions(false);
-				playBTN.innerHTML = '<span>Give up</span>';
 				startCountDown(true);
 				startNewTurn();
+				playBTN.innerHTML = '<span>Give up</span>';
 
+				// Scroll to goblets container
+				if (gobletsContainer) {
+					var top = getOffsetPage(gobletsContainer).top;
+					var margin = 17;
+					top -= margin * 14;
+					window.scroll({
+						top,
+						left: 0,
+						behavior: 'smooth'
+					});
+				}
+
+				// Measure game time
 				if (settings.gameMode.mode === GAME_MODE.REACH_SCORE) {
 					gameTimeInterval = window.setInterval(function () {
 						gameTime++;

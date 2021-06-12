@@ -18,6 +18,7 @@
 	}
 
 	// Time
+	// Countdown game mode
 	let initialTime = GAME_CONSTANTS.defaultCountdown;
 	if (room.settings.gameMode.mode === GAME_MODE.COUNTDOWN) {
 		initialTime = room.settings.gameMode.countdown;
@@ -28,6 +29,13 @@
 		initialTime =- diff;
 	}
 	const initialTimeStr = utils.secondsToTimeStr(initialTime);
+
+	// Countdown before game start
+	let initialGameStartCountdown = GAME_START_COUNTDOWN; // Timespan 
+	if (room.gameStartCountdown !== null) { // If admin triggered game start
+		let diff = Date.now() - gameStartCountdown;
+		initialGameStartCountdown -= diff;
+	}
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -45,13 +53,21 @@
 			const GAME_CONSTANTS = <%- JSON.stringify(GAME_CONSTANTS) %>;
 			const GAME_MODE = <%- JSON.stringify(GAME_MODE) %>;
 			const MULTIPLAYER = true;
+			const GAME_START_COUNTDOWN = <%= GAME_START_COUNTDOWN %>;
 
 			// Game variables
 			let isAdmin = <%= isAdmin %>;
+			let isPlaying = <%= room.isPlaying %>;
 			let settings = <%- JSON.stringify(room.settings) %>;
+			let gameStartTime = <%= JSON.stringify(room.gameStart) %>;
+			let gameStartCountdownTime = <%= JSON.stringify(room.gameStartCountdown) %>;
+			let gameStartCountdown = <%= initialGameStartCountdown %>;
 
 			// Initial players
 			let players = <%- JSON.stringify(room.players); %>
+			let participants = <%- JSON.stringify(participants); %>
+			let lurkers = <%- JSON.stringify(lurkers); %>
+
 			// Initial time
 			let initialTime = <%- initialTime %>;
 
@@ -83,12 +99,55 @@
 			</header>
 			<main class="app-body">
 				<div class="game">
-					<section id="goblets-container">
-						<div class="goblet" data-offset-x="0" data-offset-y="0"></div>
-						<div class="goblet" data-offset-x="0" data-offset-y="0"></div>
-						<div class="goblet" data-offset-x="0" data-offset-y="0"></div>
-						<div class="goblet" data-offset-x="0" data-offset-y="0"></div>
-						<div class="ball init" id="ball"></div>
+					<section class="goblets-section">
+						<div id="goblets-container">
+							<div class="goblet" data-offset-x="0" data-offset-y="0"></div>
+							<div class="goblet" data-offset-x="0" data-offset-y="0"></div>
+							<div class="goblet" data-offset-x="0" data-offset-y="0"></div>
+							<div class="goblet" data-offset-x="0" data-offset-y="0"></div>
+							<div class="ball init" id="ball"></div>
+						</div>
+						<% if ( !room.isPlaying ) { %>
+							<div class="get-ready-section" id="get-ready-section">
+								<section class="join-game-section">
+									<button class="btn btn-primary join" id="join-game-btn" onclick="participate(true);">
+										Join
+									</button>
+								</section>
+								<% if ( isAdmin ) { %>
+									<div class="hr" style="background: #FFFA;"></div>
+									<section class="start-game-section">
+										<% if ( participants.length > 2 ) { %>
+											<p>
+												Once the game starts you won't be able to join it or modify the settings until it's finished !
+											</p>
+											<button
+												class="btn btn-success start-game"
+												onclick="triggerGameStartCountdown();"
+												id="start-multiplayer-game-btn"
+											>
+												Start game
+											</button>
+										<% } else { %>
+											<p>
+												You can start game as soon as enough players have joined !
+											</p>
+										<% } %>
+									</section>
+								<% } %>
+								<div class="hr" style="background: #FFFA;"></div>
+								<p
+									class="<%= room.gameStartCountdown === null ? 'hidden' : '' %>"
+									id="countdown-before-game"
+								>
+									<%= initialGameStartCountdown %>
+								</p>
+							</div>
+						<% } else { %>
+							<div class="get-ready-section">
+								<p>This room is playing right now; you will be able to join when they create a new game.</p>
+							</div>
+						<% } %>
 					</section>
 					<section class="options-section">
 						<nav class="game-options">
@@ -263,11 +322,6 @@
 									</section>
 								</main>
 							<% } %>
-							<footer>
-								<button onclick="onPlay();" id="playBTN">
-									<span>Start</span>
-								</button>
-							</footer>
 						</nav>
 					</section>
 					<section id="players-section" style="font-size: 1rem">
@@ -286,7 +340,7 @@
 										const player = lurkers[i];
 										const adminClass = player.role === PLAYER_ROLE.ADMIN ? 'admin' : '';
 								%>
-										<li class="player lurker <%= adminClass %>" id="player_<%= player.socketID %>">
+										<li class="other player lurker <%= adminClass %>" id="player_<%= player.socketID %>">
 											<h4 class="player-name" 
 											id="player_<%= player.name %>_name" title="<%= player.name %> <%= adminClass.toUpperCase() %>">
 												<%= player.name %>
@@ -312,23 +366,20 @@
 										const player = participants[i];
 										const adminClass = player.role === PLAYER_ROLE.ADMIN ? 'admin' : '';
 								%>
-										<li class="player participant <%= adminClass %>" id="player_<%= player.socketID %>">
+										<li class="other player participant <%= adminClass %>" id="player_<%= player.socketID %>">
 											<h4 class="player-name" 
 											id="player_<%= player.name %>_name" title="<%= player.name %> <%= adminClass.toUpperCase() %>">
 												<%= player.name %>
 											</h4>
-											<% if (room.isPlaying) { %>
-												<strong class="player-score"><%= player.score %></strong>
-											<% } else if (room.settings.gameMode.mode === GAME_MODE.REACH_SCORE) { %>
-												<strong class="player-score">
-													<span class="player-current-score">
-														<%= player.score %>
-													</span>
-													<span class="player-score-to-reach">
-														/<%= room.settings.gameMode.scoreToReach %>
-													</span>
-												</strong>
+											<% if (room.settings.gameMode.mode === GAME_MODE.REACH_SCORE) { 
+												// Display current score / score to reach
+												const percentage = player.score/room.settings.gameMode.scoreToReach * 100;
+											%>
+												<div class="percentage-bar">
+													<div style="width: <%= percentage %>%;"></div>
+												</div>
 											<% } %>
+											<strong class="player-score"><%= player.score %></strong>
 										</li>
 								<%
 									}
@@ -337,7 +388,7 @@
 						</div>
 					</section>
 				</div>
-				<article id="game-info-message">
+				<article id="alert alert-info game-info-message">
 					<% if (isAdmin) { %>
 						<% if (!room.isPlaying) { %>
 							<p>Invite your friends by sending them this link:</p>

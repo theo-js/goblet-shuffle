@@ -1,8 +1,10 @@
 .options-section > .invite {
+	position: relative;
 	margin-top: 1rem;
+	height: 26px
 }
 .options-section > .invite > button {
-	float: right;
+	position: absolute; top: 0; right: 0;
 	border: none; border-radius: 999px;
 	color: var(--black); background-color: transparent;
 	font-weight: 700;

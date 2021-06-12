@@ -6,7 +6,8 @@ const {
     GAME_CONSTANTS,
     GAME_MODE,
     PLAYER_ROLE,
-    ROOM_ID_LENGTH
+    ROOM_ID_LENGTH,
+	GAME_START_COUNTDOWN
 } = require('../constants');
 
 const { secondsToTime, timeToStr, secondsToTimeStr } = require('../utils/date');
@@ -40,6 +41,7 @@ router.get('/:roomID', (req, res) => {
 				PLAYER_ROLE,
 				GAME_MODE,
 				GAME_CONSTANTS,
+				GAME_START_COUNTDOWN,
 				utils: {
 					...gameUtils,
 					sanitizeStr

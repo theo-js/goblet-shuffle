@@ -13,34 +13,36 @@ global.rooms = [
 		id: 'abcdefghij',
 		name: 'My customized room name',
 		isPlaying: false,
+		gameStart: null,
+		gameStartCountdown: null,
 		admin: {
 			ip: '6262524532',
-			name: 'Dyno Saur',
+			name: 'David',
 		},
 		players: [
 		 	{
 		 		socketID: 'ortqb',
 		 		uid: 'ytrfit6hy',
 				ip: '6262524532',
-				name: 'Dyno Saur',
+				name: 'David',
 				role: PLAYER_ROLE.ADMIN,
 				participates: true,
-				score: 250
+				score: 0
 			},
 			{
 				socketID: 'ytf!yt',
 				uid: 'ytrfit6hy',
 				ip: '6232',
-				name: 'Mr Caca',
+				name: 'Peter',
 				role: PLAYER_ROLE.BASIC,
 				participates: true,
-				score: 108
+				score: 0
 			},
 			{
 				socketID: 'ujyg',
 				uid: 'xsutgytg',
 				ip: '765685',
-				name: 'Lolilol',
+				name: 'Luke',
 				role: PLAYER_ROLE.BASIC,
 				participates: false,
 				score: 0
@@ -49,19 +51,19 @@ global.rooms = [
 				socketID: 'pokgoij',
 				uid: 'regdgtg',
 				ip: '099.89.9090',
-				name: 'Pet de veau',
+				name: 'Patrick',
 				role: PLAYER_ROLE.BASIC,
 				participates: true,
-				score: 827
+				score: 0
 			},
 			{
 				socketID: 'zerferdthfujkuh',
 				uid: 'ghjgtfyhtgf',
 				ip: '8.6788.40',
-				name: 'Gros baraqui',
+				name: 'Gabby',
 				role: PLAYER_ROLE.BASIC,
 				participates: false,
-				score: 274
+				score: 0
 			}
 		],
 		settings: {
@@ -70,7 +72,7 @@ global.rooms = [
 			shuffleSpeed: .4,
 			gameMode: {
 				mode: GAME_MODE.REACH_SCORE,
-				scoreToReach: 6500
+				scoreToReach: 1000
 			}
 		}
 	}
@@ -203,14 +205,22 @@ multiplayerRouter.post('/create-room', (req, res) => {
 		}
 
 		// Add new room
-		room.isPlaying = false;
-		room.admin.ip = ip;
-		room.admin.name = adminName;
-		room.name = roomName;
-		room.admin.role = PLAYER_ROLE.ADMIN;
-		room.players = [];
-		room.settings = settings;
-		global.rooms.push(room);
+		const createdRoom = {
+			...room,
+			name: roomName,
+			isPlaying: false,
+			gameStart: null,
+			gameStartCountdown: null,
+			settings,
+			admin: {
+				...room.admin,
+				ip,
+				name: adminName,
+				role: PLAYER_ROLE.ADMIN
+			},
+			players: []
+		};
+		global.rooms.push(createdRoom);
 		return res.status(200).json({ success: true, msg: '' });
 
 	} catch (err) {

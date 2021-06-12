@@ -3,7 +3,7 @@ const {
 	getRoomIndex,
 	filterPlayer
 } = require('./api/routes/multiplayer');
-const { PLAYER_ROLE } = require('./constants');
+const { PLAYER_ROLE, GAME_START_COUNTDOWN } = require('./constants');
 const { randomInt } = require('./utils/math');
 const { validateStr } = require('./utils/validate');
 
@@ -43,7 +43,8 @@ module.exports = server => {
 						uid,
 						ip: socket.handshake.address,
 						socketID: socket.id,
-						participates: false
+						participates: false,
+						score: 0
 					};
 
 					// Check if player is admin
@@ -101,21 +102,25 @@ module.exports = server => {
 				roomIndex => {
 					const room = global.rooms[roomIndex];
 					// There needs to be at least 2 players
-					if (room.players.length > 2) return false;
+					//if (room.players.length < 2) return false;
 					// Only admin can start games
 					if (room && room.admin.ip === socket.handshake.address) {
 						// Start countdown
-						const ms = 10000;
-						io.to(roomID).emit('game start countdown', ms);
+						const ms = GAME_START_COUNTDOWN * 1000;
+						io.to(roomID).emit('game start countdown');
+						global.rooms[roomIndex].gameStartCountdown = Date.now();
 
 						gameStartTimer[roomID] = setTimeout(() => {
 							try {
 								global.rooms[roomIndex].isPlaying = true;
+								global.rooms[roomIndex].gameStartCountdown = null;
 								global.rooms[roomIndex].gameStart = Date.now();
 								io.to(roomID).emit('game start');
 							} catch {
 								clearTimeout(gameStartTimer[roomID]);
 								io.to(roomID).emit('abort game start');
+								global.rooms[roomIndex].gameStart = null;
+								global.rooms[roomIndex].gameStartCountdown = null;
 							}
 						}, ms);
 					} // else You don't have the permission to start a game in this room
@@ -131,8 +136,13 @@ module.exports = server => {
 					const room = global.rooms[roomIndex];
 					// Only admin can abort game start
 					if (room && room.admin.ip === socket.handshake.address) {
+						// Stop timer
 						clearTimeout(gameStartTimer[roomID]);
-						socket.to(roomID).emit('abort game start');
+						// Notify players
+						io.to(roomID).emit('abort game start');
+						// Change room data
+						global.rooms[roomIndex].gameStart = null;
+						global.rooms[roomIndex].gameStartCountdown = null;
 					} // else You don't have the permission to abort a game in this room
 				},
 				() => false 

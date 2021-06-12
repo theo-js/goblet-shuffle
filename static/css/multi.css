@@ -9,6 +9,7 @@
 /* Players */
 #players-section {
 	grid-area: players;
+	z-index: 1;
 }
 #players-section .player-list-name {
 	display: flex; align-items: center;
@@ -35,38 +36,63 @@
 }
 .players-list {
 	list-style: none; padding: .5em; margin: 0;
-	min-height: 35px;
 	display: flex; flex-direction: column; gap: .5rem;
 	overflow: auto;
 }
 #participants-list {
-}
-.lurkers-section {
+	min-height: 67px;
 }
 #lurkers-list {
+	min-height: 35px;
 }
-.player:nth-child(odd) * {
+
+.player {
+	-webkit-transition: .3s all ease;
+	-moz-transition: .3s all ease;
+	transition: .3s all ease;
+}
+.player:nth-child(odd) {
 	color: var(--violet);
+	background: var(--violet);
+	outline-color: var(--violet);
 }
-.player:nth-child(even) * {
+.player:nth-child(odd) .percentage-bar > div {
+	background-color: var(--violet);
+}
+.player:nth-child(even) {
 	color: var(--purple);
+	background: var(--purple);
+	outline-color: var(--purple);
+}
+.player:nth-child(even) .percentage-bar > div {
+	background-color: var(--purple);
 }
 .player .player-name {
 	font-size: 1rem; margin: 0;
 	white-space: nowrap;
 	max-width: 10em; overflow: hidden; text-overflow: ellipsis;
 }
+
 .player.me {
-	display: inline-flex;
-	height: 19px;
-	color: red;
+	display: flex;
+	flex-direction: column;
+	max-width: 5rem;
+	border-radius: .25rem;
+}
+.player.me * {
+	color: white;
+}
+.player.other {
+	background: transparent !important;
 }
 .player input.player-name {
 	height: inherit;
+	color: white;
 	background-color: transparent;
 	border: none; border-radius: 1px;
-	padding: 0;
+	padding: 0 .25em;
 	max-width: 100px;
+	height: 19px;
 	text-decoration: underline;
 	cursor: pointer;
 }
@@ -78,6 +104,7 @@
 }
 .player input.player-name:focus {
 	background-color: white;
+	color: inherit;
 }
 .player.admin {
 	order: -1; /* admin comes after me, at least as long as the game is not playing */
@@ -92,30 +119,103 @@
 .player .player-score {
 	display: block; text-align: center;
 }
-.player .player-current-score {
-	opacity: .75;
+.player .percentage-bar {
+	/* Display current score / score to reach */
+	position: relative; margin: auto;
+	height: .5rem; width: 4rem;
+	background-color: transparent;
+	/*border: 1px solid var(--black);*/ border-radius: 99px;
+}
+.player .percentage-bar > div {
+	position: absolute;
+	top: 0; bottom: 0; left: 0;
+	border-radius: inherit;
+	
+	-webkit-transition: .3s ease-out all;
+	-moz-transition: .3s ease-out all;
+	transition: .3s ease-out all;
 }
 
 
-@media screen and ( min-width: 601px ) {
+.get-ready-section {
+	position: absolute;
+	top: 0; left: 0; 
+	height: 100%; width: 100%; max-width: calc(100vw - 3rem);
+	z-index: 5;
+	padding: 1rem;
+	background: #222D; color: #FFFA;
+	font-size: 1rem;
+	display: flex; justify-content: center; align-items: center;
+	flex-direction: column;
+
+	-moz-box-shadow: 0 0 0 .125rem rgb(238, 102, 187), 0 0 0 .25rem #222, 0 .25rem .25rem .25rem #2225;
+	-webkit-box-shadow: 0 0 0 .125rem rgb(238, 102, 187), 0 0 0 .25rem #222, 0 .25rem .25rem .25rem #2225;
+	box-shadow: var(--purple-box-border);
+
+	-webkit-transition: 1s all ease;
+	-moz-transition: 1s all ease;
+	transition: 1s all ease;
+}
+.get-ready-section.hidden {
+	user-select: none;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.get-ready-section p {
+	margin: 0;
+}
+
+.get-ready-section .start-game-section {
+	text-align: center;
+}
+
+.get-ready-section #countdown-before-game {
+	font-size: 2.5rem; font-weight: 700;
+	margin-bottom: 0; margin-top: 1rem;
+	letter-spacing: 2px;
+	opacity: .5;
+
+	-webkit-transition: opacity .3s ease;
+	-moz-transition: opacity .3s ease;
+	transition: opacity .3s ease;
+}
+.get-ready-section #countdown-before-game.hidden {
+	opacity: 0;
+	-webkit-transition: none;
+	-moz-transition: none;
+	transition: none;
+}
+
+.get-ready-section .start-game {
+	margin: 1rem;
+}
+
+
+@media screen and ( min-width: 651px ) {
 	#players-section {
 		display: flex; flex-direction: row-reverse;
-		margin-top: 2rem;
 	}
 
-	.players-list {
+	#participants-list,
+	#lurkers-list {
 		min-height: calc(100% - 43px);
 		padding-top: 0; margin-top: .5rem;
 	}
+
 	#players-section .player-list-name {
 		justify-content: center;
 	}
 	#lurkers-list {
 		border-left: .5px solid #2222;
 	}
+
+	.player .percentage-bar {
+		width: 100%;
+	}
 }
 
-@media screen and ( max-width: 600px ) {
+@media screen and ( max-width: 650px ) {
 	.game {
 		display: -ms-grid;
 		-ms-grid-columns: 1fr;
@@ -132,6 +232,10 @@
 		flex-direction: row; align-items: center;
 		padding-left: 0; padding-right: 0;
 	}
+
+	.player-name {
+		text-align: center;
+	} 
 }
 
 @media screen and ( max-width: 500px ) {
