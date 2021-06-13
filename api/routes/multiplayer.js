@@ -27,7 +27,7 @@ global.rooms = [
 				name: 'David',
 				role: PLAYER_ROLE.ADMIN,
 				participates: true,
-				score: 0
+				score: 250
 			},
 			{
 				socketID: 'ytf!yt',
@@ -36,7 +36,7 @@ global.rooms = [
 				name: 'Peter',
 				role: PLAYER_ROLE.BASIC,
 				participates: true,
-				score: 0
+				score: 800
 			},
 			{
 				socketID: 'ujyg',
@@ -67,7 +67,7 @@ global.rooms = [
 			}
 		],
 		settings: {
-			goblets: 5,
+			goblets: 10,
 			shuffleCount: 7,
 			shuffleSpeed: .4,
 			gameMode: {

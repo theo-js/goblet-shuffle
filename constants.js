@@ -15,12 +15,14 @@ const GAME_CONSTANTS = {
 	maxScoreToReach: 999999,
 	minCountdown: 5, // seconds
 	defaultCountdown: 30, // seconds
-	maxCountdown:  30*60 // seconds
+	maxCountdown:  30*60, // seconds
+	maxScoreLoss: -1500,
+	maxScoreGain: 1500
 };
 
 const GAME_MODE = {
-	REACH_SCORE: 'REACH_SCORE',
-	COUNTDOWN: 'COUNTDOWN'
+	REACH_SCORE: 'REACH_SCORE', // Goal is to reach a chosen score (before others in multiplayer)
+	COUNTDOWN: 'COUNTDOWN' // Goal is to have the highest score after a chosen time span
 };
 
 const PLAYER_ROLE = {

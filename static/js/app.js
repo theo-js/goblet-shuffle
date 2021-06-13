@@ -108,7 +108,7 @@ var countdownInterval = null;
 
 // Goblet related functions
 function setGoblets (number) {
-	if (!isInGame && isAdmin) {
+	if (!isInGame) {
 		var n = number;
 		if (!isValidNum(
 			n,
@@ -514,7 +514,14 @@ function startCountDown (boolean) {
 			countdownTimer = window.setTimeout(function () {
 				// Countdown is over
 				stopCountdown();
-				endGame()
+				if (!MULTIPLAYER) {
+					/*
+						Call end game in SOLO mode
+						(in multiplayer mode, timer is handled
+						by the server and sends victory event)
+					*/
+					endGame();
+				}
 			}, initialTime * 1000);
 
 			// Start interval
@@ -542,6 +549,14 @@ function succeed (targetGoblets) {
 			var scoreGain = Math.round(scoreGainDefault * gainCoeff);
 			score += scoreGain;
 			scoreOutput.textContent = score;
+
+			// Notify other players (multiplayer)
+			if (MULTIPLAYER && socket) {
+				socket.emit('player change', {
+					type: 'score',
+					payload: score
+				});
+			}
 
 			// Reveal ball
 			var ball = document.getElementById('ball');
@@ -596,6 +611,14 @@ function fail (goblets) {
 				score = 0;
 			}
 			scoreOutput.textContent = score;
+
+			// Notify other players (multiplayer)
+			if (MULTIPLAYER && socket) {
+				socket.emit('player change', {
+					type: 'score',
+					payload: score
+				});
+			}
 
 			// Fade goblets
 			goblets.forEach(function (goblet) {
@@ -713,7 +736,9 @@ function onPlay () {
 				turnDownGoblets(false);
 				setGoblets(settings.goblets);
 				resetBall();
-				playBTN.innerHTML = '<span>Start</span>';
+				if (playBTN) {
+					playBTN.innerHTML = '<span>Start</span>';
+				}
 
 				// Reset game stats
 				score = 0;
@@ -738,7 +763,9 @@ function onPlay () {
 				enableOptions(false);
 				startCountDown(true);
 				startNewTurn();
-				playBTN.innerHTML = '<span>Give up</span>';
+				if (playBTN) {
+					playBTN.innerHTML = '<span>Give up</span>';
+				}
 
 				// Scroll to goblets container
 				if (gobletsContainer) {
@@ -765,25 +792,49 @@ function onPlay () {
 	}
 }
 
-function endGame () {
-	switch (settings.gameMode.mode) {
-		case GAME_MODE.REACH_SCORE: {
-			var timeStr = secondsToTimeStr(gameTime);
-			var msg = 'Finish !\nIt took you ' + timeStr.m + '\'' + timeStr.s + 
-			'\'\' to reach ' + settings.gameMode.scoreToReach + 'pts' +
-			'\nSuccesses: ' + successes + '\nFails: ' + fails;
-			alert(msg);
-			break;
-		} case GAME_MODE.COUNTDOWN: {
-			var timeStr = secondsToTimeStr(settings.gameMode.countdown);
-			var msg = 'Finish !\nIn ' + timeStr.m + '\'' + timeStr.s + '\'\'' +
-			' you\'ve managed to earn ' + score + 'pts' +
-			'\nSuccesses: ' + successes + '\nFails: ' + fails;
-			alert(msg);
-			break;
-		} default: return;
-	}
+function endGame (winner) {
 	onPlay()
+	if (!MULTIPLAYER) {
+		// SOLO
+		switch (settings.gameMode.mode) {
+			case GAME_MODE.REACH_SCORE: {
+				// REACH_SCORE
+				var timeStr = secondsToTimeStr(gameTime);
+				var msg = 'Finish !\nIt took you ' + timeStr.m + '\'' + timeStr.s + 
+				'\'\' to reach ' + settings.gameMode.scoreToReach + 'pts' +
+				'\nSuccesses: ' + successes + '\nFails: ' + fails;
+				alert(msg);
+				break;
+			} case GAME_MODE.COUNTDOWN: {
+				// COUNTDOWN
+				var timeStr = secondsToTimeStr(settings.gameMode.countdown);
+				var msg = 'Finish !\nIn ' + timeStr.m + '\'' + timeStr.s + '\'\'' +
+				' you\'ve managed to earn ' + score + 'pts' +
+				'\nSuccesses: ' + successes + '\nFails: ' + fails;
+				alert(msg);
+				break;
+			} default: return;
+		}
+	} else {
+		// MULTIPLAYER
+		// Called after receiving 'victory' websocket event
+		if (winner) {
+			switch (settings.gameMode.mode) {
+				case GAME_MODE.REACH_SCORE: {
+					var timeStr = secondsToTimeStr(gameTime);
+					var msg = winner.name + ' has won ! He reached ' + settings.gameMode.scoreToReach +
+					' in ' + timeStr.m + '\'' + timeStr.s + '\'\'';
+					alert(msg);
+					break;
+				} case GAME_MODE.COUNTDOWN: {
+					var timeStr = secondsToTimeStr(settings.gameMode.countdown);
+					var msg = winner.name + ' has won with ' + winner.score + 'pts !';
+					alert(msg);
+					break;
+				} default: return;
+			}
+		}
+	}
 }
 
 // Initialize game
@@ -814,7 +865,6 @@ function endGame () {
 		)) {
 			settings.goblets = lsCurrentGoblets;
 			gobletsNumSelector.value = lsCurrentGoblets;
-			setGoblets(lsCurrentGoblets);
 		}
 		// Shuffle count
 		var lsShuffleCount = parseInt(localStorage['shuffleCount']);
@@ -877,8 +927,11 @@ function endGame () {
 		}
 	}
 
+	// Set initial goblets
+	setGoblets(lsCurrentGoblets || settings.goblets);
+
 	// Attach event handlers
 	Array.from(goblets).forEach(function (goblet) {
 		goblet.onclick = pickGoblet;
 	});
-})()
+})();

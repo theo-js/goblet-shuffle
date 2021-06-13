@@ -9,19 +9,28 @@ var countdownBfGame = document.getElementById('countdown-before-game');
 var gameStartTimer = null;
 var gameStartInterval = null;
 function resetGameStartCountdown () {
+	// Reset timeout & interval
 	window.clearInterval(gameStartInterval);
 	gameStartInterval = null;
 	window.clearTimeout(gameStartTimer);
 	gameStartTimer = null;
+	// Hide timer
 	gameStartCountdown = GAME_START_COUNTDOWN;
 	countdownBfGame.textContent = GAME_START_COUNTDOWN;
 	countdownBfGame.classList.add('hidden');
+	// Reset game start button
+	if (startMultiPlayerGameBtn) {
+		startMultiPlayerGameBtn.textContent = 'Start game';
+		startMultiPlayerGameBtn.className = 'btn btn-success start-game';
+		startMultiPlayerGameBtn.onclick = triggerGameStartCountdown;
+	}
 }
 
-function createPercentageBar (score, scoreToReach) {
+function createPercentageBar (score, scoreToReach, socketID) {
 	var percentageBar = document.createElement('div');
 	percentageBar.className = 'percentage-bar';
 	var content = document.createElement('div');
+	content.setAttribute('id', 'player_' + socketID + '_percentage');
 	var percentage = (score / scoreToReach) * 100;
 	content.style.width = percentage + '%';
 	percentageBar.appendChild(content);
@@ -35,7 +44,7 @@ function addPlayer (player, ul, addClasses) {
 		return false;
 	}
 
-	// Add player to lists in state
+	// Mutate state
 	players.push(player);
 	if (ul == participantsUL) {
 		participants.push(player);
@@ -95,7 +104,7 @@ function addPlayer (player, ul, addClasses) {
 		playerName = document.createElement('h4');
 		playerName.textContent = player.name;
 	}
-	playerName.setAttribute('id', 'player_' + player.socketID + '_name');
+	playerName.setAttribute('id', idAttribute + '_name');
 	li.appendChild(playerName);
 
 	// Set ID attribute on li (socketID)
@@ -109,12 +118,14 @@ function addPlayer (player, ul, addClasses) {
 			// Append percentage bar to li
 			var percentageBar = createPercentageBar(
 				player.score,
-				settings.gameMode.scoreToReach
+				settings.gameMode.scoreToReach,
+				player.socketID
 			);
 			li.appendChild(percentageBar);
 		}
 		// Append score to li
 		var scoreStr = document.createElement('strong');
+		scoreStr.setAttribute('id', idAttribute + '_score');
 		scoreStr.className = 'player-score';
 		scoreStr.textContent = player.score;
 		li.appendChild(scoreStr);
@@ -152,7 +163,7 @@ function removePlayer (socketID) {
 				title.textContent = replaced;
 				title.setAttribute('title', replaced);
 			}
-			// Remove player from lists in state
+			// Mutate state
 			players = players.filter(function (player) {
 				return player.socketID !== socketID;
 			});
@@ -168,11 +179,13 @@ function removePlayer (socketID) {
 		}
 	}
 
-	// Check if there are enough participants for a game during gamestart countdown
+	/*// Check if there are enough participants for a game during gamestart countdown
 	if ( gameStartTimer !== null && participants.length < 2 ) {
 		// Stop countdown and reset counter
-		resetGameStartCountdown();
-	}
+		if (isAdmin) {
+			socket.emit('abort game start');
+		}
+	}*/
 }
 
 function participate (boolean) {
@@ -188,7 +201,7 @@ function participate (boolean) {
 function triggerGameStartCountdown () {
 	if (
 		gameStartTimer === null && gameStartInterval === null
-		&& !isPlaying && participants.length > 1
+		//&& !isPlaying && participants.length > 1
 	) {
 		socket.emit('start game');
 	}
@@ -211,11 +224,76 @@ window.addEventListener('load', function () {
 
 	// Player was renamed
 	socket.on('player renamed', function (id, name) {
+		// DOM
 		var playerTitle = document.getElementById('player_' + id + '_name');
 		if (playerTitle) {
 			playerTitle.textContent = name;
 			playerTitle.title = name;
 		}
+		// Mutate state
+		// Change name in players list
+		players = players.map(function (player) {
+			if (player.socketID === id) {
+				return { ...player, socketID: id };
+			}
+			return player
+		});
+		// Change name in participants list
+		participants = participants.map(function (player) {
+			if (player.socketID === id) {
+				return { ...player, socketID: id };
+			}
+			return player
+		});
+		// Change name in lurkers list
+		lurkers = lurkers.map(function (player) {
+			if (player.socketID === id) {
+				return { ...player, socketID: id };
+			}
+			return player
+		});
+	});
+
+	// Player's score was modified
+	socket.on('updated score', function (id, newScore) {
+		// Looking for player score to update in DOM
+		var playerScore = document.getElementById('player_' + id + '_score');
+		if (playerScore) {
+			playerScore.textContent = newScore;
+		}
+
+		if (settings.gameMode.mode === GAME_MODE.REACH_SCORE) {
+			// Looking for player percentage bar in DOM
+			var playerPercentage = document.getElementById('player_' + id + '_percentage');
+			if (playerPercentage) {
+				var percentage = newScore / settings.gameMode.scoreToReach * 100;
+				playerPercentage.style.width = percentage + '%';
+			}
+		}
+
+		// Update state
+		players = players.map(function (player) {
+			if (player.socketID === id) {
+				return { ...player, score: newScore };
+			}
+			return player;
+		});
+		participants = participants.map(function (player) {
+			if (player.socketID === id) {
+				return { ...player, score: newScore };
+			}
+			return player;
+		});
+
+		// Sort participants by score
+		participants.sort(function (a, b) {
+			return b.score - a.score;
+		});
+		participants.forEach(function (player, index, array) {
+			// Get corresponding li DOM element
+			var li = document.getElementById('player_' + player.socketID);
+			li.style.order = index - array.length - 1;
+		});
 	});
 
 	// Player was accepted as a participant
@@ -235,16 +313,24 @@ window.addEventListener('load', function () {
 
 	// Player gave up
 	socket.on('gave up', function (player) {
+		// Remove player from list of participants and add to list of lurkers
 		removePlayer(player.socketID);
 		addPlayer(player, lurkersUL);
-		// Change button
-		var joinGameBtn = document.getElementById('join-game-btn');
-		if (joinGameBtn) {
-			joinGameBtn.textContent = 'Join';
-			joinGameBtn.className = 'btn btn-primary join';
-			joinGameBtn.onclick = function () {
-				participate(true);
-			};
+
+		if (!isPlaying) {
+			// Game has not started
+			// Change button
+			var joinGameBtn = document.getElementById('join-game-btn');
+			if (joinGameBtn) {
+				joinGameBtn.textContent = 'Join';
+				joinGameBtn.className = 'btn btn-primary join';
+				joinGameBtn.onclick = function () {
+					participate(true);
+				};
+			}
+		} else {
+			// Game has started
+			getReadySection.classList.remove('hidden');
 		}
 	});
 
@@ -274,30 +360,63 @@ window.addEventListener('load', function () {
 	});
 
 	// Admin cancelled game start during countdown
-	socket.on('abort game start', function () {
-		resetGameStartCountdown();
-		startMultiPlayerGameBtn.onclick = triggerGameStartCountdown;
-		startMultiPlayerGameBtn.className = 'btn btn-success start-game';
-		startMultiPlayerGameBtn.textContent = 'Start game';
-	});
+	socket.on('abort game start', resetGameStartCountdown);
 
 	// Game started
 	socket.on('game start', function () {
 		console.log('Game started')
-		var amParticipating = participants.find(function (participant) {
-			return participant.socketID === socket.id;
+		//if ( participants.length > 1 ) {
+			var amParticipating = participants.find(function (participant) {
+				return participant.socketID === socket.id;
+			});
+			if ( !!amParticipating ) {
+				// I am participating
+				isPlaying = true;
+				getReadySection.classList.add('hidden');
+				onPlay();
+			} else {
+				// I'm not participating
+			}
+		//}
+	});
+
+	socket.on('victory', function (socketID) {
+		const player = participants.find(function (thisPlayer) {
+			return thisPlayer.socketID === socketID;
 		});
-		if (!!amParticipating) {
-			// I am participating
-			isPlaying = true;
-			getReadySection.classList.add('hidden');
-			onPlay();
-		} else {
-			// I'm not participating
+		if (!!player) {
+			// End game
+			endGame(player);
+
+			// Reset game variables
+			isPlaying = false;
+			
+			// Show 'get-ready' section
+			getReadySection.classList.remove('hidden');
+				// Change join btn
+				var joinGameBtn = document.getElementById('join-game-btn');
+				if (joinGameBtn) {
+					joinGameBtn.textContent = 'Join game';
+					joinGameBtn.className = 'btn btn-success join-game';
+					joinGameBtn.onclick = function () {
+						participate(true);
+					};
+				}
+
+			// Do something for each participant
+			participants.forEach(function (player) {
+				// Reset everybody's score
+				player.score = 0;
+
+				// Add all participants to list of lurkers
+				removePlayer(player.socketID);
+				addPlayer(player, lurkersUL);
+			});
 		}
 	});
 
 	// User receives an error
-	socket.on('error', function (error) {
+	socket.on('error', function (err) {
+		console.log(err.msg);
 	});
 }, false);

@@ -16,6 +16,10 @@
 			player.participates ? participants.push(player) : lurkers.push(player);
 		});
 	}
+	// Sort participants by score
+	if (participants.length > 1) {
+		participants.sort((a, b) => b.score - a.score);
+	}
 
 	// Time
 	// Countdown game mode
@@ -366,9 +370,16 @@
 										const player = participants[i];
 										const adminClass = player.role === PLAYER_ROLE.ADMIN ? 'admin' : '';
 								%>
-										<li class="other player participant <%= adminClass %>" id="player_<%= player.socketID %>">
-											<h4 class="player-name" 
-											id="player_<%= player.name %>_name" title="<%= player.name %> <%= adminClass.toUpperCase() %>">
+										<li
+											class="other player participant <%= adminClass %>"
+											id="player_<%= player.socketID %>"
+											style="order: <%= i %>;"
+										>
+											<h4
+												class="player-name" 
+												id="player_<%= player.name %>_name"
+												title="<%= player.name %> <%= adminClass.toUpperCase() %>"
+											>
 												<%= player.name %>
 											</h4>
 											<% if (room.settings.gameMode.mode === GAME_MODE.REACH_SCORE) { 
@@ -376,10 +387,15 @@
 												const percentage = player.score/room.settings.gameMode.scoreToReach * 100;
 											%>
 												<div class="percentage-bar">
-													<div style="width: <%= percentage %>%;"></div>
+													<div
+														style="width: <%= percentage %>%;"
+														id="player_<%= player.socketID %>_percentage"
+													></div>
 												</div>
 											<% } %>
-											<strong class="player-score"><%= player.score %></strong>
+											<strong class="player-score" id="player_<%= player.socketID %>_score">
+												<%= player.score %>
+											</strong>
 										</li>
 								<%
 									}

@@ -3,14 +3,15 @@ const {
 	getRoomIndex,
 	filterPlayer
 } = require('./api/routes/multiplayer');
-const { PLAYER_ROLE, GAME_START_COUNTDOWN } = require('./constants');
+const { GAME_CONSTANTS, PLAYER_ROLE, GAME_START_COUNTDOWN, GAME_MODE } = require('./constants');
 const { randomInt } = require('./utils/math');
-const { validateStr } = require('./utils/validate');
+const { validateStr, limitNum, isValidNum } = require('./utils/validate');
 
 module.exports = server => {
 	// Timers
 	const roomDeletionTimer = {};
 	const gameStartTimer = {};
+	const countdownTimer = {};
 
 	const io = new Server(server);
 
@@ -101,8 +102,7 @@ module.exports = server => {
 				roomID,
 				roomIndex => {
 					const room = global.rooms[roomIndex];
-					// There needs to be at least 2 players
-					//if (room.players.length < 2) return false;
+
 					// Only admin can start games
 					if (room && room.admin.ip === socket.handshake.address) {
 						// Start countdown
@@ -112,10 +112,46 @@ module.exports = server => {
 
 						gameStartTimer[roomID] = setTimeout(() => {
 							try {
-								global.rooms[roomIndex].isPlaying = true;
+								// Reset timer ID
 								global.rooms[roomIndex].gameStartCountdown = null;
-								global.rooms[roomIndex].gameStart = Date.now();
-								io.to(roomID).emit('game start');
+								// There needs to be at least 2 participating players
+								const participants = room.players.filter(player => player.participates);
+								if ( participants.length >= 2 ) {
+									// Successfully starting game
+									// Modify room status
+									global.rooms[roomIndex].isPlaying = true;
+									global.rooms[roomIndex].gameStart = Date.now();
+									// Notify players
+									io.to(roomID).emit('game start');
+
+									// In COUNTDOWN mode, start countdown at game start
+									if (room.settings.gameMode.mode === GAME_MODE.COUNTDOWN) {
+										countdownTimer[roomID] = setTimeout(() => {
+											// Winner is the one who has the highest score at this moment
+											let winner = participants[0];
+											participants.forEach((participant, index) => {
+												if (participant.score > winner.score) {
+													// Get player with highest score
+													winner = participant;
+													// Set participate property to false
+													global.rooms[roomIndex].players[index].participates = false;
+												}
+											});
+											// Reset room variables
+											global.rooms[roomIndex].isPlaying = false;
+											global.rooms[roomIndex].gameStart = null;
+											// Notify players about who's the winner
+											io.to(roomID).emit('victory', winner.socketID);
+										}, room.settings.gameMode.countdown * 1000);
+									}
+								} else {
+									// Send error to admin
+									if (room && room.admin.ip === socket.handshake.address) {
+										socket.emit('error', { 
+											msg: 'There needs to be at least 2 participating players to start a game'
+										});
+									}
+								}
 							} catch {
 								clearTimeout(gameStartTimer[roomID]);
 								io.to(roomID).emit('abort game start');
@@ -160,6 +196,7 @@ module.exports = server => {
 					roomID,
 					roomIndex => {
 						const room = global.rooms[roomIndex];
+						console.log(room)
 						// Make sure user who sent the request has the same IP address as the registered player
 						let playerIndex;
 						const player = room.players.find((player, index) => {
@@ -233,6 +270,7 @@ module.exports = server => {
 					) {
 						break;
 					}
+					console.log(3)
 					
 					// Emit event
 					const { player } = playerWhoCanParticipate;
@@ -256,6 +294,73 @@ module.exports = server => {
 					// Emit event
 					const { player } = playerWhoCanGiveUp;
 					io.to(roomID).emit('gave up', filterPlayer(player));
+					break;
+			
+				} case 'score': {
+					getRoomIndex(
+						roomID,
+						roomIndex => {
+							const room = global.rooms[roomIndex];
+							let newScore = payload;
+
+							// Player can only update his own score
+							let playerIndex = null;
+							const player = room.players.find((player, index) => {
+								playerIndex = index;
+								return player.ip === socket.handshake.address;
+							});
+							if (!player) return false;
+
+							if (room.isPlaying) {
+								// Limit score gain/loss during game
+								const diff = payload - player.score; //  newScore - prevScore
+								const validDiff = limitNum(
+									diff,
+									GAME_CONSTANTS.maxScoreLoss,
+									GAME_CONSTANTS.maxScoreGain
+								);
+								if (validDiff === false) return false;
+								newScore = player.score + validDiff;
+							}
+
+							// Update player's score
+							try {
+								global.rooms[roomIndex].players[playerIndex].score = newScore;
+							} catch {
+								return;
+							}
+
+							// Handle REACH_SCORE mode
+							if (
+								room.isPlaying && 
+								room.settings.gameMode.mode === GAME_MODE.REACH_SCORE
+							) {
+								// Trigger victory event when a player has reached score
+								if (newScore >= room.settings.gameMode.scoreToReach) {
+									io.to(roomID).emit(
+										'updated score', player.socketID, room.settings.gameMode.scoreToReach
+									);
+									io.to(roomID).emit(
+										'victory', player.socketID
+									);
+									// Reset room variables
+									global.rooms[roomIndex].isPlaying = false;
+									global.rooms[roomIndex].gameStart = null;
+									// Set participates property to false
+									room.players.forEach((player, index) => {
+										global.rooms[roomIndex].players[index].participates = false;
+									});
+									return true;
+								}
+							}
+
+							// Emit event (notify other players about new score)
+							io.to(roomID).emit(
+								'updated score', player.socketID, newScore
+							);
+						},
+						() => false
+					);
 					break;
 
 				} default: return false;
@@ -291,6 +396,9 @@ module.exports = server => {
 							roomDeletionTimer[roomID] = setTimeout(() => {
 								global.rooms = global.rooms.filter(room => room.id !== roomID);
 								delete roomDeletionTimer[roomID];
+								// Clear all timers/intervals related to this room
+								clearInterval(gameStartTimer[roomID]); delete gameStartTimer[roomID];
+								clearInterval(countdownTimer[roomID]); delete countdownTimer[roomID];
 							}, 5000);
 
 						} else {
