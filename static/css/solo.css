@@ -51,9 +51,13 @@
 }
 .invite-form legend {
 	color: rgba(255, 255, 255, .5);
-	text-decoration: underline; text-align: center;
+	text-align: center;
 	font-family: 'Parisienne', cursive;
 	font-size: 1.25em; margin-top: -.25rem;
+}
+.invite-form legend .fa {
+	font-size: .75em;
+	margin-right: .5em;
 }
 .invite-form label {
 	display: flex;

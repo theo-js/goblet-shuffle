@@ -148,6 +148,7 @@ module.exports = server => {
 									// Send error to admin
 									if (room && room.admin.ip === socket.handshake.address) {
 										socket.emit('error', { 
+											type: 'get-ready',
 											msg: 'There needs to be at least 2 participating players to start a game'
 										});
 									}

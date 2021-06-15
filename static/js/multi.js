@@ -207,7 +207,33 @@ function triggerGameStartCountdown () {
 	}
 }
 
-function handleMultiPlayerError (err) {}
+function handleMultiPlayerError (err) {
+	switch (err.type) {
+		case 'get-ready': {
+			if (!getReadySection) {
+				return false;
+			}
+			// Check if there's a message already
+			var preexistingErrPara = document.getElementById('get-ready-error');
+			if (preexistingErrPara) {
+				preexistingErrPara.parentElement.removeChild(preexistingErrPara);
+			}
+			// Create error message in 'get-ready' section
+			var errPara = document.createElement('p');
+			errPara.id = 'get-ready-error';
+			errPara.className = 'alert alert-danger flicker';
+			errPara.innerHTML = err.msg + ' <button class="close-btn" ' + 
+				'onclick="this.parentElement.parentElement.removeChild(this.parentElement);">' + 
+				'<i class="fa fa-times"></i></button>';
+			getReadySection.appendChild(errPara);
+			errPara.scrollIntoView({
+				behavior: 'smooth',
+				inline: 'start', block: 'nearest'
+			});
+			return true;
+		} default: return false;
+	}
+}
 
 
 // React to websocket events
@@ -215,6 +241,7 @@ window.addEventListener('load', function () {
 	// Player joined a room
 	socket.on('player join', function (player) {
 		player.participates ? addPlayer(player, participantsUL) : addPlayer(player, lurkersUL);
+		// Check if there are enough participants for a game
 	});
 
 	// PLayer left a room
@@ -417,6 +444,6 @@ window.addEventListener('load', function () {
 
 	// User receives an error
 	socket.on('error', function (err) {
-		console.log(err.msg);
+		handleMultiPlayerError(err);
 	});
 }, false);

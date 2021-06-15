@@ -161,6 +161,13 @@
 .player.me .percentage-bar > div {
 	background: white;
 }
+.player.me .player-score {
+	background-color: white;
+	border-color: inherit; border-width: 1px; border-style: solid;
+	border-radius: inherit; border-top-left-radius: 0; border-top-right-radius: 0;
+	border-top: none;
+	color: inherit;
+}
 
 
 .get-ready-section {
@@ -174,9 +181,9 @@
 	display: flex; justify-content: center; align-items: center;
 	flex-direction: column;
 
-	-moz-box-shadow: 0 0 0 .125rem rgb(238, 102, 187), 0 0 0 .25rem #222, 0 .25rem .25rem .25rem #2225;
+	/*-moz-box-shadow: 0 0 0 .125rem rgb(238, 102, 187), 0 0 0 .25rem #222, 0 .25rem .25rem .25rem #2225;
 	-webkit-box-shadow: 0 0 0 .125rem rgb(238, 102, 187), 0 0 0 .25rem #222, 0 .25rem .25rem .25rem #2225;
-	box-shadow: var(--purple-box-border);
+	box-shadow: var(--purple-box-border);*/
 
 	-webkit-transition: 1s all ease;
 	-moz-transition: 1s all ease;
@@ -192,8 +199,12 @@
 	margin: 0;
 }
 
-.get-ready-section .start-game-section {
+.get-ready-section .start-game-section,
+.get-ready-section .join-game-section {
 	text-align: center;
+}
+.get-ready-section .join-game-section .msg {
+	margin-bottom: 1rem;
 }
 
 .get-ready-section #countdown-before-game {

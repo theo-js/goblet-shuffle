@@ -71,8 +71,8 @@ global.rooms = [
 			shuffleCount: 7,
 			shuffleSpeed: .4,
 			gameMode: {
-				mode: GAME_MODE.REACH_SCORE,
-				scoreToReach: 1000
+				mode: GAME_MODE.COUNTDOWN,
+				countdown: 95
 			}
 		}
 	}

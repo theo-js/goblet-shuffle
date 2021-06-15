@@ -5,7 +5,7 @@ const GAME_CONSTANTS = {
 	maxPlayerNameLength: 40,
 	maxRoomNameLength: 50,
 	minGoblets: 3,
-	maxGoblets: 12,
+	maxGoblets: 36,
 	minShuffleCount: 2,
 	maxShuffleCount: 25,
 	minShuffleSpeed: .2,

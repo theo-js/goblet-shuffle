@@ -6,7 +6,7 @@ var isInviteSubmitDisabledStr = isInviteSubmitDisabled ? 'disabled' : '';
 
 var inviteModalHTMLContent = '<form class="invite-form scrollbar scrollbar-black" id="invite-form">' +
 	'<fieldset>' + 
-		'<legend>About me</legend>' +
+		'<legend><i class="fa fa-pen-fancy"></i><span class="underline">About me</span></legend>' +
 	 	'<label><strong class="label">Player name:</strong>&nbsp;&nbsp;' +
 	 	'<input placeholder="' + getRandomUserName() + '" id="playerName" name="playerName" oninput="handlePlayerNameChange(this)" maxlength="' + GAME_CONSTANTS.maxPlayerNameLength + '"/>' +
 	 	'<span class="button hide500-" onclick="resetPlayerName();">&times;</span>' +
@@ -19,7 +19,7 @@ var inviteModalHTMLContent = '<form class="invite-form scrollbar scrollbar-black
 	'</fieldset>' +
 	'<div class="hr" style="background: white;"></div>' +
 	'<fieldset>' +
-		'<legend>Settings</legend>' +
+		'<legend><i class="fa fa-cogs"></i><span class="underline">Settings</span></legend>' +
 		'<label><strong class="label center">Goblets:</strong>' +
 		 	'<input id="roomSettingsGoblets" type="number" value="' + (settings.goblets || 4) + '" required="true" min="' + (GAME_CONSTANTS.minGoblets || 3) + '" max="' + (GAME_CONSTANTS.maxGoblets || 12) + '"/>' +
 	 	'</label><br/>' +
@@ -31,7 +31,7 @@ var inviteModalHTMLContent = '<form class="invite-form scrollbar scrollbar-black
 	 	'</label>' +
 	'</fieldset><br/>' +
 	'<fieldset>' + 
-		'<legend>Game mode</legend>' +
+		'<legend><span class="underline">Game mode</span></legend>' +
 		'<div style="display: flex;">' +
 	 		'<label style="display: inline-flex; align-items: center;">' +
 	 			'<strong class="label">Reach score</strong>' +

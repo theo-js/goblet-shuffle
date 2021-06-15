@@ -108,23 +108,15 @@ var countdownInterval = null;
 
 // Goblet related functions
 function setGoblets (number) {
-	if (!isInGame) {
-		var n = number;
-		if (!isValidNum(
-			n,
+	if (!isInGame) {		
+		// Limit goblets
+		var n = limitNum(
+			number,
 			GAME_CONSTANTS.minGoblets,
 			GAME_CONSTANTS.maxGoblets
-		)) {
+		);
+		if (n === false) {
 			return;
-		}
-		
-		// Limit goblets
-		if (number < GAME_CONSTANTS.minGoblets) {
-			n = GAME_CONSTANTS.minGoblets;
-		} else if (number > GAME_CONSTANTS.maxGoblets) {
-			n = GAME_CONSTANTS.maxGoblets;
-		} else {
-			n = number;
 		}
 
 		// Override global var (side effect)
@@ -141,17 +133,35 @@ function setGoblets (number) {
 		}
 		gobletsStr += ballStr;
 		gobletsContainer.innerHTML = gobletsStr;
+
 		// Make grid responsive
-		if (n <= 4) {
-			gobletsContainer.style.gridTemplateColumns = 'repeat(2, 1fr)';
-		} else if (n <= 9) {
-			gobletsContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
-		} else {
-			gobletsContainer.style.gridTemplateColumns = 'repeat(4, 1fr)';
+		var cols = Math.ceil(Math.sqrt(n));
+		gobletsContainer.className = cols + '-cols';
+		gobletsContainer.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
+		function resizeGoblets () {
+			if (window.matchMedia('( max-width: 450px )').matches ) {
+				// Until 500px viewport width
+				var vw = 40 - (cols*5);
+				gobletsContainer.style.fontSize = vw + 'vw';
+			} else {
+				// 500px and over viewport width
+				var rem = 10 - cols;
+				gobletsContainer.style.fontSize = rem + 'rem';
+			}
 		}
-		// Attach event handlers
+		resizeGoblets();
+		window.onresize = resizeGoblets;
+		
+		// Initialize each goblet
+		var totalDelay = 0;
+		var delayDuration = .4/(cols**2);
+
 		Array.from(goblets).forEach(function (goblet) {
+			// Attach event listeners
 			goblet.onclick = pickGoblet;
+			// Style
+			goblet.style.animationDelay = totalDelay + 's';
+			totalDelay += delayDuration;
 		});
 	}
 }
@@ -769,13 +779,18 @@ function onPlay () {
 
 				// Scroll to goblets container
 				if (gobletsContainer) {
-					var top = getOffsetPage(gobletsContainer).top;
+					/*var top = getOffsetPage(gobletsContainer).top;
 					var margin = 17;
 					top -= margin * 14;
 					window.scroll({
 						top,
 						left: 0,
 						behavior: 'smooth'
+					});*/
+					gobletsContainer.scrollIntoView({
+						behaviour: 'smooth',
+						inline: 'start',
+						block: 'end'
 					});
 				}
 

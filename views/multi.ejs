@@ -48,6 +48,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=3.0">
 		<meta name="theme-color" content="#222">
 		<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css">
+		<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.1.1/css/all.min.css">
 		<link rel="stylesheet" type="text/css" href="static/css/main.css">
 		<link rel="stylesheet" type="text/css" href="static/css/multi.css">
 		<title><%= roomName %></title>
@@ -114,6 +115,9 @@
 						<% if ( !room.isPlaying ) { %>
 							<div class="get-ready-section" id="get-ready-section">
 								<section class="join-game-section">
+									<% if ( isAdmin ) { %>
+										<p class="msg">You need at least 2 participating players to play</p>
+									<% } %>
 									<button class="btn btn-primary join" id="join-game-btn" onclick="participate(true);">
 										Join
 									</button>
@@ -121,7 +125,6 @@
 								<% if ( isAdmin ) { %>
 									<div class="hr" style="background: #FFFA;"></div>
 									<section class="start-game-section">
-										<% if ( participants.length > 2 ) { %>
 											<p>
 												Once the game starts you won't be able to join it or modify the settings until it's finished !
 											</p>
@@ -132,11 +135,6 @@
 											>
 												Start game
 											</button>
-										<% } else { %>
-											<p>
-												You can start game as soon as enough players have joined !
-											</p>
-										<% } %>
 									</section>
 								<% } %>
 								<div class="hr" style="background: #FFFA;"></div>
@@ -196,7 +194,8 @@
 											list.classList.toggle('collapsed');
 											btn.classList.toggle('active');
 										})()" style="cursor: pointer;" title="Settings">
-											Settings
+											<i class="fa fa-cog"></i>
+											&nbsp;Settings
 										</h3>
 										<button class="collapse-btn active" id="game-settings-options-list-toggle-btn" onclick="(function (btn) {
 											// Collapse list
