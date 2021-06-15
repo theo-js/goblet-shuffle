@@ -13,7 +13,12 @@ module.exports = server => {
 	const gameStartTimer = {};
 	const countdownTimer = {};
 
-	const io = new Server(server);
+	const io = new Server(server, {
+		cors: {
+			origin: ['http://localhost', process.env.DOMAIN_NAME],
+			methods: ['GET', 'POST']
+		}
+	});
 
 	io.on('connection', socket => {
 		console.log('connect !');	
