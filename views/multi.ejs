@@ -424,10 +424,20 @@
 						<% } %>
 					<% } %>
 				</article>
+				<div id="particles"></div>
 			</main>
 			<footer class="app-footer"></footer>
 		</div>
 		<script type="text/javascript" src="static/js/app.js"></script>
 		<script type="text/javascript" src="static/js/multi.js"></script>
+		<script type="text/javascript">
+			particlesJS.load(
+				'particles',
+				'static/particles.json',
+				function() {
+					console.log('callback - particles.js config loaded');
+				}
+			);
+		</script>
 	</body>
 </html>

@@ -238,7 +238,7 @@
 						<aside class="invite">
 							<button class="link" onclick="openInviteModal(true);">
 								<span style="color: green">
-									<i class="fa fa-user-plus"></i>
+									<i style="color: var(--purple);" class="fa fa-user-plus"></i>
 								</span>
 								Invite friends
 							</button>
@@ -248,10 +248,21 @@
 				<article id="game-info-msg">
 					<p>Find the <strong style="color: var(--yellow);">ball</strong> !</p>
 				</article>
+				<div id="particles"></div>
 			</main>
 			<footer class="app-footer"></footer>
 		</div>
 		<script type="text/javascript" src="static/js/app.js"></script>
 		<script type="text/javascript" src="static/js/solo.js"></script>
+		<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+		<script type="text/javascript">
+			particlesJS.load(
+				'particles',
+				'static/particles.json',
+				function() {
+					console.log('callback - particles.js config loaded');
+				}
+			);
+		</script>
 	</body>
 </html>

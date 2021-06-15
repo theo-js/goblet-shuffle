@@ -2,23 +2,30 @@
 
 // Client utils
 function randomizeTheme () {
-	var violet = randomColor(30, 255);
 	var purpleR = randomInt(30, 255);
 	var purpleG = randomInt(30, 255);
 	var purpleB = randomInt(30, 255);
+	var violetR = randomInt(30, 255);
+	var violetG = randomInt(30, 255);
+	var violetB = randomInt(30, 255);
+	
 	var lighten = 20;
-	var pinkR = purpleR + lighten;
-	var pinkG = purpleG + lighten;
-	var pinkB = purpleB + lighten;
-
-	document.documentElement.style.setProperty('--pink', 'rgb(' + pinkR + ', ' + pinkG + ', ' + pinkB + ')');
+	var lpR = purpleR + lighten;
+	var lpG = purpleG + lighten;
+	var lpB = purpleB + lighten;
+	var pinkR = violetR + lighten;
+	var pinkG = violetG + lighten;
+	var pinkB = violetB + lighten;
+	
 	document.documentElement.style.setProperty('--purple', 'rgb(' + purpleR + ', ' + purpleG + ', ' + purpleB + ')');
-	document.documentElement.style.setProperty('--violet', violet);
+	document.documentElement.style.setProperty('--violet', 'rgb(' + violetR + ', ' + violetG + ', ' + violetB + ')');
+	document.documentElement.style.setProperty('--light-purple', 'rgb(' + lpR + ', ' + lpG + ', ' + lpB + ')');
+	document.documentElement.style.setProperty('--pink', 'rgb(' + pinkR + ', ' + pinkG + ', ' + pinkB + ')');
 
-	// --pink-yellow-blend is a blend between --light-yellow & --pink
-	var pyR = Math.round(avg(purpleR, 255));
-	var pyG = Math.round(avg(purpleG, 238));
-	var pyB = Math.round(avg(purpleB, 153));
+	// --pink-yellow-blend is a blend between --light-yellow & --violet
+	var pyR = Math.round(avg(violetR, 255));
+	var pyG = Math.round(avg(violetG, 238));
+	var pyB = Math.round(avg(violetB, 153));
 	document.documentElement.style.setProperty('--pink-yellow-blend', 'rgb(' + pyR + ', ' + pyG + ', ' + pyB + ')');
 }
 
@@ -268,7 +275,7 @@ function shuffleGoblets () {
 		}
 
 		// Resolve promise
-		shuffleTM = window.setTimeout(resolve, 1000 * settings.shuffleSpeed);
+		shuffleTM = window.setTimeout(resolve, (1000 * settings.shuffleSpeed) + 70);
 	});
 }
 // Pick goblet
@@ -503,7 +510,11 @@ function startCountDown (boolean) {
 			timeOutputS.textContent = timeStr.s;
 
 			// Make output blink when remaining time is low
-			if (seconds <= 60 && seconds < settings.gameMode.countdown/3) {
+			if (
+				seconds <= 60 && 
+				seconds < settings.gameMode.countdown/3 && 
+				!timeOutputPara.classList.contains('active')
+			) {
 				timeOutputPara.classList.add('active')
 			}
 		}
@@ -615,11 +626,18 @@ function fail (goblets) {
 
 			// Lose score
 			var lossCoeff = 1/settings.shuffleSpeed || 1;
-			var scoreLoss = Math.round(scoreLossDefault * lossCoeff);
-			score -= scoreLoss;
-			if (score < 0) {
-				score = 0;
-			}
+			var scoreLoss = scoreLossDefault * lossCoeff;
+			// Player should lose less points the more goblets there are
+			// Take away some percentage of the loss
+			var percentage = ((settings.goblets / GAME_CONSTANTS.minGoblets) - 1) * 4; // minGoblets: 0%
+			scoreLoss -= (scoreLoss * percentage/100);
+
+			// Remove from score
+			score = limitNum(
+				Math.round(score - scoreLoss),
+				0,
+				GAME_CONSTANTS.maxScoreToReach
+			)
 			scoreOutput.textContent = score;
 
 			// Notify other players (multiplayer)
@@ -790,7 +808,7 @@ function onPlay () {
 					gobletsContainer.scrollIntoView({
 						behaviour: 'smooth',
 						inline: 'start',
-						block: 'end'
+						block: 'nearest'
 					});
 				}
 
@@ -808,7 +826,6 @@ function onPlay () {
 }
 
 function endGame (winner) {
-	onPlay()
 	if (!MULTIPLAYER) {
 		// SOLO
 		switch (settings.gameMode.mode) {
@@ -850,6 +867,7 @@ function endGame (winner) {
 			}
 		}
 	}
+	onPlay();
 }
 
 // Initialize game
