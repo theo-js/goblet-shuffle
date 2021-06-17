@@ -109,7 +109,7 @@ module.exports = server => {
 					const room = global.rooms[roomIndex];
 
 					// Only admin can start games
-					if (room && room.admin.ip === socket.handshake.address) {
+					if ( room && room.admin.ip === socket.handshake.address ) {
 						// Start countdown
 						const ms = GAME_START_COUNTDOWN * 1000;
 						io.to(roomID).emit('game start countdown');
@@ -121,7 +121,7 @@ module.exports = server => {
 								global.rooms[roomIndex].gameStartCountdown = null;
 								// There needs to be at least 2 participating players
 								const participants = room.players.filter(player => player.participates);
-								if ( participants.length >= 2 ) {
+								if ( participants.length > 1 ) {
 									// Successfully starting game
 									// Modify room status
 									global.rooms[roomIndex].isPlaying = true;
@@ -145,6 +145,11 @@ module.exports = server => {
 											// Reset room variables
 											global.rooms[roomIndex].isPlaying = false;
 											global.rooms[roomIndex].gameStart = null;
+											// Reset player variables
+											room.players.forEach((player, index) => {
+												global.rooms[roomIndex].players[index].participates = false;
+												global.rooms[roomIndex].players[index].score = 0;
+											});
 											// Notify players about who's the winner
 											io.to(roomID).emit('victory', winner.socketID);
 										}, room.settings.gameMode.countdown * 1000);
@@ -276,7 +281,6 @@ module.exports = server => {
 					) {
 						break;
 					}
-					console.log(3)
 					
 					// Emit event
 					const { player } = playerWhoCanParticipate;
@@ -352,9 +356,10 @@ module.exports = server => {
 									// Reset room variables
 									global.rooms[roomIndex].isPlaying = false;
 									global.rooms[roomIndex].gameStart = null;
-									// Set participates property to false
+									// Reset player variables
 									room.players.forEach((player, index) => {
 										global.rooms[roomIndex].players[index].participates = false;
+										global.rooms[roomIndex].players[index].score = 0;
 									});
 									return true;
 								}

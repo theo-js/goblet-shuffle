@@ -15,6 +15,15 @@ app.use(express.urlencoded({
 }));
 app.use('/static', express.static(`${__dirname}/static`));
 app.disable('x-powered-by');
+app.use((req, res, next) => {
+	// CORS middleware
+	if (process.env.NODE_ENV !== 'production') {
+		res.set('Access-Control-Allow-Origin', '*');
+	} else {
+		res.set('Access-Control-Allow-Origin', process.env.DOMAIN_NAME);
+	}
+	next();
+});
 
 // Websockets
 initializeSockets(server);

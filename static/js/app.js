@@ -603,7 +603,10 @@ function succeed (targetGoblets) {
 				// Limit score
 				score = settings.gameMode.scoreToReach;
 				// End this game
-				endGame();
+				if (MULTIPLAYER === false) {
+					// In multiplayer mode, victory is triggered by an event sent from the server
+					endGame();
+				}
 			} else {
 				// Go to next turn
 				ballScaleTM = window.setTimeout(function () {
@@ -634,7 +637,7 @@ function fail (goblets) {
 
 			// Remove from score
 			score = limitNum(
-				Math.round(score - scoreLoss),
+				Math.floor(score - scoreLoss),
 				0,
 				GAME_CONSTANTS.maxScoreToReach
 			)
@@ -854,7 +857,7 @@ function endGame (winner) {
 			switch (settings.gameMode.mode) {
 				case GAME_MODE.REACH_SCORE: {
 					var timeStr = secondsToTimeStr(gameTime);
-					var msg = winner.name + ' has won ! He reached ' + settings.gameMode.scoreToReach +
+					var msg = winner.name + ' has won ! Reached ' + settings.gameMode.scoreToReach +
 					' in ' + timeStr.m + '\'' + timeStr.s + '\'\'';
 					alert(msg);
 					break;

@@ -26,6 +26,68 @@ function resetGameStartCountdown () {
 	}
 }
 
+function updateGetReadySection () {
+	if (isPlaying) {
+		return '<p>This room is playing right now; you will be able to join when they create a new game.</p>';
+	}
+	var amParticipating = participants.find(function (player) {
+		return player.socketID === socket.id;
+	});
+
+	var joinGameSection = '';
+	if (!amParticipating) {
+		joinGameSection = '<section class="join-game-section">' +
+			( isAdmin ? '<p class="msg">You need at least 2 participating players to play</p>' : '' ) +
+			'<button class="btn btn-primary join" id="join-game-btn" onclick="participate(true);">' +
+				'Join' +
+			'</button>' +
+		'</section>'
+	} else {
+		joinGameSection = '<section class="join-game-section">' +
+			( isAdmin ? '<p class="msg">You need at least 2 participating players to play</p>' : '' ) +
+			'<button class="btn btn-danger leave" id="join-game-btn" onclick="participate(false);">' +
+				'Leave' +
+			'</button>' +
+		'</section>'
+	}
+
+	var startGameSection = '';
+	if (isAdmin) {
+		startGameSection = '<section class="start-game-section">' +
+			'<p>' +
+				'Once the game starts you won\'t be able to join it or modify the settings until it\'s finished !' +
+			'</p>' +
+			'<button ' +
+				'class="btn btn-success start-game"' +
+				'onclick="triggerGameStartCountdown();"' +
+				'id="start-multiplayer-game-btn"' +
+			'>' +
+				'Start game' +
+			'</button>' +
+		'</section>'
+	} else {
+		startGameSection = '<section class="start-game-section">' +
+			'<p>' +
+				'Once the game starts you won\'t be able to join it until it\'s finished !' +
+			'</p>' +
+		'</section>'
+	}
+
+	var countdownSection = '<p ' +
+		'class="hidden"' +
+		'id="countdown-before-game"' +
+	'>' +
+		+ GAME_START_COUNTDOWN +
+	'</p>';
+	var hr = '<div class="hr" style="background: #FFFA;"></div>';
+
+	// Update
+	getReadySection.innerHTML = joinGameSection + hr + startGameSection + hr + countdownSection;
+
+	startMultiPlayerGameBtn = document.getElementById('start-multiplayer-game-btn');
+	countdownBfGame = document.getElementById('countdown-before-game');
+}
+
 function createPercentageBar (score, scoreToReach, socketID) {
 	var percentageBar = document.createElement('div');
 	percentageBar.className = 'percentage-bar';
@@ -35,6 +97,49 @@ function createPercentageBar (score, scoreToReach, socketID) {
 	content.style.width = percentage + '%';
 	percentageBar.appendChild(content);
 	return percentageBar;
+}
+function updatePlayerScore (
+	id, 
+	newScore, 
+	updateState = true, 
+	sort = true
+) {
+	// Set player's score in DOM
+	// Looking for player score to update in DOM
+	var playerScore = document.getElementById('player_' + id + '_score');
+	if (playerScore) {
+		playerScore.textContent = newScore;
+	}
+
+	if (settings.gameMode.mode === GAME_MODE.REACH_SCORE) {
+		// Looking for player percentage bar in DOM
+		var playerPercentage = document.getElementById('player_' + id + '_percentage');
+		if (playerPercentage) {
+			var percentage = newScore / settings.gameMode.scoreToReach * 100;
+			playerPercentage.style.width = percentage + '%';
+		}
+	}
+
+	// Update state
+	if (updateState) {
+		players = players.map(function (player) {
+			if (player.socketID === id) {
+				return { ...player, score: newScore };
+			}
+			return player;
+		});
+		participants = participants.map(function (player) {
+			if (player.socketID === id) {
+				return { ...player, score: newScore };
+			}
+			return player;
+		});
+	}
+
+	// Sort participants
+	if (sort) {
+		sortParticipants();
+	}
 }
 
 function addPlayer (player, ul, addClasses) {
@@ -102,6 +207,7 @@ function addPlayer (player, ul, addClasses) {
 		li.classList.add('other');
 		// Player name is a 4th lvl title
 		playerName = document.createElement('h4');
+		playerName.className = 'player-name';
 		playerName.textContent = player.name;
 	}
 	playerName.setAttribute('id', idAttribute + '_name');
@@ -206,6 +312,51 @@ function triggerGameStartCountdown () {
 		socket.emit('start game');
 	}
 }
+function handleGameStartCountdown (ms = GAME_START_COUNTDOWN*1000) {
+	// Change start button
+	if (startMultiPlayerGameBtn) {
+		startMultiPlayerGameBtn.onclick = function () {
+			socket.emit('abort game start');
+		}
+		startMultiPlayerGameBtn.className = 'btn btn-danger start-game';
+		startMultiPlayerGameBtn.textContent = 'Abort start';
+	}
+
+	// Start countdown
+	countdownBfGame.classList.remove('hidden');
+
+	gameStartInterval = window.setInterval(function () {
+		gameStartCountdown--;
+		countdownBfGame.textContent = gameStartCountdown;
+	}, 1000);
+
+	// Stop interval after correct time
+	gameStartTimer = window.setTimeout(function () {
+		resetGameStartCountdown();
+		// Start game (should receive 'game start' event)
+	}, ms);
+}
+
+function sortParticipants (asc = false) {
+	// Sort participants by score
+	if (asc) {
+		// From lowest to highest
+		participants.sort(function (a, b) {
+			return a.score - b.score;
+		});
+	} else {
+		// From highest to lowest
+		participants.sort(function (a, b) {
+			return b.score - a.score;
+		});
+	}
+	// Update DOM
+	participants.forEach(function (player, index, array) {
+		// Get corresponding li DOM element
+		var li = document.getElementById('player_' + player.socketID);
+		li.style.order = index - array.length - 1;
+	});
+}
 
 function handleMultiPlayerError (err) {
 	switch (err.type) {
@@ -282,46 +433,7 @@ window.addEventListener('load', function () {
 	});
 
 	// Player's score was modified
-	socket.on('updated score', function (id, newScore) {
-		// Looking for player score to update in DOM
-		var playerScore = document.getElementById('player_' + id + '_score');
-		if (playerScore) {
-			playerScore.textContent = newScore;
-		}
-
-		if (settings.gameMode.mode === GAME_MODE.REACH_SCORE) {
-			// Looking for player percentage bar in DOM
-			var playerPercentage = document.getElementById('player_' + id + '_percentage');
-			if (playerPercentage) {
-				var percentage = newScore / settings.gameMode.scoreToReach * 100;
-				playerPercentage.style.width = percentage + '%';
-			}
-		}
-
-		// Update state
-		players = players.map(function (player) {
-			if (player.socketID === id) {
-				return { ...player, score: newScore };
-			}
-			return player;
-		});
-		participants = participants.map(function (player) {
-			if (player.socketID === id) {
-				return { ...player, score: newScore };
-			}
-			return player;
-		});
-
-		// Sort participants by score
-		participants.sort(function (a, b) {
-			return b.score - a.score;
-		});
-		participants.forEach(function (player, index, array) {
-			// Get corresponding li DOM element
-			var li = document.getElementById('player_' + player.socketID);
-			li.style.order = index - array.length - 1;
-		});
-	});
+	socket.on('updated score', updatePlayerScore);
 
 	// Player was accepted as a participant
 	socket.on('participates', function (player) {
@@ -361,84 +473,70 @@ window.addEventListener('load', function () {
 		}
 	});
 
-	// Admin started countdown before game
-	socket.on('game start countdown', function () {
-		// Change start button
-		startMultiPlayerGameBtn.onclick = function () {
-			socket.emit('abort game start');
-		}
-		startMultiPlayerGameBtn.className = 'btn btn-danger start-game';
-		startMultiPlayerGameBtn.textContent = 'Abort start';
-
-		// Start countdown
-		countdownBfGame.classList.remove('hidden');
-		const ms = GAME_START_COUNTDOWN*1000;
-
-		gameStartInterval = window.setInterval(function () {
-			gameStartCountdown--;
-			countdownBfGame.textContent = gameStartCountdown;
-		}, 1000);
-
-		// Stop interval after correct time
-		gameStartTimer = window.setTimeout(function () {
-			resetGameStartCountdown();
-			// Start game (should receive 'game start' event)
-		}, ms);
-	});
+	// Admin started countdown (before game)
+	socket.on('game start countdown', handleGameStartCountdown);
 
 	// Admin cancelled game start during countdown
 	socket.on('abort game start', resetGameStartCountdown);
 
 	// Game started
 	socket.on('game start', function () {
-		console.log('Game started')
 		//if ( participants.length > 1 ) {
+			isPlaying = true;
 			var amParticipating = participants.find(function (participant) {
 				return participant.socketID === socket.id;
 			});
 			if ( !!amParticipating ) {
 				// I am participating
-				isPlaying = true;
 				getReadySection.classList.add('hidden');
 				onPlay();
 			} else {
 				// I'm not participating
+				updateGetReadySection();
 			}
 		//}
 	});
 
 	socket.on('victory', function (socketID) {
-		const player = participants.find(function (thisPlayer) {
+		const winner = participants.find(function (thisPlayer) {
 			return thisPlayer.socketID === socketID;
 		});
-		if (!!player) {
+		if (!!winner) {
 			// End game
-			endGame(player);
+			endGame(winner);
 
 			// Reset game variables
 			isPlaying = false;
-			
-			// Show 'get-ready' section
-			getReadySection.classList.remove('hidden');
-				// Change join btn
-				var joinGameBtn = document.getElementById('join-game-btn');
-				if (joinGameBtn) {
-					joinGameBtn.textContent = 'Join game';
-					joinGameBtn.className = 'btn btn-success join-game';
-					joinGameBtn.onclick = function () {
-						participate(true);
-					};
-				}
 
 			// Do something for each participant
 			participants.forEach(function (player) {
 				// Reset everybody's score
 				player.score = 0;
+				updatePlayerScore(
+					player.socketID,
+					0, 
+					false, 
+					false
+				);
 
 				// Add all participants to list of lurkers
 				removePlayer(player.socketID);
 				addPlayer(player, lurkersUL);
 			});
+
+			// Show 'get-ready' section
+			getReadySection.classList.remove('hidden');
+			updateGetReadySection();
+		}
+	});
+
+	socket.on('new admin', function (id) {
+		if (id === socket.id) {
+			// I am the new admin
+			isAdmin = true;
+			updateGetReadySection();
+		} else {
+			// New admin is another player
 		}
 	});
 

@@ -89,7 +89,8 @@
 	background-color: var(--purple);
 }
 .player .player-name {
-	font-size: 1rem; margin: 0;
+	font-size: 1rem; 
+	margin: 0;
 	white-space: nowrap;
 	max-width: 10em; overflow: hidden; text-overflow: ellipsis;
 }
@@ -229,6 +230,10 @@
 	margin: 1rem;
 }
 
+.game-info-message {
+	display: flex; justify-content: space-around; align-items: center;
+}
+
 
 @media screen and ( min-width: 651px ) {
 	#players-section {
@@ -274,7 +279,7 @@
 		padding-left: 0; padding-right: 0;
 	}
 
-	.player-name {
+	.player .player-name {
 		text-align: center;
 	} 
 }

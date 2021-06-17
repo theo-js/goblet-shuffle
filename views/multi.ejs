@@ -35,11 +35,12 @@
 	const initialTimeStr = utils.secondsToTimeStr(initialTime);
 
 	// Countdown before game start
-	let initialGameStartCountdown = GAME_START_COUNTDOWN; // Timespan 
+	let initialGameStartCountdown = GAME_START_COUNTDOWN; // Timespan in seconds
 	if (room.gameStartCountdown !== null) { // If admin triggered game start
-		let diff = Date.now() - gameStartCountdown;
-		initialGameStartCountdown -= diff;
+		let diff = Date.now() - room.gameStartCountdown; // Time since countdown start, in milliseconds
+		initialGameStartCountdown -= Math.round(diff/1000);
 	}
+	console.log(initialGameStartCountdown)
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -87,7 +88,10 @@
 			// Socket client
 			var socket;
 			window.addEventListener('load', function () {
-				socket = io('<%= DOMAIN %>', { query: "roomID=<%= room.id %>" });
+				socket = io('<%= DOMAIN %>', {
+					query: "roomID=<%= room.id %>",
+					transports: ['websocket']
+				});
 				socket.on('connect', () => console.log('Connecté !'));
 			}, false);
 		</script>
@@ -122,21 +126,21 @@
 										Join
 									</button>
 								</section>
-								<% if ( isAdmin ) { %>
-									<div class="hr" style="background: #FFFA;"></div>
-									<section class="start-game-section">
-											<p>
-												Once the game starts you won't be able to join it or modify the settings until it's finished !
-											</p>
-											<button
-												class="btn btn-success start-game"
-												onclick="triggerGameStartCountdown();"
-												id="start-multiplayer-game-btn"
-											>
-												Start game
-											</button>
-									</section>
-								<% } %>
+								<div class="hr" style="background: #FFFA;"></div>
+								<section class="start-game-section">
+									<p>
+										Once the game starts you won't be able to join it or modify the settings until it's finished !
+									</p>
+									<% if ( isAdmin ) { %>
+										<button
+											class="btn btn-success start-game"
+											onclick="triggerGameStartCountdown();"
+											id="start-multiplayer-game-btn"
+										>
+											Start game
+										</button>
+									<% } %>
+								</section>
 								<div class="hr" style="background: #FFFA;"></div>
 								<p
 									class="<%= room.gameStartCountdown === null ? 'hidden' : '' %>"
@@ -403,27 +407,25 @@
 						</div>
 					</section>
 				</div>
-				<article id="alert alert-info game-info-message">
-					<% if (isAdmin) { %>
-						<% if (!room.isPlaying) { %>
-							<p>Invite your friends by sending them this link:</p>
-							<button onclick="(function () {
+				<% if (isAdmin) { %>
+					<article class="alert alert-info game-info-message">
+						<p style="margin: 0 .5rem;">
+							Invite your friends by sending them this link:
+						</p>
+						<button
+							class="btn btn-secondary"
+							onclick="(function () {
 								if(saveToClipboard(location.href + '<%= room.id  %>')) {
 									alert('Copied !');
 								} else {
 									alert('Failed copying to clipboard')
 								}
-							})();">
-								Copy <strong>link</strong> to clipboard
-							</button>
-							<p>So far you can still change the game's settings. Wait until everyone is ready and start the game</p>
-						<% } %>
-					<% } else { %>
-						<% if (!room.isPlaying) { %>
-							<p></p>
-						<% } %>
-					<% } %>
-				</article>
+							})();
+						">
+							Copy <strong>link</strong> to clipboard
+						</button>
+					</article>
+				<% } %>
 				<div id="particles"></div>
 			</main>
 			<footer class="app-footer"></footer>
@@ -431,6 +433,16 @@
 		<script type="text/javascript" src="static/js/app.js"></script>
 		<script type="text/javascript" src="static/js/multi.js"></script>
 		<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+		<% if (typeof room.gameStartCountdown === 'number') {
+			// If countdown before game has already started,
+			// Do as if 'game start countdown' event was received
+		%>
+			<script type="text/javascript">
+				handleGameStartCountdown(
+					<%= initialGameStartCountdown %> * 1000
+				);
+			</script>
+		<% } %>
 		<script type="text/javascript">
 			particlesJS.load(
 				'particles',
