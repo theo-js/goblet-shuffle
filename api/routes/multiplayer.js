@@ -101,6 +101,9 @@ multiplayerRouter.post('/create-room', (req, res) => {
 	try {
 		// Validate IP
 		const { ip } = req;
+		console.log('req.ip: ' + req.ip)
+		console.log('remoteAddress: ' + req.connection.remoteAddress)
+		console.log('x-forwarded-for: ' + req.headers['x-forwarded-for'])
 		// Find out if this IP is admin in any of the rooms already
 		const userAdminInAnyRoom = global.rooms.find(room => {
 			try {
