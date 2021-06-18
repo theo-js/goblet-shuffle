@@ -1,4 +1,5 @@
 const multiplayerRouter = require('express').Router();
+const { getIP } = require('../../utils');
 const { validateStr, isValidNum } = require('../../utils/validate');
 const {
 	GAME_CONSTANTS,
@@ -100,10 +101,11 @@ const filterPlayer = player => {
 multiplayerRouter.post('/create-room', (req, res) => {
 	try {
 		// Validate IP
-		const { ip } = req;
+		const ip = getIP(req);
 		console.log('req.ip: ' + req.ip)
-		console.log('remoteAddress: ' + req.connection.remoteAddress)
-		console.log('x-forwarded-for: ' + req.headers['x-forwarded-for'])
+		console.log('remoteAddress: ' + req.connection.remoteAddress);
+		console.log('x-forwarded-for: ' + req.headers['x-forwarded-for']);
+		console.log('creating room with admin\'s ip: ' + ip);
 		// Find out if this IP is admin in any of the rooms already
 		const userAdminInAnyRoom = global.rooms.find(room => {
 			try {

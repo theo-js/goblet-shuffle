@@ -5,7 +5,11 @@ const {
 } = require('./api/routes/multiplayer');
 const { GAME_CONSTANTS, PLAYER_ROLE, GAME_START_COUNTDOWN, GAME_MODE } = require('./constants');
 const { randomInt } = require('./utils/math');
-const { validateStr, limitNum, isValidNum } = require('./utils/validate');
+const { validateStr, limitNum } = require('./utils/validate');
+
+function getIP (socket) {
+	return socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
+}
 
 module.exports = server => {
 	// Timers
@@ -31,10 +35,11 @@ module.exports = server => {
 				if (!validateStr(socket.id)) return false; // prevent XSS
 
 				const room = global.rooms[roomIndex];
+				const ip = getIP(socket);
 				// Look for IP address in room
-				const uid = socket.id + socket.handshake.address;
+				const uid = socket.id + ip;
 
-				const playerInRoom = room.players.find(player => player.ip === socket.handshake.address);
+				const playerInRoom = room.players.find(player => player.ip === ip);
 
 				if (!playerInRoom) {
 					// Player is not already in room
@@ -46,15 +51,14 @@ module.exports = server => {
 					// Add player
 					socket.join(roomID);
 					const player = {
-						uid,
-						ip: socket.handshake.address,
+						uid, ip,
 						socketID: socket.id,
 						participates: false,
 						score: 0
 					};
 
 					// Check if player is admin
-					if (room.admin.ip === socket.handshake.address) {
+					if (room.admin.ip === ip) {
 						// Player is admin
 						global.rooms[roomIndex].admin.uid = uid; // Set admin's current ID
 						global.rooms[roomIndex].admin.socketID = socket.id;
@@ -73,7 +77,7 @@ module.exports = server => {
 				} else {
 					// Player is already in the room
 					// Check if player is admin
-					if (room.admin.ip === socket.handshake.address) {
+					if (room.admin.ip === ip) {
 						// Player is admin
 						global.rooms[roomIndex].admin.uid = uid; // Update admin's IDs with new socket
 						global.rooms[roomIndex].admin.socketID = socket.id;
@@ -83,7 +87,7 @@ module.exports = server => {
 					// Update players with current player's new IDs
 					let prevSocketID = null;
 					global.rooms[roomIndex].players = room.players.map(player => {
-						if (player.ip === socket.handshake.address) {
+						if (player.ip === ip) {
 							prevSocketID = player.socketID;
 							player.socketID = socket.id;
 							player.uid = uid;
@@ -107,13 +111,13 @@ module.exports = server => {
 				roomID,
 				roomIndex => {
 					const room = global.rooms[roomIndex];
+					const ip = getIP(socket);
 
 					// Only admin can start games
-					console.log('room.admin.ip: ' + room.admin.ip)
 					console.log('socket.handshake.address: ' + socket.handshake.address)
 					console.log('x-forwarded-for: ' + socket.handshake.headers['x-forwarded-for'])
-					console.log('socket.request.connection.remoteAddress: ' + socket.request.connection.remoteAddress)
-					if ( room && room.admin.ip === socket.handshake.address || room.admin.ip === '::ffff:127.0.0.1' ) {
+					console.log('user with IP: ' + ip + ' tries to start game')
+					if ( room && room.admin.ip === ip ) {
 						// Start countdown
 						const ms = GAME_START_COUNTDOWN * 1000;
 						io.to(roomID).emit('game start countdown');
@@ -125,7 +129,7 @@ module.exports = server => {
 								global.rooms[roomIndex].gameStartCountdown = null;
 								// There needs to be at least 2 participating players
 								const participants = room.players.filter(player => player.participates);
-								if ( participants.length >= 1 ) {
+								if ( participants.length > 1 ) {
 									// Successfully starting game
 									// Modify room status
 									global.rooms[roomIndex].isPlaying = true;
@@ -160,7 +164,7 @@ module.exports = server => {
 									}
 								} else {
 									// Send error to admin
-									if (room && room.admin.ip === socket.handshake.address) {
+									if (room && room.admin.ip === ip) {
 										socket.emit('error', { 
 											type: 'get-ready',
 											msg: 'There needs to be at least 2 participating players to start a game'
@@ -185,8 +189,9 @@ module.exports = server => {
 				roomID,
 				roomIndex => {
 					const room = global.rooms[roomIndex];
+					const ip = getIP(socket);
 					// Only admin can abort game start
-					if (room && room.admin.ip === socket.handshake.address) {
+					if ( room && room.admin.ip === ip ) {
 						// Stop timer
 						clearTimeout(gameStartTimer[roomID]);
 						// Notify players
@@ -211,11 +216,12 @@ module.exports = server => {
 					roomID,
 					roomIndex => {
 						const room = global.rooms[roomIndex];
+						const ip = getIP(socket);
 						// Make sure user who sent the request has the same IP address as the registered player
-						let playerIndex;
+						let playerIndex; // (get player index)
 						const player = room.players.find((player, index) => {
 							playerIndex = index;
-							return player.ip === socket.handshake.address
+							return player.ip === ip;
 						});
 
 						// Additional conditions that can reject the request
@@ -314,13 +320,14 @@ module.exports = server => {
 						roomID,
 						roomIndex => {
 							const room = global.rooms[roomIndex];
+							const ip = getIP(socket);
 							let newScore = payload;
 
 							// Player can only update his own score
 							let playerIndex = null;
 							const player = room.players.find((player, index) => {
 								playerIndex = index;
-								return player.ip === socket.handshake.address;
+								return player.ip === ip;
 							});
 							if (!player) return false;
 
@@ -390,9 +397,10 @@ module.exports = server => {
 				roomID,
 				roomIndex => {
 					const room = global.rooms[roomIndex];
+					const ip = getIP(socket);
 					// Look for IP address in room
-					const uid = socket.id + socket.handshake.address;
-					const playerInRoom = room.players.find(player => player.ip === socket.handshake.address)
+					const uid = socket.id + ip;
+					const playerInRoom = room.players.find(player => player.ip === ip);
 
 					if (playerInRoom) {
 						// Player is still in the room
