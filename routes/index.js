@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const { getIP } = require('../utils');
 
 // Constants
 const {
@@ -33,7 +34,8 @@ router.get('/:roomID', (req, res) => {
 		if (!!room) {
 			// Room exists
 			// Find out if current user is admin
-			const isAdmin = room.admin.ip === req.ip;
+			const ip = getIP(req);
+			const isAdmin = room.admin.ip === ip;
 			res.render('multi', {
 				room,
 				isAdmin,
