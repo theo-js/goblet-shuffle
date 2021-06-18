@@ -109,7 +109,9 @@ module.exports = server => {
 					const room = global.rooms[roomIndex];
 
 					// Only admin can start games
-					if ( room && room.admin.ip === socket.handshake.address ) {
+					console.log(room.admin.ip)
+					console.log(socket.handshake.address)
+					if ( room && room.admin.ip === socket.handshake.address || room.admin.ip === '::ffff:127.0.0.1' ) {
 						// Start countdown
 						const ms = GAME_START_COUNTDOWN * 1000;
 						io.to(roomID).emit('game start countdown');
@@ -121,7 +123,7 @@ module.exports = server => {
 								global.rooms[roomIndex].gameStartCountdown = null;
 								// There needs to be at least 2 participating players
 								const participants = room.players.filter(player => player.participates);
-								if ( participants.length > 1 ) {
+								if ( participants.length >= 1 ) {
 									// Successfully starting game
 									// Modify room status
 									global.rooms[roomIndex].isPlaying = true;
@@ -207,7 +209,6 @@ module.exports = server => {
 					roomID,
 					roomIndex => {
 						const room = global.rooms[roomIndex];
-						console.log(room)
 						// Make sure user who sent the request has the same IP address as the registered player
 						let playerIndex;
 						const player = room.players.find((player, index) => {
