@@ -325,12 +325,14 @@ function handleGameStartCountdown (ms = GAME_START_COUNTDOWN*1000) {
 	// Start countdown
 	countdownBfGame.classList.remove('hidden');
 
+	window.clearInterval(gameStartInterval); // In case an interval had started
 	gameStartInterval = window.setInterval(function () {
 		gameStartCountdown--;
 		countdownBfGame.textContent = gameStartCountdown;
 	}, 1000);
 
 	// Stop interval after correct time
+	window.clearTimeout(gameStartTimer);
 	gameStartTimer = window.setTimeout(function () {
 		resetGameStartCountdown();
 		// Start game (should receive 'game start' event)
@@ -439,14 +441,16 @@ window.addEventListener('load', function () {
 	socket.on('participates', function (player) {
 		removePlayer(player.socketID);
 		addPlayer(player, participantsUL);
-		// Change join btn
-		var joinGameBtn = document.getElementById('join-game-btn');
-		if (joinGameBtn) {
-			joinGameBtn.textContent = 'Leave';
-			joinGameBtn.className = 'btn btn-danger leave';
-			joinGameBtn.onclick = function () {
-				participate(false);
-			};
+		// Change join btn if participating player is me
+		if (player.socketID === socket.id) {
+			var joinGameBtn = document.getElementById('join-game-btn');
+			if (joinGameBtn) {
+				joinGameBtn.textContent = 'Leave';
+				joinGameBtn.className = 'btn btn-danger leave';
+				joinGameBtn.onclick = function () {
+					participate(false);
+				};
+			}
 		}
 	});
 
@@ -458,18 +462,21 @@ window.addEventListener('load', function () {
 
 		if (!isPlaying) {
 			// Game has not started
-			// Change button
-			var joinGameBtn = document.getElementById('join-game-btn');
-			if (joinGameBtn) {
-				joinGameBtn.textContent = 'Join';
-				joinGameBtn.className = 'btn btn-primary join';
-				joinGameBtn.onclick = function () {
-					participate(true);
-				};
+			// Change button if player who gave up is me
+			if (player.socketID === socket.id) {
+				var joinGameBtn = document.getElementById('join-game-btn');
+				if (joinGameBtn) {
+					joinGameBtn.textContent = 'Join';
+					joinGameBtn.className = 'btn btn-primary join';
+					joinGameBtn.onclick = function () {
+						participate(true);
+					};
+				}
 			}
 		} else {
 			// Game has started
 			getReadySection.classList.remove('hidden');
+			updateGetReadySection();
 		}
 	});
 

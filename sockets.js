@@ -114,8 +114,6 @@ module.exports = server => {
 					const ip = getIP(socket);
 
 					// Only admin can start games
-					console.log('socket.handshake.address: ' + socket.handshake.address)
-					console.log('x-forwarded-for: ' + socket.handshake.headers['x-forwarded-for'])
 					console.log('user with IP: ' + ip + ' tries to start game')
 					if ( room && room.admin.ip === ip ) {
 						// Start countdown
