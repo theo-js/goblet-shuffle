@@ -114,24 +114,10 @@ function clearTimers () {
 var countdownInterval = null;
 
 // Goblet related functions
-function setGoblets (number) {
+function setGoblets (n) {
 	if (!isInGame) {		
-		// Limit goblets
-		var n = limitNum(
-			number,
-			GAME_CONSTANTS.minGoblets,
-			GAME_CONSTANTS.maxGoblets
-		);
-		if (n === false) {
-			return;
-		}
-
 		// Override global var (side effect)
 		settings.goblets = n;
-		// Memorize number of goblets
-		if (!MULTIPLAYER) {
-			localStorage.setItem('currentGoblets', n);
-		}
 
 		// Replace HTML
 		var gobletsStr = '';
@@ -334,9 +320,23 @@ function enableOptions (enable) {
 function changeSetting(type, element) {
 	if (isAdmin && !isInGame) {
 		var value = element.value;
+
 		switch (type) {
 			case 'goblets-count': {
-				setGoblets(parseInt(value));
+				// Limit goblets
+				value = limitNum(
+					parseInt(value),
+					GAME_CONSTANTS.minGoblets,
+					GAME_CONSTANTS.maxGoblets
+				);
+				setGoblets(value);
+				// Memorize number of goblets
+				if (!MULTIPLAYER) {
+					localStorage.setItem('currentGoblets', value);
+				} else if (isAdmin && socket) {
+					// In multiplayer mode, emit event
+					socket.emit('room setting change', { type, value });
+				}
 				break;
 			} case 'shuffle-count': {
 				// Validate value
@@ -350,6 +350,9 @@ function changeSetting(type, element) {
 					// Memorize setting
 					if (!MULTIPLAYER) {
 						localStorage['shuffleCount'] = value;
+					} else if (isAdmin && socket) {
+						// In multiplayer mode, emit event
+						socket.emit('room setting change', { type, value });
 					}
 				}
 				break;
@@ -362,9 +365,13 @@ function changeSetting(type, element) {
 				);
 				if (value !== false) {
 					settings.shuffleSpeed = value;
-					// Memorize setting
+					
 					if (!MULTIPLAYER) {
+						// Memorize setting
 						localStorage['shuffleSpeed'] = value;
+					} else if (isAdmin && socket) {
+						// In multiplayer mode, emit event
+						socket.emit('room setting change', { type, value });
 					}
 				}
 				break;
@@ -396,9 +403,15 @@ function changeSetting(type, element) {
 								mode: GAME_MODE.REACH_SCORE,
 								scoreToReach
 							};
-							// Memorize settings
-							localStorage['game-mode'] = GAME_MODE.REACH_SCORE;
-							localStorage['score-to-reach'] = scoreToReach;
+							if (!MULTIPLAYER) {
+								// Memorize settings
+								localStorage['game-mode'] = GAME_MODE.REACH_SCORE;
+								localStorage['score-to-reach'] = scoreToReach;
+							} else if (isAdmin && socket) {
+								// In multiplayer mode, emit event
+								socket.emit('room setting change', { type: 'game-mode', value: GAME_MODE.REACH_SCORE });
+								socket.emit('room setting change', { type: 'score-to-reach', value: scoreToReach });
+							}
 						}
 						break;
 					} case GAME_MODE.COUNTDOWN: {
@@ -431,15 +444,21 @@ function changeSetting(type, element) {
 								countdown = GAME_CONSTANTS.defaultCountdown;
 							}
 							settings.gameMode = { mode: GAME_MODE.COUNTDOWN, countdown };
-
-							// Memorize settings
-							localStorage['game-mode'] = GAME_MODE.COUNTDOWN;
-							localStorage['countdown'] = countdown;
 							
 							// Display timer
 							if (timeOutput) {
 								timeOutput.style.display = 'block';
 								timeOutput.className = 'fade-in';
+							}
+
+							if (!MULTIPLAYER) {
+								// Memorize settings
+								localStorage['game-mode'] = GAME_MODE.COUNTDOWN;
+								localStorage['countdown'] = countdown;
+							} else if (isAdmin && socket) {
+								// In multiplayer mode, emit event
+								socket.emit('room setting change', { type: 'game-mode', value: GAME_MODE.COUNTDOWN });
+								socket.emit('room setting change', { type: 'countdown', value: countdown });
 							}
 						}
 						break;
@@ -461,8 +480,13 @@ function changeSetting(type, element) {
 					mode: GAME_MODE.REACH_SCORE,
 					scoreToReach: value
 				};
-				// Memorize settings
-				localStorage['score-to-reach'] = value;
+				if (!MULTIPLAYER) {
+					// Memorize settings
+					localStorage['score-to-reach'] = value;
+				} else if (isAdmin && socket) {
+					// In multiplayer mode, emit event
+					socket.emit('room setting change', { type, value });
+				}
 				break;
 			} case 'countdown': {
 				if (!countdownSelectorM || !countdownSelectorS) {
@@ -486,14 +510,19 @@ function changeSetting(type, element) {
 				settings.gameMode = { mode: GAME_MODE.COUNTDOWN, countdown };
 				initialTime = countdown;
 
-				// Memorize settings
-				localStorage['countdown'] = countdown;
-
-				// Update user interface
+				// Update user interface timer
 				if (timeOutputM && timeOutputS) {
 					var timeString = secondsToTimeStr(countdown);
 					timeOutputM.textContent = timeString.m;
 					timeOutputS.textContent = timeString.s;
+				}
+
+				if (!MULTIPLAYER) {
+					// Memorize settings
+					localStorage['countdown'] = countdown;
+				} else if (isAdmin && socket) {
+					// In multiplayer mode, emit event
+					socket.emit('room setting change', { type, value: countdown });
 				}
 				break;
 			} default: return;

@@ -31,6 +31,7 @@ const PLAYER_ROLE = {
 };
 
 const ROOM_ID_LENGTH = 10;
+const ROOM_TTL = 10; // Empty rooms get deleted after this timespan (seconds)
 const GAME_START_COUNTDOWN = 10;
 
 module.exports = {
@@ -39,5 +40,6 @@ module.exports = {
 	GAME_MODE,
 	PLAYER_ROLE,
 	ROOM_ID_LENGTH,
+	ROOM_TTL,
 	GAME_START_COUNTDOWN
 };

@@ -384,6 +384,10 @@ function handleMultiPlayerError (err) {
 				inline: 'start', block: 'nearest'
 			});
 			return true;
+		} case'game-settings': {
+			console.log('game settings error: ')
+			console.log(err.msg)
+			return true;
 		} default: return false;
 	}
 }
@@ -477,6 +481,54 @@ window.addEventListener('load', function () {
 			// Game has started
 			getReadySection.classList.remove('hidden');
 			updateGetReadySection();
+		}
+	});
+
+	// Admin changed the game settings
+	socket.on('game setting changed', function ({ type, value }) {
+		switch (type) {
+			case 'goblets-count': {
+				settings.goblets = value;
+				setGoblets(value);
+				break;
+			} case 'shuffle-count': {
+				settings.shuffleCount = value;
+				break;
+			} case 'shuffle-speed': {
+				settings.shuffleSpeed = value;
+				break;
+			} case 'game-mode': {
+				settings.gameMode.mode = value;
+				switch (value) {
+					case GAME_MODE.REACH_SCORE:
+						// Hide timer
+						if (timeOutput) {
+							timeOutput.style.display = 'none';
+						}
+						break;
+					case GAME_MODE.COUNTDOWN:
+						// Display timer
+						if (timeOutput) {
+							timeOutput.style.display = 'block';
+							timeOutput.className = 'fade-in';
+						}
+						break;
+					default:
+				}
+				break;
+			} case 'score-to-reach': {
+				settings.gameMode = { mode: GAME_MODE.REACH_SCORE, scoreToReach: value };
+				break;
+			} case 'countdown': {
+				settings.gameMode = { mode: GAME_MODE.COUNTDOWN, countdown: value };
+				// Update timer
+				if (timeOutputM && timeOutputS) {
+					var timeString = secondsToTimeStr(value);
+					timeOutputM.textContent = timeString.m;
+					timeOutputS.textContent = timeString.s;
+				}				
+				break;
+			} default: return;
 		}
 	});
 

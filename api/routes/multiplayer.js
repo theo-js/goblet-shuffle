@@ -8,76 +8,7 @@ const {
 	ROOM_ID_LENGTH
 } = require('../../constants');
 
-global.rooms = [
-	{
-		// Mock data
-		id: 'abcdefghij',
-		name: 'My customized room name',
-		isPlaying: false,
-		gameStart: null,
-		gameStartCountdown: null,
-		admin: {
-			ip: '6262524532',
-			name: 'David',
-		},
-		players: [
-		 	{
-		 		socketID: 'ortqb',
-		 		uid: 'ytrfit6hy',
-				ip: '6262524532',
-				name: 'David',
-				role: PLAYER_ROLE.ADMIN,
-				participates: true,
-				score: 250
-			},
-			{
-				socketID: 'ytf!yt',
-				uid: 'ytrfit6hy',
-				ip: '6232',
-				name: 'Peter',
-				role: PLAYER_ROLE.BASIC,
-				participates: true,
-				score: 800
-			},
-			{
-				socketID: 'ujyg',
-				uid: 'xsutgytg',
-				ip: '765685',
-				name: 'Luke',
-				role: PLAYER_ROLE.BASIC,
-				participates: false,
-				score: 0
-			},
-			{
-				socketID: 'pokgoij',
-				uid: 'regdgtg',
-				ip: '099.89.9090',
-				name: 'Patrick',
-				role: PLAYER_ROLE.BASIC,
-				participates: true,
-				score: 0
-			},
-			{
-				socketID: 'zerferdthfujkuh',
-				uid: 'ghjgtfyhtgf',
-				ip: '8.6788.40',
-				name: 'Gabby',
-				role: PLAYER_ROLE.BASIC,
-				participates: false,
-				score: 0
-			}
-		],
-		settings: {
-			goblets: 10,
-			shuffleCount: 7,
-			shuffleSpeed: .4,
-			gameMode: {
-				mode: GAME_MODE.COUNTDOWN,
-				countdown: 95
-			}
-		}
-	}
-];
+global.rooms = [];
 
 const getRoomIndex = (roomID, resolve, reject) => {
 	const room = global.rooms.find(room => room.id === roomID);

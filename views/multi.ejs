@@ -265,7 +265,7 @@
 															id="reach-score-mode"
 															value="<%= GAME_MODE.REACH_SCORE %>"
 															style="display: none;"
-															checked="<%= room.settings.gameMode.mode === GAME_MODE.REACH_SCORE %>"
+															<%= room.settings.gameMode.mode === GAME_MODE.REACH_SCORE ? 'checked' : '' %>
 														>
 														<input
 															type="number"
@@ -296,7 +296,7 @@
 															id="countdown-mode"
 															value="<%= GAME_MODE.COUNTDOWN %>"
 															style="display: none;"
-															checked="<%= room.settings.gameMode.mode === GAME_MODE.COUNTDOWN %>"
+															<%= room.settings.gameMode.mode === GAME_MODE.COUNTDOWN ? 'checked' : '' %>
 														>
 														<fieldset class="time-field">
 															<input

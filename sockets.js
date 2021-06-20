@@ -3,7 +3,13 @@ const {
 	getRoomIndex,
 	filterPlayer
 } = require('./api/routes/multiplayer');
-const { GAME_CONSTANTS, PLAYER_ROLE, GAME_START_COUNTDOWN, GAME_MODE } = require('./constants');
+const {
+	GAME_CONSTANTS, 
+	PLAYER_ROLE, 
+	GAME_START_COUNTDOWN, 
+	GAME_MODE,
+	ROOM_TTL
+	} = require('./constants');
 const { randomInt } = require('./utils/math');
 const { validateStr, limitNum } = require('./utils/validate');
 
@@ -385,6 +391,135 @@ module.exports = server => {
 				} default: return false;
 			}
 		});
+
+		// Room settings
+		socket.on('room setting change', ({ type, value }) => {
+			getRoomIndex(
+				roomID,
+				roomIndex => {
+					const room = global.rooms[roomIndex];
+					const ip = getIP(socket);
+					// Only admin can change the room's settings
+					if (room.admin.ip !== ip) return false
+					// Cannot change settings during game
+					if (room.isPlaying) {
+						socket.emit('error', {
+							type: 'game-settings',
+							msg: 'Cannot change settings during game !'
+						});
+						return false;
+					}
+
+					// Validate new setting
+					switch (type) {
+						case 'goblets-count': {
+							const validated = limitNum(
+								parseInt(value),
+								GAME_CONSTANTS.minGoblets,
+								GAME_CONSTANTS.maxGoblets
+							);
+							if (validated === false) {
+								socket.emit('error', {
+									type: 'game-settings',
+									msg: `Invalid number of goblets ! It should be between ${GAME_CONSTANTS.minGoblets} and ${GAME_CONSTANTS.maxGoblets}`
+								});
+								return false;
+							}
+
+							global.rooms[roomIndex].settings.goblets = validated;
+							socket.broadcast.to(roomID).emit('game setting changed', {
+								type, value: validated
+							});
+							break;
+						} case 'shuffle-count': {
+							const validated = limitNum(
+								parseInt(value),
+								GAME_CONSTANTS.minShuffleCount,
+								GAME_CONSTANTS.maxShuffleCount
+							);
+							if (validated === false) {
+								socket.emit('error', {
+									type: 'game-settings',
+									msg: `Invalid number of goblet permutations ! It should be between ${GAME_CONSTANTS.minShuffleCount} and ${GAME_CONSTANTS.maxShuffleCount}`
+								});
+								return false;
+							}
+
+							global.rooms[roomIndex].settings.shuffleCount = validated;
+							socket.broadcast.to(roomID).emit('game setting changed', {
+								type, value: validated
+							});
+							break;
+						} case 'shuffle-speed': {
+							const validated = limitNum(
+								parseFloat(value),
+								GAME_CONSTANTS.minShuffleSpeed,
+								GAME_CONSTANTS.maxShuffleSpeed
+							);
+							if (validated === false) {
+								socket.emit('error', {
+									type: 'game-settings',
+									msg: 'Invalid shuffle speed !'
+								});
+								return false;
+							}
+
+							global.rooms[roomIndex].settings.shuffleSpeed = validated;
+							socket.broadcast.to(roomID).emit('game setting changed', {
+								type, value: validated
+							});
+							break;
+						} case 'game-mode': {
+							const isValidMode = Object.keys(GAME_MODE).includes(value);
+							if (!isValidMode) {
+								socket.emit('error', {
+									type: 'game-settings',
+									msg: 'This game mode does not exist'
+								});
+								return false;
+							}
+
+							global.rooms[roomIndex].settings.gameMode.mode = value;
+							socket.broadcast.to(roomID).emit('game setting changed', { type, value });
+							break;
+						} case 'score-to-reach': {
+							const validated = limitNum(
+								parseInt(value),
+								GAME_CONSTANTS.minScoreToReach,
+								GAME_CONSTANTS.maxScoreToReach
+							)
+							if (validated === false) {
+								socket.emit('error', {
+									type: 'game-settings',
+									msg: `Invalid score ! It should be between ${GAME_CONSTANTS.minScoreToReach} and ${GAME_CONSTANTS.maxScoreToReach}`
+								});
+								return false;
+							}
+							global.rooms[roomIndex].settings.gameMode = { mode: GAME_MODE.REACH_SCORE, scoreToReach: value };
+							socket.broadcast.to(roomID).emit('game setting changed', { type, value });
+							break;
+						} case 'countdown': {
+							const validated = limitNum(
+								parseInt(value),
+								GAME_CONSTANTS.minCountdown,
+								GAME_CONSTANTS.maxCountdown
+							);
+							if (validated === false) {
+								socket.emit('error', {
+									type: 'game-settings',
+									msg: `Invalid countdown ! It should be between ${GAME_CONSTANTS.minCountdown} and ${GAME_CONSTANTS.maxCountdown}`
+								});
+								return false;
+							}
+							global.rooms[roomIndex].settings.gameMode = { mode: GAME_MODE.COUNTDOWN, countdown: value };
+							socket.broadcast.to(roomID).emit('game setting changed', { type, value });
+							break;
+						} default: return false;
+					}
+				},
+				() => false
+			);
+		});
 		
 
 		// Disconnect
@@ -419,7 +554,7 @@ module.exports = server => {
 								// Clear all timers/intervals related to this room
 								clearInterval(gameStartTimer[roomID]); delete gameStartTimer[roomID];
 								clearInterval(countdownTimer[roomID]); delete countdownTimer[roomID];
-							}, 5000);
+							}, ROOM_TTL * 1000);
 
 						} else {
 							// Notify other players about player leave

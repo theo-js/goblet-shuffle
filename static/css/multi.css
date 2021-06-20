@@ -187,9 +187,9 @@
 	-webkit-box-shadow: 0 0 0 .125rem rgb(238, 102, 187), 0 0 0 .25rem #222, 0 .25rem .25rem .25rem #2225;
 	box-shadow: var(--purple-box-border);*/
 
-	-webkit-transition: 1s all ease;
-	-moz-transition: 1s all ease;
-	transition: 1s all ease;
+	-webkit-transition: 1s opacity ease;
+	-moz-transition: 1s opacity ease;
+	transition: 1s opacity ease;
 }
 .get-ready-section.hidden {
 	user-select: none;
@@ -268,6 +268,8 @@
 		display: grid;
 		grid-template-columns: 1fr;
 		grid-template-areas: "options" "players" "goblets";
+		grid-gap: 0 !important;
+		margin-bottom: 1rem;
 	}
 
 	#players-section {
