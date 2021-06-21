@@ -21,6 +21,8 @@ function randomizeTheme () {
 	document.documentElement.style.setProperty('--violet', 'rgb(' + violetR + ', ' + violetG + ', ' + violetB + ')');
 	document.documentElement.style.setProperty('--light-purple', 'rgb(' + lpR + ', ' + lpG + ', ' + lpB + ')');
 	document.documentElement.style.setProperty('--pink', 'rgb(' + pinkR + ', ' + pinkG + ', ' + pinkB + ')');
+	document.documentElement.style.setProperty('--pink-tp', 'rgba(' + pinkR + ', ' + pinkG + ', ' + pinkB + ', .333)');
+	document.documentElement.style.setProperty('--violet-dark', 'rgb(' + (violetR - lighten) + ', ' + (violetG - lighten) + ', ' + (violetB - lighten) + ')');
 
 	// --pink-yellow-blend is a blend between --light-yellow & --violet
 	var pyR = Math.round(avg(violetR, 255));
@@ -864,18 +866,44 @@ function endGame (winner) {
 			case GAME_MODE.REACH_SCORE: {
 				// REACH_SCORE
 				var timeStr = secondsToTimeStr(gameTime);
-				var msg = 'Finish !\nIt took you ' + timeStr.m + '\'' + timeStr.s + 
-				'\'\' to reach ' + settings.gameMode.scoreToReach + 'pts' +
-				'\nSuccesses: ' + successes + '\nFails: ' + fails;
-				alert(msg);
+				var msg = '<h3 class="title" style="--n: 0">Finish !</h3>' + 
+				'<p class="msg" style="--n: 1">It took you <strong>' + timeStr.m + '\'' + timeStr.s + 
+				'\'\'</strong> to reach <strong>' + settings.gameMode.scoreToReach + 'pts</strong></p>' +
+				'<div class="hr"></div>' + 
+				'<p class="result-row" style="--n: 2">' + 
+					'<span>Successes:</span><strong class="successes">' + successes + '</strong>' + 
+				'</p>' +
+				'<p class="result-row" style="--n: 3">' + 
+					'<span>Fails:</span><strong class="fails">' + fails + '</strong>' + 
+				'</p>' +
+				'<div class="hr"></div>' + 
+				'<button ' + 
+					'class="btn btn-primary ok" ' + 
+					'onclick="openEndGameModal(false);" ' +
+					'style="--n: 4"' +
+				'>Ok</button>';
+				openEndGameModal(true, msg);
 				break;
 			} case GAME_MODE.COUNTDOWN: {
 				// COUNTDOWN
 				var timeStr = secondsToTimeStr(settings.gameMode.countdown);
-				var msg = 'Finish !\nIn ' + timeStr.m + '\'' + timeStr.s + '\'\'' +
-				' you\'ve managed to earn ' + score + 'pts' +
-				'\nSuccesses: ' + successes + '\nFails: ' + fails;
-				alert(msg);
+				var msg = '<h3 class="title" style="--n: 0">Finish !</h3>' +
+				'<p class="msg" style="--n: 1">In <strong>' + timeStr.m + '\'' + timeStr.s + '\'\'' +
+				'</strong> you\'ve managed to earn <strong>' + score + 'pts</strong></p>' +
+				'<div class="hr"></div>' + 
+				'<p class="result-row" style="--n: 2">' + 
+					'<span>Successes:</span><strong class="successes">' + successes + '</strong>' + 
+				'</p>' +
+				'<p class="result-row" style="--n: 3">' + 
+					'<span>Fails:</span><strong class="fails">' + fails + '</strong>' + 
+				'</p>' +
+				'<div class="hr"></div>' + 
+				'<button ' + 
+					'class="btn btn-primary ok" ' + 
+					'onclick="openEndGameModal(false);" ' +
+					'style="--n: 4"' +
+				'>Ok</button>';
+				openEndGameModal(true, msg);
 				break;
 			} default: return;
 		}
@@ -886,20 +914,73 @@ function endGame (winner) {
 			switch (settings.gameMode.mode) {
 				case GAME_MODE.REACH_SCORE: {
 					var timeStr = secondsToTimeStr(gameTime);
-					var msg = winner.name + ' has won ! Reached ' + settings.gameMode.scoreToReach +
-					' in ' + timeStr.m + '\'' + timeStr.s + '\'\'';
-					alert(msg);
+					var msg = '<h3 class="title" style="--n: 0">' + winner.name + ' has won !</h3>' +
+					'<p class="msg" style="--n: 1">Reached <strong>' + settings.gameMode.scoreToReach +
+					'</strong> in <strong>' + timeStr.m + '\'' + timeStr.s + '\'\'</strong></p>' +
+					'<div class="hr"></div>' + 
+					'<button ' + 
+						'class="btn btn-primary ok" ' + 
+						'onclick="openEndGameModal(false);" ' +
+						'style="--n: 2"' +
+					'>Ok</button>';
+					openEndGameModal(true, msg);
 					break;
 				} case GAME_MODE.COUNTDOWN: {
 					var timeStr = secondsToTimeStr(settings.gameMode.countdown);
-					var msg = winner.name + ' has won with ' + winner.score + 'pts !';
-					alert(msg);
+					var msg = '<h3 class="title" style="--n: 0">' + winner.name + ' has won !</h3>' +
+					'<p class="msg" style="--n: 1">with <strong>' + winner.score + 'pts !</strong></p>' +
+					'<div class="hr"></div>' + 
+					'<button ' + 
+						'class="btn btn-primary ok" ' + 
+						'onclick="openEndGameModal(false);" ' +
+						'style="--n: 2"' +
+					'>Ok</button>';
+					openEndGameModal(true, msg);
 					break;
 				} default: return;
 			}
 		}
 	}
 	onPlay();
+}
+function openEndGameModal (boolean, msg) {
+	var modalID = 'game-end-modal';
+	if (boolean) {
+		// Open modal
+		// Check if modal is already open; if so, close it first
+		if (!!document.getElementById(modalID)) {
+			var modal = document.getElementById(modalID);
+			modal.parentElement.removeChild(modal);
+		}
+		var modal = document.createElement('div');
+		modal.className = 'my-modal';
+		modal.setAttribute('id', modalID);
+		var win = document.createElement('div');
+		win.className = 'game-end-msg';
+		win.addEventListener('mousedown', function (e) {
+			e.stopPropagation();
+		}, false);
+		modal.addEventListener('mousedown', function () {
+			win.classList.add('modal-clicked');
+			window.setTimeout(function () {
+				win.classList.remove('modal-clicked');
+			}, 75);
+		}, false);
+
+		win.innerHTML = msg;
+
+		modal.appendChild(win);
+		document.body.appendChild(modal);
+	} else {
+		// Close modal
+		var modal = document.getElementById(modalID);
+		// Fade out transition during 500ms
+		modal.style.opacity = 0;
+		modal.style.pointerEvents = 'none';
+		window.setTimeout(function () {
+			modal.parentElement.removeChild(modal);
+		}, 500);
+	}
 }
 
 // Initialize game

@@ -2,7 +2,9 @@
 
 :root {
 	--violet: rgb(170, 0, 238); /* #8a2de9 */
+	--violet-dark: rgb(150, 0, 218);
 	--pink: rgb(187, 102, 238); /* light violet */ /* #9e41fd */
+	--pink-tp: rgba(187, 102, 238, .333);
 	--purple: #ee00aa; /* #ba9b7f */
 	--light-purple: rgb(238, 102, 187); /* #ceaf93 */
 	--black: #222;
@@ -77,6 +79,20 @@ body::before {
 .close-btn:hover, .close-btn:focus {
 	filter: brightness(1.05);
 	opacity: .75;
+}
+
+.btn-primary {
+	background-color: var(--violet);
+	border-color: var(--violet);
+}
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+	background-color: var(--violet-dark);
+	border-color: var(--violet-dark);
+}
+.btn-primary:focus {
+	box-shadow: 0 0 0 4px var(--pink-tp) !important;
 }
 
 a, .link {
@@ -471,6 +487,67 @@ br {
 	font-size: 1.25rem; margin-left: 1rem; margin-right: 1rem;
 }
 
+.game-end-msg {
+	align-self: start; margin-top: 4rem;
+	background: white;
+	max-width: calc(100vw - 3rem);
+	padding: 1rem;
+	border: 1px solid var(--violet); border-radius: .5rem;
+	box-shadow: 0 0 .5rem .125rem var(--violet), 0 0rem 1rem .25rem var(--purple);
+	/*box-shadow: 0 .25rem 1rem 0 #2225;*/
+	animation: move-top .5s cubic-bezier(.25,1,.75,1.15);
+	transition: 500ms ease transform;
+}
+.game-end-msg.modal-clicked {
+	transform: scale(1.0625);
+	transition-duration: 50ms;
+}
+.game-end-msg .title {
+	text-align: center;
+	margin-bottom: 1rem;
+	font-size: 2rem;
+	font-family: 'Parisienne', cursive;
+	font-weight: 700;
+	color: var(--purple);
+}
+.game-end-msg .msg {
+	font-style: italic;
+}
+.game-end-msg .hr {
+	background-color: var(--light-purple);
+}
+.game-end-msg strong {
+	color: var(--violet);
+}
+.game-end-msg .result-row {
+	display: flex;
+}
+.game-end-msg .result-row > * {
+	width: 50%;
+}
+.game-end-msg .result-row > strong {
+	text-align: center;
+}
+.game-end-msg .successes {
+	color: var(--bs-success);
+}
+.game-end-msg .fails {
+	color: var(--bs-danger);
+}
+.game-end-msg p:last-child {
+	margin-bottom: 0;
+}
+.game-end-msg .ok {
+	float: right;
+}
+.game-end-msg > * {
+	animation-name: margin-top;
+	animation-duration: .5s;
+	animation-timing-function: cubic-bezier(.65,.15,.5,1.25);
+	animation-delay: calc(var(--n) * .1s);
+	animation-fill-mode: both;
+}
+
 
 @media screen and ( max-width: 650px ) {
 	:root {
@@ -539,6 +616,18 @@ br {
 	}
 }
 
+@keyframes move-top {
+	from {
+		transform: translateY(2rem);
+		opacity: .5;
+		filter: blur(1px);
+	} to {
+		transform: none;
+		opacity: 1;
+		filter: none;
+	}
+}
+
 @keyframes blink {
 	from {
 		filter: brightness(.8);
@@ -553,6 +642,18 @@ br {
 	from {
 		opacity: 0;
 	} to {
+		opacity: 1;
+	}
+}
+
+@keyframes margin-top {
+	from {
+		margin-top: -.5rem;
+		transform: translateY(2rem);
+		opacity: .125;
+	} to {
+		margin-top: 0;
+		transform: translateY(0);
 		opacity: 1;
 	}
 }
