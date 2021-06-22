@@ -149,7 +149,6 @@ br {
 
 .app {
 	position: relative;
-	overflow: hidden;
 }
 
 .app-header {

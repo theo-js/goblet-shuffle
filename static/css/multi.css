@@ -239,6 +239,11 @@
 }
 .chat-form .chat-input-field {
 	display: inline-flex;
+	-webkit-flex-direction: row;
+	-moz-flex-direction: row;
+	-ms-flex-direction: row;
+	-o-flex-direction: row;
+	flex-direction: row;
 	-webkit-flex-wrap: nowrap !important;
 	-moz-flex-wrap: nowrap !important;
 	-ms-flex-wrap: nowrap !important;

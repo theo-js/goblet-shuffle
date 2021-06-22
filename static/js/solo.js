@@ -6,15 +6,16 @@ var isInviteSubmitDisabledStr = isInviteSubmitDisabled ? 'disabled' : '';
 
 var inviteModalHTMLContent = '<form class="invite-form scrollbar scrollbar-black" id="invite-form">' +
 	'<fieldset>' + 
+		'<span onclick="openInviteModal(false)" class="close-btn btn btn-danger"><i class="fa fa-arrow-left"></i></span>' + 
 		'<legend><i class="fa fa-pen-fancy"></i><span class="underline">About me</span></legend>' +
 	 	'<label><strong class="label">Player name:</strong>&nbsp;&nbsp;' +
 	 	'<input placeholder="' + getRandomUserName() + '" id="playerName" name="playerName" oninput="handlePlayerNameChange(this)" maxlength="' + GAME_CONSTANTS.maxPlayerNameLength + '"/>' +
-	 	'<span class="button hide500-" onclick="resetPlayerName();">&times;</span>' +
+	 	'<span class="button hide500-" onclick="resetPlayerName();"><i class="fa fa-times"></i></span>' +
 	 	'<span class="button round-right hide500-" onclick="randomizePlayerName();">Random</span>' +
 	 	'</label><br/>' +
 	 	'<label><strong class="label">Room name:</strong>&nbsp;&nbsp;' +
 	 	'<input id="roomName" name="roomName" placeholder="Goblet shuffle" oninput="handleRoomNameChange(this)" value="" maxlength="' + GAME_CONSTANTS.maxRoomNameLength + '"/>' +
-	 	'<span class="button round-right hide500-" onclick="resetRoomName();">&times;</span>' +
+	 	'<span class="button round-right hide500-" onclick="resetRoomName();"><i class="fa fa-times"></i></span>' +
 	 	'</label>' +
 	'</fieldset>' +
 	'<div class="hr" style="background: white;"></div>' +
@@ -57,7 +58,7 @@ var inviteModalHTMLContent = '<form class="invite-form scrollbar scrollbar-black
 	'<div class="hr" style="background: white;"></div>' +
 	'<div id="invite-form-error"></div>' +
 	'<fieldset class="invite-form-footer">' +
-		'<button id="submitBtn" class="button submit" ' + isInviteSubmitDisabledStr + '>Ready</button>' +
+		'<button id="submitBtn" class="button submit" ' + isInviteSubmitDisabledStr + '>Ready <i class="fa fa-arrow-right"></i></button>' +
 	'</fieldset>' + 
 '</form>';
 

@@ -38,6 +38,17 @@
 	transition: transform ease .5s;
 }
 
+.invite-form .close-btn {
+	display: none;
+	position: fixed;
+	left: .5rem; bottom: 1rem;
+	padding: 1.333rem 2rem;
+	z-index: 2;
+}
+.invite-form .close-btn:hover {
+	filter: unset;
+}
+
 .invite-form .label {
 	background: linear-gradient(white, var(--light-yellow));
 	background-clip: text;
@@ -139,13 +150,12 @@
 	transition: all ease-out .5s;
 	padding: .5rem 1rem;
 }
-.invite-form .button.submit::after { content: ' \279F'; }
 .invite-form .button.submit:disabled {
 	opacity: .5;
 	filter: brightness(.8);
 	cursor: default;
 }
-.invite-form .button.submit:disabled::after { display: none; }
+.invite-form .button.submit.fa { display: none; }
 
 .invite-form .invite-form-footer {
 	position: sticky; bottom: 0; width: 100%;
@@ -155,6 +165,17 @@
 
 
 @media screen and ( max-width: 500px ) {
+	.invite-form {
+		position: absolute;
+		top: 2rem; left: 0; right: 0; bottom: 0;
+		max-width: 100%; max-height: 100%;
+		margin: 0;
+		border-radius: 0;
+	}
+	.invite-form .close-btn {
+		display: inline-flex;
+	}
+
 	.invite-form legend {
 		text-align: right;
 		font-size: .875rem;
