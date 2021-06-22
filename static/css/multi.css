@@ -239,7 +239,11 @@
 }
 .chat-form .chat-input-field {
 	display: inline-flex;
-	flex-wrap: nowrap;
+	-webkit-flex-wrap: nowrap !important;
+	-moz-flex-wrap: nowrap !important;
+	-ms-flex-wrap: nowrap !important;
+	-o-flex-wrap: nowrap !important;
+	flex-wrap: nowrap !important;
 }
 .chat-form .chat-input {
 	padding: 0 .5rem;
