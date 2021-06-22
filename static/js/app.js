@@ -881,7 +881,7 @@ function endGame (winner) {
 					'class="btn btn-primary ok" ' + 
 					'onclick="openEndGameModal(false);" ' +
 					'style="--n: 4"' +
-				'>Ok</button>';
+				'>Got it</button>';
 				openEndGameModal(true, msg);
 				break;
 			} case GAME_MODE.COUNTDOWN: {
@@ -902,7 +902,7 @@ function endGame (winner) {
 					'class="btn btn-primary ok" ' + 
 					'onclick="openEndGameModal(false);" ' +
 					'style="--n: 4"' +
-				'>Ok</button>';
+				'>Got it</button>';
 				openEndGameModal(true, msg);
 				break;
 			} default: return;
@@ -922,7 +922,7 @@ function endGame (winner) {
 						'class="btn btn-primary ok" ' + 
 						'onclick="openEndGameModal(false);" ' +
 						'style="--n: 2"' +
-					'>Ok</button>';
+					'>Got it</button>';
 					openEndGameModal(true, msg);
 					break;
 				} case GAME_MODE.COUNTDOWN: {
@@ -934,7 +934,7 @@ function endGame (winner) {
 						'class="btn btn-primary ok" ' + 
 						'onclick="openEndGameModal(false);" ' +
 						'style="--n: 2"' +
-					'>Ok</button>';
+					'>Got it</button>';
 					openEndGameModal(true, msg);
 					break;
 				} default: return;

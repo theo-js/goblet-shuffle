@@ -106,7 +106,25 @@
 				</h1>
 			</header>
 			<main class="app-body">
-				<div class="game">
+				<% if (err) { %>
+					<p class="alert alert-danger" style="position: relative; margin-top: 1rem;">
+						<%= err %> :(
+						<button
+							onclick="(function (btn) {
+								if (btn.parentElement && btn.parentElement.parentElement) {
+									if (btn.parentElement.previousElementSibling) {
+										btn.parentElement.parentElement.removeChild(btn.parentElement.previousElementSibling);
+									}
+									btn.parentElement.parentElement.removeChild(btn.parentElement);
+								}
+							})(this);"
+							class="close-btn"
+						>
+						<i class="fa fa-times"></i>
+					</button>
+					</p>
+				<% } %>
+				<div class="game <%= isAdmin ? 'admin' : '' %>">
 					<section class="goblets-section">
 						<div id="goblets-container">
 							<div class="goblet" data-offset-x="0" data-offset-y="0"></div>
@@ -197,8 +215,10 @@
 											list.classList.toggle('collapsed');
 											btn.classList.toggle('active');
 										})()" style="cursor: pointer;" title="Settings">
-											<i class="fa fa-cog"></i>
-											&nbsp;Settings
+											<span class="clickable">
+												<i class="fa fa-cog"></i>
+												&nbsp;Settings
+											</span>
 										</h3>
 										<button class="collapse-btn active" id="game-settings-options-list-toggle-btn" onclick="(function (btn) {
 											// Collapse list
@@ -405,6 +425,36 @@
 							</ul>
 						</div>
 					</section>
+					<form class="chat-form" id="chat-form">
+						<fieldset class="chat-input-field">
+							<input
+								class="chat-input"
+								id="chat-form-input"
+								maxLength="1000"
+								autocomplete="off"
+								placeholder="Type your message here"
+							/>
+							<button
+								class="btn btn-primary delete-btn"
+								onmousedown="(function (btn) {
+									var chatFormInput = document.getElementById('chat-form-input');
+									if (chatFormInput) {
+										chatFormInput.value = '';
+										window.setTimeout(function () {
+											if (chatFormInput) {
+												chatFormInput.focus();
+											}
+										}, 5);
+									}
+								})(this);"
+							>
+								<i class="fa fa-times"></i>
+							</button>
+							<button class="btn btn-primary send-btn">
+								<i class="fa fa-paper-plane"></i>
+							</button>
+						</fieldset>
+					</form>
 				</div>
 				<% if (isAdmin) { %>
 					<article class="alert alert-info game-info-message">

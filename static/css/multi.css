@@ -3,7 +3,7 @@
 }
 
 .game {
-	grid-template-areas: "goblets options" "goblets players";
+	grid-template-areas: "goblets options" "goblets players" "goblets chat-form";
 }
 
 /* Players */
@@ -17,7 +17,7 @@
 	font-size: .75em; font-family: 'Parisienne', cursive;
 	margin: 0; padding: .125rem .5rem;
 	background-color: var(--black); color: white;
-	border-radius: 1px;
+	border-radius: 99px;
 }
 #players-section .player-list-name::before {
 	content: '';
@@ -53,18 +53,14 @@
 	-moz-border-radius: 99px;
 	border-radius: 99px;
 }
+.players-list::-webkit-scrollbar:hover {
+	height: 1rem; width: 1rem;
+}
 .players-list::-webkit-scrollbar-thumb:hover {
 	background-color: #2225;
 }
 .players-list::-webkit-scrollbar-thumb:active {
 	background-color: #2226;
-}
-
-#participants-list {
-	min-height: 67px;
-}
-#lurkers-list {
-	min-height: 35px;
 }
 
 .player {
@@ -234,23 +230,86 @@
 	display: flex; justify-content: space-around; align-items: center;
 }
 
+.chat-form {
+	grid-area: chat-form;
+	font-size: 1rem;
+	height: calc(1.5em + 2px);
+}
+.chat-form .chat-input-field {
+	display: inline-flex;
+}
+.chat-form .chat-input {
+	padding: 0 .5rem;
+	border: none;
+	border-bottom: 1px solid var(--pink);
+	border-radius: 2px 0 0 0;
+	background-color: transparent;
+	transition: .2s background-color ease;
+}
+.chat-form .chat-input:focus {
+	border-bottom-color: var(--violet);
+	outline: none;
+}
+.chat-form .chat-input:focus {
+	background-color: white;
+}
+.chat-form button {
+	padding: 0 .5rem;
+	border-top-left-radius: 0; border-bottom-left-radius: 0;
+}
+.chat-form .delete-btn {
+	display: none;
+	background-color: white;
+	border: none;
+	border-bottom: 1px solid var(--violet);
+	border-radius: 0;
+	color: #222A;
+	font-size: 1.125rem;
+	transition: .2s color ease;
+}
+.chat-form .delete-btn:hover {
+	color: var(--black);
+}
 
-@media screen and ( min-width: 651px ) {
+
+@media screen and ( min-width: 701px ) {
 	#players-section {
 		display: flex; flex-direction: row-reverse;
 	}
+	#players-section > * {
+		width: 50%;
+	}
 
-	#participants-list,
-	#lurkers-list {
-		min-height: calc(100% - 43px);
-		padding-top: 0; margin-top: .5rem;
+	.players-list {
+		height: calc(100% - 18px);
+		max-height: calc(265px - 2.5rem - 2px);
+		padding-top: 0; padding-bottom: 0;
+		margin-top: .5rem;
 	}
 
 	#players-section .player-list-name {
 		justify-content: center;
 	}
+
+	#participants-list-name {
+		border-radius: 99px 0 0 99px !important;
+	}
+	#lurkers-list-name {
+		border-radius: 0 99px 99px 0 !important;
+	}
+	#participants-list {
+		padding-left: 0;
+	}
 	#lurkers-list {
+		padding-right: 0;
 		border-left: .5px solid #2222;
+	}
+	.player {
+		max-width: 100% !important;
+	}
+	.player-name {
+		max-width: 100% !important;
+		text-align: center !important;
 	}
 
 	.player .percentage-bar {
@@ -259,17 +318,25 @@
 	.player .percentage-bar {
 		width: calc(100% - .5rem);
 	}
+
+	.chat-form {
+		align-self: flex-end;
+	}
 }
 
-@media screen and ( max-width: 650px ) {
+@media screen and ( max-width: 700px ) {
 	.game {
 		display: -ms-grid;
 		-ms-grid-columns: 1fr;
 		display: grid;
 		grid-template-columns: 1fr;
-		grid-template-areas: "options" "players" "goblets";
+		grid-template-areas: "options" "players" "goblets" "chat-form";
 		grid-gap: 0 !important;
 		margin-bottom: 1rem;
+	}
+
+	.get-ready-section .btn {
+		font-size: 1.25rem;
 	}
 
 	#players-section {
@@ -280,10 +347,33 @@
 		flex-direction: row; align-items: center;
 		padding-left: 0; padding-right: 0;
 	}
+	#participants-list {
+		min-height: 67px;
+	}
+	#lurkers-list {
+		min-height: 35px;
+	}
 
 	.player .player-name {
 		text-align: center;
 	} 
+
+	.chat-form {
+		margin-top: 1rem;
+		font-size: 1.25rem;
+	}
+	.chat-form .chat-input-field {
+		display: flex;
+	}
+	.chat-form .chat-input {
+		flex-grow: 1;
+	}
+	.chat-form .send-btn {
+		padding: 0 2rem;
+	}
+	.chat-form .chat-input:focus + .delete-btn {
+		display: inline-block;
+	}
 }
 
 @media screen and ( max-width: 500px ) {

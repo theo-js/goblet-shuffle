@@ -149,6 +149,7 @@ br {
 
 .app {
 	position: relative;
+	overflow: hidden;
 }
 
 .app-header {
@@ -188,10 +189,9 @@ br {
 }
 
 .app-body {
-	min-height: calc(100vh - 36px)/*.app-header height*/;
+	min-height: calc(100vh - 1rem - 36px)/*.app-header height*/;
 	max-width: 1000px;
 	margin: 0 auto;
-	overflow: hidden;
 }
 #particles {
 	position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -206,10 +206,12 @@ br {
 	position: relative;
 	display: -ms-grid; -ms-grid-columns: 1fr 200px;
 	display: grid;
-	grid-template-columns: 4fr 1fr;
+	grid-template-columns: 4fr 245px;
+	grid-template-rows: auto 1fr;
 	grid-template-areas: "goblets options";
 	grid-gap: 1rem;
-	margin: 1rem;
+	margin: 1rem auto;
+	max-width: calc(100vw - 3rem);
 	font-size: 100px;
 	min-height: 382px;
 }
@@ -219,7 +221,6 @@ br {
 	grid-area: options;
 	font-size: 1rem;
 	z-index: 5;
-	transform: translate(4px, 4px);
 }
 .game-options {
 	display: flex; flex-direction: column;
@@ -230,9 +231,12 @@ br {
 	border-radius: 2px;
 	transition: .3s background-color ease;
 
-	-moz-box-shadow: 0 0 0 .125rem rgb(238, 102, 187), 0 0 0 .25rem #222, 0 .25rem .25rem .25rem #2225;
-	-webkit-box-shadow: 0 0 0 .125rem rgb(238, 102, 187), 0 0 0 .25rem #222, 0 .25rem .25rem .25rem #2225;
+	-moz-box-shadow: 0 0 0 .125rem rgb(187, 102, 238), 0 0 0 .25rem #222, 0 .25rem .25rem .25rem #2225;
+	-webkit-box-shadow: 0 0 0 .125rem rgb(187, 102, 238), 0 0 0 .25rem #222, 0 .25rem .25rem .25rem #2225;
 	box-shadow: var(--purple-box-border);
+}
+.game-options .clickable:hover {
+	color: white;
 }
 .game-options > main > section h3, .game-options > header h3,
 .game-options .options-list > .game-mode > h4 {
@@ -409,7 +413,7 @@ br {
 	position: relative;
 	grid-area: goblets;
 	display: flex; align-items: center;
-	min-height: 424px;
+	min-height: 425px;
 	background: #FFFD;
 	padding: 1rem;
 	border-radius: .5rem;
@@ -548,23 +552,33 @@ br {
 	animation-fill-mode: both;
 }
 
-
-@media screen and ( max-width: 650px ) {
+@media screen and ( min-width: 701px ) {
+	.options-section {
+		/* Compensate width gain due to box-shadow */
+		width: calc(100% - 8px);
+		transform: translate(4px, 4px);
+	}
+}
+@media screen and ( max-width: 700px ) {
 	:root {
 		font-size: 13px;
 	}
 
-	.hide600- {
+	.hide700- {
 		display: none;
 	}
 
 	.game {
 		display: flex;
 		flex-direction: column-reverse;
+		margin: 1rem;
 		margin-bottom: 2rem
 	}
+
 	.options-section {
-		transform: none;
+		width: 100%;
+		max-width: calc(100vw - 3rem - 8px);
+		margin-left: auto; margin-right: auto;
 	}
 	.game-options {
 		margin-bottom: 1rem;

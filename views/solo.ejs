@@ -46,8 +46,7 @@
 			</header>
 			<main class="app-body">
 				<% if (err) { %>
-					<br />
-					<p class="alert alert-danger" style="position: relative;">
+					<p class="alert alert-danger" style="position: relative; margin-top: 1rem;">
 						<%= err %> :(
 						<button
 							onclick="(function (btn) {
@@ -103,8 +102,10 @@
 										list.classList.toggle('collapsed');
 										btn.classList.toggle('active');
 									})()" style="cursor: pointer;" title="Settings">
-										<i class="fa fa-cog"></i>
-										&nbsp;Settings
+										<span class="clickable">
+											<i class="fa fa-cog"></i>
+											&nbsp;Settings
+										</span>
 									</h3>
 									<button class="collapse-btn active" id="game-settings-options-list-toggle-btn" title="Change game settings" onclick="(function (btn) {
 										// Collapse list

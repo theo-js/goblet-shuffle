@@ -1,3 +1,4 @@
+// GAME
 var participantsUL = document.getElementById('participants-list');
 var lurkersUL = document.getElementById('lurkers-list');
 
@@ -392,7 +393,21 @@ function handleMultiPlayerError (err) {
 	}
 }
 
+// CHAT
+var chatForm = document.getElementById('chat-form');
+if (chatForm) {
+	chatForm.onsubmit = handleChatFormSubmit;
+}
+var chatFormInput = document.getElementById('chat-form-input');
+function handleChatFormSubmit (e) {
+	e.preventDefault();
+	// Validation
+	if (!chatFormInput) return;
+	if (!chatFormInput.value) return;
+	chatFormInput.value = '';
+}
 
+// SOCKET EVENTS
 // React to websocket events
 window.addEventListener('load', function () {
 	// Player joined a room

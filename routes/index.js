@@ -37,6 +37,7 @@ router.get('/:roomID', (req, res) => {
 			const ip = getIP(req);
 			const isAdmin = room.admin.ip === ip;
 			res.render('multi', {
+				err: urlErrMsg(req.query.err),
 				room,
 				isAdmin,
 				DOMAIN,
