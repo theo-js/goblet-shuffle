@@ -521,6 +521,16 @@ module.exports = server => {
 			);
 		});
 		
+		// Chat
+		socket.on('chat msg', (unescapedMSG) => {
+			if (!unescapedMSG) return;
+			// No need to verify socket belongs to a player who is in this room
+			io.to(roomID).emit('chat msg', {
+				socketID: socket.id,
+				msg: unescapedMSG,
+				timestamp: Date.now()
+			});
+		});
 
 		// Disconnect
 		socket.on('disconnect', () => {

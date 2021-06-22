@@ -371,6 +371,10 @@
 											id="player_<%= player.name %>_name" title="<%= player.name %> <%= adminClass.toUpperCase() %>">
 												<%= player.name %>
 											</h4>
+											<ul
+												class="msg-list"
+												id="player_<%= player.socketID %>_msg_list"
+											></ul>
 										</li>
 								<%
 									}
@@ -418,6 +422,10 @@
 											<strong class="player-score" id="player_<%= player.socketID %>_score">
 												<%= player.score %>
 											</strong>
+											<ul
+												class="msg-list"
+												id="player_<%= player.socketID %>_msg_list"
+											></ul>
 										</li>
 								<%
 									}

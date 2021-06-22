@@ -238,6 +238,13 @@ function addPlayer (player, ul, addClasses) {
 		li.appendChild(scoreStr);
 	}
 
+	// Append list of chat messages
+	var chatMsgList = document.createElement('ul');
+	chatMsgList.className = 'msg-list';
+	var chatMsgListID = 'player_' + player.socketID + '_msg_list';
+	chatMsgList.setAttribute('id', chatMsgListID);
+	li.appendChild(chatMsgList);
+
 	// Append li to ul
 	if (ul.appendChild) {
 		ul.appendChild(li);
@@ -404,7 +411,26 @@ function handleChatFormSubmit (e) {
 	// Validation
 	if (!chatFormInput) return;
 	if (!chatFormInput.value) return;
+	if (!socket) return;
+
+	socket.emit('chat msg', chatFormInput.value);
+
 	chatFormInput.value = '';
+}
+
+function handleChatMsgReception ({ socketID, timespan, msg }) {
+	/*var ulID = 'player_' + socketID + '_msg_list';
+	var ul = document.getElementById(ulID);
+	if (ul) {
+		var li = document.createElement('li');
+		var liID = 'msg_from_' + socketID + 'at_' + timespan;
+		li.setAttribute('id', liID);
+		li.className = 'chat-msg';
+		li.textContent = msg;
+		ul.innerHTML = '';
+		ul.appendChild(li);
+	}*/
+	console.log(msg)
 }
 
 // SOCKET EVENTS
@@ -618,4 +644,7 @@ window.addEventListener('load', function () {
 	socket.on('error', function (err) {
 		handleMultiPlayerError(err);
 	});
+
+	// Someone sent a message to our room
+	socket.on('chat msg', handleChatMsgReception);
 }, false);

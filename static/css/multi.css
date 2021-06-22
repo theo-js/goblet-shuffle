@@ -64,6 +64,8 @@
 }
 
 .player {
+	position: relative;
+
 	-webkit-transition: .3s all ease;
 	-moz-transition: .3s all ease;
 	transition: .3s all ease;
@@ -237,6 +239,7 @@
 }
 .chat-form .chat-input-field {
 	display: inline-flex;
+	flex-wrap: nowrap;
 }
 .chat-form .chat-input {
 	padding: 0 .5rem;
@@ -269,6 +272,38 @@
 }
 .chat-form .delete-btn:hover {
 	color: var(--black);
+}
+
+.player .msg-list {
+	z-index: 4;
+	position: absolute;
+	top: calc(100% - .25rem);
+	left: .25rem; right: .25rem;
+	list-style: none;
+	background-color: inherit;
+	border-color: inherit;
+	padding: 0; margin: 0;
+	border-radius: .25rem;
+	opacity: .5;
+	box-shadow: .125rem .125rem .125rem 0 #2228;
+	transition: .1s all ease;
+}
+.player .msg-list:hover {
+	transform: translate(.25rem, .25rem);
+	box-shadow: 0 0 .5rem 0 #2225;
+	left: unset;
+	opacity: 1;
+	font-size: 1.25rem
+}
+.player .msg-list::after {
+	display: none;
+	content: '';
+	border: transparent .5rem solid;
+	border-bottom-color: inherit;
+	position: absolute; bottom: 100%; right: .25rem;
+}
+.player .msg-list .chat-msg {
+	padding: .25rem;
 }
 
 
@@ -367,6 +402,7 @@
 	}
 	.chat-form .chat-input {
 		flex-grow: 1;
+		width: 100%;
 	}
 	.chat-form .send-btn {
 		padding: 0 2rem;
