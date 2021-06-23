@@ -19,16 +19,18 @@ function secondsToTime (number)/*: number*/ /*: { m, s } */ {
 	const s = date.getSeconds();
 	const result = { m, s };
 
-	if (Number.isNaN(result)) return { m: 0, s: 0 };
 	return result;
 };
 
 function timeToStr (mAndS/*: { m: number, s: number } */) /*: { m: string, s: string } */ {
 	if (
+		!mAndS ||
 		typeof mAndS.m !== 'number' ||
 		Number.isNaN(mAndS.m) ||
+		mAndS.m < 0 ||
 		typeof mAndS.s !== 'number' ||
-		Number.isNaN(mAndS.s)
+		Number.isNaN(mAndS.s) ||
+		mAndS.s < 0
 	) {
 		return { m: '01', s: '00' };
 	}

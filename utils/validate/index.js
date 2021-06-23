@@ -1,4 +1,5 @@
 function validateStr (str) {
+	if (typeof str !== 'string') return false;
 	if (str.match(/['"/\\<>(){};:`´]/)) {
 		return false;
 	}
@@ -7,17 +8,27 @@ function validateStr (str) {
 }
 
 function sanitizeStr (str) {
+	if (typeof str !== 'string') return false;
 	const re = new RegExp(/['"/\\<>(){}]/, 'g');
-	return str.replaceAll(re, '');
+	return str.replace(re, '');
 }
 
 function isValidNum (value, min, max, included = true) {
 	if (
 		typeof value !== 'number' ||
-		Number.isNaN(value)
+		Number.isNaN(parseFloat(value))
 	) {
 		return false;
 	}
+	if (
+		Number.isNaN(parseFloat(min)) || 
+		Number.isNaN(parseFloat(max))
+	) {
+		// Value does not have to be within a certain range
+		return true;
+	}
+
+	// Min and max params were provided; value has to be within this range
 	if (included) {
 		if (value < min) return false;
 		else if (value > max) return false;

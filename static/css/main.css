@@ -371,7 +371,7 @@ br {
 	background: linear-gradient(to right, rgb(255, 238, 153), rgb(238, 102, 187));
 	background: linear-gradient(to right, var(--light-yellow), var(--pink));
 	cursor: pointer;
-	outline-offset: 3px;
+	outline-offset: 4px;
 
 	border: .125em solid #222;
 	border: .125em solid var(--black);
