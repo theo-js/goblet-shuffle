@@ -371,7 +371,7 @@ br {
 	background: linear-gradient(to right, rgb(255, 238, 153), rgb(238, 102, 187));
 	background: linear-gradient(to right, var(--light-yellow), var(--pink));
 	cursor: pointer;
-	outline-offset: 1px;
+	outline-offset: 2px;
 
 	border: .125em solid #222;
 	border: .125em solid var(--black);
@@ -415,6 +415,7 @@ br {
 	grid-area: goblets;
 	display: flex; align-items: center;
 	min-height: 425px;
+	max-width: var(--max-mb-w);
 	background: #FFFD;
 	padding: 1rem;
 	border-radius: .5rem;
@@ -424,7 +425,6 @@ br {
 #goblets-container {
 	position: relative;
 	width: fit-content;
-	max-width: var(--max-mb-w);
 	display: -ms-grid; display: grid;
 	-ms-grid-columns: 1fr 1fr; grid-template-columns: repeat(2, 1fr);
 	grid-auto-rows: 1em;
@@ -573,14 +573,15 @@ br {
 	.game {
 		display: flex;
 		flex-direction: column-reverse;
+		align-items: center;
 		margin: 1rem;
-		margin-bottom: 2rem
+		margin-bottom: 2rem;
+		max-width: var(--max-mb-w);
 	}
 
 	.options-section {
 		width: 100%;
 		max-width: calc(100vw - 3rem - 8px);
-		margin-left: auto; margin-right: auto;
 	}
 	.game-options {
 		margin-bottom: 1rem;
