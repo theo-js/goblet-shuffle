@@ -44,7 +44,7 @@ function timeToStr (mAndS/*: { m: number, s: number } */) /*: { m: string, s: st
 };
 
 function secondsToTimeStr (number/*: number */) /*: { m: string, s: string, time: number } */ {
-	const str = timeToStr(secondsToTime(number));
+	const str = timeToStr(secondsToTime(parseFloat(number)));
 	return { ...str, time: number };
 };
 

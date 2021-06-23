@@ -1,66 +1,76 @@
 var playerName = localStorage['player-name'] || '';
-var roomName = '';
+var roomName = localStorage['room-name'] || '';
 
 var isInviteSubmitDisabled = false;
 var isInviteSubmitDisabledStr = isInviteSubmitDisabled ? 'disabled' : '';
 
-var inviteModalHTMLContent = '<form class="invite-form scrollbar scrollbar-black" id="invite-form">' +
-	'<fieldset>' +  
-		'<legend><i class="fa fa-pen-fancy"></i><span class="underline">About me</span></legend>' +
-	 	'<label><strong class="label">Player name:</strong>&nbsp;&nbsp;' +
-	 	'<input placeholder="' + getRandomUserName() + '" id="playerName" name="playerName" oninput="handlePlayerNameChange(this)" maxlength="' + GAME_CONSTANTS.maxPlayerNameLength + '"/>' +
-	 	'<span class="button hide500-" onclick="resetPlayerName();"><i class="fa fa-times"></i></span>' +
-	 	'<span class="button round-right hide500-" onclick="randomizePlayerName();">Random</span>' +
-	 	'</label><br/>' +
-	 	'<label><strong class="label">Room name:</strong>&nbsp;&nbsp;' +
-	 	'<input id="roomName" name="roomName" placeholder="Goblet shuffle" oninput="handleRoomNameChange(this)" value="" maxlength="' + GAME_CONSTANTS.maxRoomNameLength + '"/>' +
-	 	'<span class="button round-right hide500-" onclick="resetRoomName();"><i class="fa fa-times"></i></span>' +
-	 	'</label>' +
-	'</fieldset>' +
-	'<div class="hr" style="background: white;"></div>' +
-	'<fieldset>' +
-		'<legend><i class="fa fa-cogs"></i><span class="underline">Settings</span></legend>' +
-		'<label><strong class="label center">Goblets:</strong>' +
-		 	'<input id="roomSettingsGoblets" type="number" value="' + (settings.goblets || 4) + '" required="true" min="' + (GAME_CONSTANTS.minGoblets || 3) + '" max="' + (GAME_CONSTANTS.maxGoblets || 12) + '"/>' +
-	 	'</label><br/>' +
-	 	'<label><strong class="label center">Shuffles:</strong>' +
-		 	'<input id="roomSettingsShuffleCount" type="number" value="' + (settings.shuffleCount || 4) + '" required="true" min="' + (GAME_CONSTANTS.minShuffleCount || 2) + '" max="' + (GAME_CONSTANTS.maxShuffleCount || 25) + '" />' +
-	 	'</label><br/>' +
-	 	'<label><strong class="label center">Speed:</strong>' +
-		 	'<input id="roomSettingsShuffleSpeed" type="range" value="' + (settings.shuffleSpeed || .6) + '" required="true" step="0.01" min="' + (GAME_CONSTANTS.minShuffleSpeed || .2) + '" max="' + (GAME_CONSTANTS.maxShuffleSpeed || 1) + '" style="transform: rotate(180deg);" />' +
-	 	'</label>' +
-	'</fieldset><br/>' +
-	'<fieldset>' + 
-		'<legend><span class="underline">Game mode</span></legend>' +
-		'<div style="display: flex;">' +
-	 		'<label style="display: inline-flex; align-items: center;">' +
-	 			'<strong class="label">Reach score</strong>' +
-		 		'<input onchange="handleGameModeChangeNewRoom(this);" name="gameMode" checked type="radio" value="' + GAME_MODE.REACH_SCORE + '" required="true" />' +
-		 	'</label>' +
-		 	'<input id="scoreToReach" name="scoreToReach" type="number" min="' + GAME_CONSTANTS.minScoreToReach + '" max="' + GAME_CONSTANTS.maxScoreToReach + '" value="' + GAME_CONSTANTS.defaultScoreToReach + '" step="10" required">' +
-		'</div>' +
-		'<p class="description">The first player who can reach the chosen score wins !</p>' +
-		'<br/>' +
-		'<div style="display: flex; justify-content: space-between; flex-wrap: wrap;">' +
-		 	'<label style="display: inline-flex; align-items: center;">' +
-	 			'<strong class="label">Countdown</strong>' +
-		 		'<input onchange="handleGameModeChangeNewRoom(this);" name="gameMode" type="radio" value="' + GAME_MODE.COUNTDOWN + '"  />' +
-		 	'</label>' +
-		 	'<div class="time-field">' +
-			 	'<input style="max-width: 3rem; display: inline;" id="gameCountdown-m" name="gameCountdown-m" type="number" min="0" max="59" value="0" disabled>' +
-			 	'<span class="colon">:</span>' +
-			 	'<input style="max-width: 3rem; display: inline;" id="gameCountdown-s" name="gameCountdown-s" type="number" min="0" max="59" value="30" disabled>' +
-			 '</div>' +
-			 '<p class="description">Player with the highest score at the end of the countdown wins !</p>' +
-		 '</div>' +
- 	'</fieldset>' +
-	'<div class="hr" style="background: white;"></div>' +
-	'<div id="invite-form-error"></div>' +
-	'<fieldset class="invite-form-footer">' +
-		'<span onclick="openInviteModal(false)" class="close-btn btn btn-danger"><i class="fa fa-arrow-left"></i></span>' +
-		'<button id="submitBtn" class="button submit" ' + isInviteSubmitDisabledStr + '>Ready <i class="fa fa-arrow-right"></i></button>' +
-	'</fieldset>' + 
-'</form>';
+function getInviteModalHTMLContent () {
+	// Compute data
+	var isReachScoreMode = settings.gameMode.mode === GAME_MODE.REACH_SCORE;
+	var isCountdownMode = settings.gameMode.mode === GAME_MODE.COUNTDOWN;
+	var myScoreToReach = settings.gameMode.scoreToReach || localStorage['score-to-reach'] || GAME_CONSTANTS.defaultScoreToReach;
+	var countdown = settings.gameMode.countdown || localStorage['countdown'] || GAME_CONSTANTS.defaultCountdown;
+	var countdownStr = secondsToTimeStr(countdown);
+
+	// Return template
+	return '<form class="invite-form scrollbar scrollbar-black" id="invite-form">' +
+		'<fieldset>' +  
+			'<legend><i class="fa fa-pen-fancy"></i><span class="underline">About me</span></legend>' +
+			'<label><strong class="label">Player name:</strong>&nbsp;&nbsp;' +
+			'<input value="' + playerName + '" placeholder="' + getRandomUserName() + '" id="playerName" name="playerName" oninput="handlePlayerNameChange(this)" maxlength="' + GAME_CONSTANTS.maxPlayerNameLength + '"/>' +
+			'<span class="button hide500-" onclick="resetPlayerName();"><i class="fa fa-times"></i></span>' +
+			'<span class="button round-right hide500-" onclick="randomizePlayerName();">Random</span>' +
+			'</label><br/>' +
+			'<label><strong class="label">Room name:</strong>&nbsp;&nbsp;' +
+			'<input id="roomName" name="roomName" placeholder="Goblet shuffle" oninput="handleRoomNameChange(this)" value="' + roomName + '" maxlength="' + GAME_CONSTANTS.maxRoomNameLength + '"/>' +
+			'<span class="button round-right hide500-" onclick="resetRoomName();"><i class="fa fa-times"></i></span>' +
+			'</label>' +
+		'</fieldset>' +
+		'<div class="hr" style="background: white;"></div>' +
+		'<fieldset>' +
+			'<legend><i class="fa fa-cogs"></i><span class="underline">Settings</span></legend>' +
+			'<label><strong class="label center">Goblets:</strong>' +
+				'<input id="roomSettingsGoblets" type="number" value="' + (settings.goblets || 4) + '" required="true" min="' + (GAME_CONSTANTS.minGoblets || 3) + '" max="' + (GAME_CONSTANTS.maxGoblets || 12) + '"/>' +
+			'</label><br/>' +
+			'<label><strong class="label center">Shuffles:</strong>' +
+				'<input id="roomSettingsShuffleCount" type="number" value="' + (settings.shuffleCount || 4) + '" required="true" min="' + (GAME_CONSTANTS.minShuffleCount || 2) + '" max="' + (GAME_CONSTANTS.maxShuffleCount || 25) + '" />' +
+			'</label><br/>' +
+			'<label><strong class="label center">Speed:</strong>' +
+				'<input id="roomSettingsShuffleSpeed" type="range" value="' + (settings.shuffleSpeed || .6) + '" required="true" step="0.01" min="' + (GAME_CONSTANTS.minShuffleSpeed || .2) + '" max="' + (GAME_CONSTANTS.maxShuffleSpeed || 1) + '" style="transform: rotate(180deg);" />' +
+			'</label>' +
+		'</fieldset><br/>' +
+		'<fieldset>' + 
+			'<legend><span class="underline">Game mode</span></legend>' +
+			'<div style="display: flex;">' +
+				'<label style="display: inline-flex; align-items: center;">' +
+					'<strong class="label">Reach score</strong>' +
+					'<input onchange="handleGameModeChangeNewRoom(this);" name="gameMode" checked type="radio" value="' + GAME_MODE.REACH_SCORE + '" ' + (isReachScoreMode ? 'checked' : '') + ' />' +
+				'</label>' +
+				'<input id="scoreToReach" name="scoreToReach" type="number" min="' + GAME_CONSTANTS.minScoreToReach + '" max="' + GAME_CONSTANTS.maxScoreToReach + '" value="' + myScoreToReach + '" ' + (!isReachScoreMode ? 'disabled' : '') + ' step="10">' +
+			'</div>' +
+			'<p class="description">The first player who can reach the chosen score wins !</p>' +
+			'<br/>' +
+			'<div style="display: flex; justify-content: space-between; flex-wrap: wrap;">' +
+				'<label style="display: inline-flex; align-items: center;">' +
+					'<strong class="label">Countdown</strong>' +
+					'<input onchange="handleGameModeChangeNewRoom(this);" name="gameMode" type="radio" value="' + GAME_MODE.COUNTDOWN + '" ' + (isCountdownMode ? 'checked' : '') + ' />' +
+				'</label>' +
+				'<div class="time-field">' +
+					'<input style="max-width: 3rem; display: inline;" id="gameCountdown-m" name="gameCountdown-m" type="number" min="0" max="59" value="' + countdownStr.m + '" ' + (!isCountdownMode ? 'disabled' : '') + '>' +
+					'<span class="colon">:</span>' +
+					'<input style="max-width: 3rem; display: inline;" id="gameCountdown-s" name="gameCountdown-s" type="number" min="0" max="59" value="' + countdownStr.s + '" ' + (!isCountdownMode ? 'disabled' : '') + '>' +
+				'</div>' +
+				'<p class="description">Player with the highest score at the end of the countdown wins !</p>' +
+			'</div>' +
+		'</fieldset>' +
+		'<div class="hr" style="background: white;"></div>' +
+		'<div id="invite-form-error"></div>' +
+		'<fieldset class="invite-form-footer">' +
+			'<span onclick="openInviteModal(false)" class="close-btn btn btn-danger"><i class="fa fa-arrow-left"></i></span>' +
+			'<button id="submitBtn" class="button submit" ' + isInviteSubmitDisabledStr + '>Ready <i class="fa fa-arrow-right"></i></button>' +
+		'</fieldset>' + 
+	'</form>';
+}
 
 function openInviteModal (open) {
 	try {
@@ -80,7 +90,7 @@ function openInviteModal (open) {
 			var modal = document.createElement('div');
 			modal.setAttribute('id', 'invite-modal');
 			modal.classList.add('my-modal');
-			modal.innerHTML = inviteModalHTMLContent;
+			modal.innerHTML = getInviteModalHTMLContent();
 			modal.onclick = function () { openInviteModal(false); };
 
 			form = modal.firstElementChild;
@@ -226,6 +236,7 @@ function handlePlayerNameChange (target) {
 }
 function handleRoomNameChange (target) {
 	roomName = target.value;
+	localStorage['room-name'] = target.value;
 }
 
 function handleGameModeChangeNewRoom (radio) {
@@ -443,6 +454,18 @@ async function handleInviteFormSubmit (formEvent) {
 
 			// Close invite modal
 			openInviteModal(false);
+
+			// Memorize game settings
+			localStorage['currentGoblets'] = mySettings.goblets;
+			localStorage['shuffleCount'] = mySettings.shuffleCount;
+			localStorage['shuffleSpeed'] = mySettings.shuffleSpeed;
+			localStorage['game-mode'] = mySettings.gameMode.mode;
+			if (mySettings.gameMode.scoreToReach) {
+				localStorage['score-to-reach'] = mySettings.gameMode.scoreToReach;
+			}
+			if (mySettings.gameMode.countdown) {
+				localStorage['countdown'] = mySettings.gameMode.countdown;
+			}
 
 		} catch (err) {
 			console.log({err});
