@@ -172,7 +172,7 @@
 .get-ready-section {
 	position: absolute;
 	top: 0; left: 0; 
-	height: 100%; width: 100%; max-width: calc(100vw - 3rem);
+	height: 100%; width: 100%; max-width: var(--max-mb-w);
 	border-radius: .5rem;
 	z-index: 5;
 	padding: 1rem;
@@ -384,7 +384,7 @@
 	}
 
 	#players-section {
-		max-width: calc(100vw - 3rem);
+		max-width: var(--max-mb-w);
 	}
 
 	.players-list {
@@ -405,6 +405,7 @@
 	.chat-form {
 		margin-top: 1rem;
 		font-size: 1.25rem;
+		max-width: var(--max-mb-w);
 	}
 	.chat-form .send-btn {
 		padding: .125rem 2rem;

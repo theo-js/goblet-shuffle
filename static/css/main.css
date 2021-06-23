@@ -13,6 +13,7 @@
 	--orange: #FA2;
 	--pink-yellow-blend: rgb(212.5, 119, 195.5); /* Mix of --violet and --light-yellow */ /* #c58ec1 */
 	--purple-box-border: 0 0 0 .125rem var(--pink), 0 0 0 .25rem var(--black), 0 .25rem .25rem .25rem #2225;
+	--max-mb-w: calc(100vw - 3rem);
 }
 
 ::selection {
@@ -117,7 +118,7 @@ br {
 }
 
 .alert {
-	max-width: calc(100vw - 3rem);
+	max-width: var(--max-mb-w);
 	margin-left: auto; margin-right: auto;
 }
 .alert-danger {
@@ -210,7 +211,7 @@ br {
 	grid-template-areas: "goblets options";
 	grid-gap: 1rem;
 	margin: 1rem auto;
-	max-width: calc(100vw - 2rem);
+	max-width: var(--max-mb-w);
 	font-size: 100px;
 	min-height: 382px;
 }
@@ -423,6 +424,7 @@ br {
 #goblets-container {
 	position: relative;
 	width: fit-content;
+	max-width: var(--max-mb-w);
 	display: -ms-grid; display: grid;
 	-ms-grid-columns: 1fr 1fr; grid-template-columns: repeat(2, 1fr);
 	grid-auto-rows: 1em;
@@ -494,7 +496,7 @@ br {
 .game-end-msg {
 	align-self: start; margin-top: 4rem;
 	background: white;
-	max-width: calc(100vw - 3rem);
+	max-width: var(--max-mb-w);
 	padding: 1rem;
 	border: 1px solid var(--violet); border-radius: .5rem;
 	box-shadow: 0 0 .5rem .125rem var(--violet), 0 0rem 1rem .25rem var(--purple);
