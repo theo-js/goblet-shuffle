@@ -5,8 +5,7 @@ var isInviteSubmitDisabled = false;
 var isInviteSubmitDisabledStr = isInviteSubmitDisabled ? 'disabled' : '';
 
 var inviteModalHTMLContent = '<form class="invite-form scrollbar scrollbar-black" id="invite-form">' +
-	'<fieldset>' + 
-		'<span onclick="openInviteModal(false)" class="close-btn btn btn-danger"><i class="fa fa-arrow-left"></i></span>' + 
+	'<fieldset>' +  
 		'<legend><i class="fa fa-pen-fancy"></i><span class="underline">About me</span></legend>' +
 	 	'<label><strong class="label">Player name:</strong>&nbsp;&nbsp;' +
 	 	'<input placeholder="' + getRandomUserName() + '" id="playerName" name="playerName" oninput="handlePlayerNameChange(this)" maxlength="' + GAME_CONSTANTS.maxPlayerNameLength + '"/>' +
@@ -58,6 +57,7 @@ var inviteModalHTMLContent = '<form class="invite-form scrollbar scrollbar-black
 	'<div class="hr" style="background: white;"></div>' +
 	'<div id="invite-form-error"></div>' +
 	'<fieldset class="invite-form-footer">' +
+		'<span onclick="openInviteModal(false)" class="close-btn btn btn-danger"><i class="fa fa-arrow-left"></i></span>' +
 		'<button id="submitBtn" class="button submit" ' + isInviteSubmitDisabledStr + '>Ready <i class="fa fa-arrow-right"></i></button>' +
 	'</fieldset>' + 
 '</form>';

@@ -414,10 +414,7 @@
 	}
 	.chat-form .chat-input {
 		flex-grow: 1;
-		width: calc(100% - 67px); /* Prevent flex wrap */
-	}
-	.chat-form .chat-input:focus {
-		width: calc(100% - 24px - 67px); /* Prevent flex wrap */
+		width: 50%; /* Prevent flex wrap */
 	}
 	.chat-form .chat-input:focus + .delete-btn {
 		display: inline-block;

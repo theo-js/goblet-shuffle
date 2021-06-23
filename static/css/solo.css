@@ -41,7 +41,8 @@
 .invite-form .close-btn {
 	display: none;
 	position: fixed;
-	left: .5rem; bottom: 1rem;
+	left: 0; bottom: 1rem;
+	margin-left: 0;
 	padding: 1.333rem 2rem;
 	z-index: 2;
 }
@@ -174,6 +175,9 @@
 	}
 	.invite-form .close-btn {
 		display: inline-flex;
+	}
+	.invite-form .invite-form-footer {
+		margin-top: auto;
 	}
 
 	.invite-form legend {

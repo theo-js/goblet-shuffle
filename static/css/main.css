@@ -210,7 +210,7 @@ br {
 	grid-template-areas: "goblets options";
 	grid-gap: 1rem;
 	margin: 1rem auto;
-	max-width: calc(100vw - 3rem);
+	max-width: calc(100vw - 2rem);
 	font-size: 100px;
 	min-height: 382px;
 }
@@ -561,7 +561,7 @@ br {
 }
 @media screen and ( max-width: 700px ) {
 	:root {
-		font-size: 13px;
+		font-size: 14px;
 	}
 
 	.hide700- {
