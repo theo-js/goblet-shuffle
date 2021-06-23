@@ -574,14 +574,16 @@ br {
 		display: flex;
 		flex-direction: column-reverse;
 		align-items: center;
-		margin: 1rem;
+		margin: 1rem auto;
 		margin-bottom: 2rem;
+		width: 100%;
 		max-width: var(--max-mb-w);
 	}
 
 	.options-section {
 		width: 100%;
 		max-width: calc(100vw - 3rem - 8px);
+		margin: 0 auto;
 	}
 	.game-options {
 		margin-bottom: 1rem;
