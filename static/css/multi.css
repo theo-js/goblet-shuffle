@@ -406,20 +406,26 @@
 		margin-top: 1rem;
 		font-size: 1.25rem;
 	}
-	.chat-form .chat-input-field {
-		display: flex;
-	}
 	.chat-form .send-btn {
-		padding: 0 2rem;
+		padding: .125rem 2rem;
+		margin-bottom: 0 !important;
+	}
+	.chat-form .chat-input-field {
+		display: block;
+		white-space: nowrap;
 	}
 	.chat-form .chat-input {
-		width: calc(100% - 67px); /* Prevent flex wrap */
+		width: calc(100% - 72px); /* Prevent wrap */
+		display: inline-block;
 	}
 	.chat-form .chat-input:focus {
-		width: calc(100% - 24px - 67px); /* Prevent flex wrap */
+		width: calc(100% - 24.17px - 72px); /* Prevent wrap */
 	}
-	.chat-form .chat-input:focus + .delete-btn {
+	.chat-form .chat-input:focus + .delete-btn,
+	.chat-form .send-btn {
 		display: inline-block;
+		margin-left: -5px;
+		margin-bottom: -2px;
 	}
 }
 
