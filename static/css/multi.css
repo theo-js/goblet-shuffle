@@ -105,14 +105,16 @@
 .player.other {
 	background: transparent !important;
 }
+.player .player-name-form {
+	color: inherit;
+}
 .player input.player-name {
-	height: inherit;
+	height: 1.5rem;
 	color: white;
 	background-color: transparent;
 	border: none; border-radius: 1px;
 	padding: 0 .25em;
 	max-width: 100px;
-	height: 19px;
 	text-decoration: underline;
 	cursor: pointer;
 }

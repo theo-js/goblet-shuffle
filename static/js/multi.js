@@ -180,29 +180,43 @@ function addPlayer (player, ul, addClasses) {
 		// This player is me
 		li.classList.add('me');
 		// Player name is an input element
+		var form = document.createElement('form');
+		form.className = 'player-name-form';
 		playerName = document.createElement('input');
+		function changeName () { // On player name change
+			playerName.blur();
+
+			if (!playerName.value) {
+				// Reset to previous name if input is empty
+				playerName.value = player.name;
+				return;
+			}
+
+			// Change name
+			localStorage['player-name'] = playerName.value;
+			playerName.title = playerName.value + ' (YOU)';
+			socket.emit('player change', { 
+				type: 'rename player',
+				payload: playerName.value
+			});
+		}
+		form.onsubmit = function (e) {
+			e.preventDefault();
+			changeName();
+		};
 		playerName.value = player.name;
 		playerName.title = player.name + ' (YOU)';
 		playerName.oninput = function (e) { // Prevent from typing forbidden characters
 			var sanitized = sanitizeStr(e.target.value);
 			e.target.value = sanitized;
 		}
-		playerName.onchange = function (e) { // On player name change
-			if (!e.target.value) {
-				// Reset to previous name if input is empty
-				e.target.value = player.name;
-				return;
-			}
-
-			localStorage['player-name'] = e.target.value;
-			e.target.title = e.target.value + ' (YOU)';
-			socket.emit('player change', { 
-				type: 'rename player',
-				payload: e.target.value
-			});
-		};
+		playerName.onchange = changeName;
 		playerName.className = 'player-name';
 		playerName.setAttribute('autofocus', true);
+		playerName.setAttribute('id', idAttribute + '_name');
+		
+		form.appendChild(playerName);
+		li.appendChild(form);
 	} else {
 		// This player is not me
 		li.classList.add('other');
@@ -210,9 +224,9 @@ function addPlayer (player, ul, addClasses) {
 		playerName = document.createElement('h4');
 		playerName.className = 'player-name';
 		playerName.textContent = player.name;
+		playerName.setAttribute('id', idAttribute + '_name');
+		li.appendChild(playerName);
 	}
-	playerName.setAttribute('id', idAttribute + '_name');
-	li.appendChild(playerName);
 
 	// Set ID attribute on li (socketID)
 	li.setAttribute('id', idAttribute);
