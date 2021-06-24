@@ -480,7 +480,7 @@ module.exports = server => {
 							}
 
 							global.rooms[roomIndex].settings.gameMode.mode = value;
-							socket.broadcast.to(roomID).emit('game setting changed', { type, value });
+							io.to(roomID).emit('game setting changed', { type, value });
 							break;
 						} case 'score-to-reach': {
 							const validated = limitNum(
@@ -496,7 +496,7 @@ module.exports = server => {
 								return false;
 							}
 							global.rooms[roomIndex].settings.gameMode = { mode: GAME_MODE.REACH_SCORE, scoreToReach: value };
-							socket.broadcast.to(roomID).emit('game setting changed', { type, value });
+							io.to(roomID).emit('game setting changed', { type, value });
 							break;
 						} case 'countdown': {
 							const validated = limitNum(
@@ -512,7 +512,7 @@ module.exports = server => {
 								return false;
 							}
 							global.rooms[roomIndex].settings.gameMode = { mode: GAME_MODE.COUNTDOWN, countdown: value };
-							socket.broadcast.to(roomID).emit('game setting changed', { type, value });
+							io.to(roomID).emit('game setting changed', { type, value });
 							break;
 						} default: return false;
 					}

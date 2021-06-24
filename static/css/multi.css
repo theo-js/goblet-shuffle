@@ -88,15 +88,15 @@
 }
 .player .player-name {
 	font-size: 1rem; 
+	text-align: center;
 	margin: 0;
 	white-space: nowrap;
-	max-width: 10em; overflow: hidden; text-overflow: ellipsis;
+	overflow: hidden; text-overflow: ellipsis;
 }
 
 .player.me {
 	display: flex;
 	flex-direction: column;
-	max-width: 5rem;
 	border-radius: .25rem;
 }
 .player.me * {
@@ -355,7 +355,6 @@
 	}
 	.player-name {
 		max-width: 100% !important;
-		text-align: center !important;
 	}
 
 	.player .percentage-bar {
@@ -400,9 +399,9 @@
 		min-height: 35px;
 	}
 
-	.player .player-name {
-		text-align: center;
-	} 
+	.player {
+		max-width: 100px;
+	}
 
 	.chat-form {
 		margin-top: 1rem;

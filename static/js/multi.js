@@ -555,20 +555,44 @@ window.addEventListener('load', function () {
 			} case 'game-mode': {
 				settings.gameMode.mode = value;
 				switch (value) {
-					case GAME_MODE.REACH_SCORE:
+					case GAME_MODE.REACH_SCORE: {
 						// Hide timer
 						if (timeOutput) {
 							timeOutput.style.display = 'none';
 						}
+						// Add percentage bars
+						Array.from(participantsUL.children).forEach(function (li) {
+							// Check if a percentage bar already exists
+							var barExists = document.getElementById(li.id + '_percentage');
+							if (!!barExists) return;
+
+							// Find player ID
+							var id = li.id.replace('player_', '');
+							var percentageBar = createPercentageBar(
+								0, // Since game mode cannot be changed during game, score is necessarily 0
+								settings.gameMode.scoreToReach,
+								id
+							);
+							// Append bar to li before player score
+							var score = document.getElementById(li.id + '_score');
+							if (score) {
+								li.insertBefore(percentageBar, score);
+							}
+						});
 						break;
-					case GAME_MODE.COUNTDOWN:
+					} case GAME_MODE.COUNTDOWN: {
 						// Display timer
 						if (timeOutput) {
 							timeOutput.style.display = 'block';
 							timeOutput.className = 'fade-in';
 						}
+						// Remove percentage bars
+						var bars = document.getElementsByClassName('percentage-bar');
+						Array.from(bars).forEach(function (bar) {
+							bar.parentElement.removeChild(bar);
+						});
 						break;
-					default:
+					} default:
 				}
 				break;
 			} case 'score-to-reach': {
