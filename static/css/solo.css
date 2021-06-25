@@ -11,6 +11,9 @@
 	white-space: nowrap;
 	transition: .5s all ease;
 }
+body.dark .options-section > .invite > button {
+	color: white;
+}
 .options-section > .invite > button:hover,
 .options-section > .invite > button:focus {
 	background-color: var(--black); color: white;

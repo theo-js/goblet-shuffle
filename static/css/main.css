@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Parisienne&display=swap');
 
 :root {
+	color-scheme: light dark; /* both supported */
 	--violet: rgb(170, 0, 238); /* #8a2de9 */
 	--violet-dark: rgb(150, 0, 218);
 	--pink: rgb(187, 102, 238); /* light violet */ /* #9e41fd */
@@ -38,18 +39,26 @@ body {
 	margin: 0;
 	padding: 0;
 	font-family: Arial;
+	min-height: 100vh;
 	color: #222;
 	color: var(--black);
-	min-height: 100vh;
+	background-color: white;
+	transition: background-color 1s ease;
+}
+body.dark {
+	color: white;
+	background-color: var(--black);
 }
 body::before {
 	content: '';
 	position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-	background: linear-gradient(rgb(238, 102, 187), transparent);
-	background: linear-gradient(var(--light-purple), transparent);
+	background-color: rgb(238, 102, 187);
+	background-color: var(--light-purple);
+	-webkit-mask-image: linear-gradient(black, transparent);
+	mask-image: linear-gradient(black, transparent);
 	opacity: .25;
 	z-index: -2;
-	transition: .3s all ease;
+	transition: 1s all ease;
 }
 
 .my-modal {
@@ -59,6 +68,9 @@ body::before {
 	background: #FFFA;
 	animation: fade .5s ease;
 	transition: opacity 500ms ease;
+}
+body.dark .my-modal {
+	background: #222A;
 }
 
 .close-btn {
@@ -108,6 +120,7 @@ a:focus, .link:focus {
 	margin: 1rem 0;
 	height: 1px; width: 100%;
 	opacity: .125;
+	transition: all .3s ease;
 }
 br {
 	user-select: none;
@@ -120,6 +133,10 @@ br {
 .alert {
 	max-width: var(--max-mb-w);
 	margin-left: auto; margin-right: auto;
+	transition: filter 1s ease;
+}
+body.dark .alert {
+	filter: brightness(.8);
 }
 .alert-danger {
 	background-color: #f8d7dacc;
@@ -169,11 +186,27 @@ br {
 	color: white;
 	display: flex; justify-content: center; align-items: center;
 	font-family: 'Parisienne', cursive;
+	text-decoration: none;
 }
+.app-header .to-solo .text {
+	text-decoration: underline;
+}
+
 .app-header .to-solo:hover,
 .app-header .to-solo:focus {
 	color: rgb(255, 238, 153);
 	color: var(--light-yellow);
+}
+.app-header .to-solo:hover .text,
+.app-header .to-solo:focus .text {
+	text-decoration: none;
+}
+.app-header .to-solo .fa {
+	transition: .1s transform ease;
+}
+.app-header .to-solo:hover .fa,
+.app-header .to-solo:focus .fa {
+	transform: translate(-.125rem) scale(1.125);
 }
 
 .app-header h1 {
@@ -186,6 +219,32 @@ br {
 .app-header h1 > .app-name {
 	color: rgb(255, 238, 153);
 	color: var(--light-yellow);
+}
+
+.app-header .color-mode-toggle {
+	position: absolute; right: 1rem; top: 0; bottom: 0; margin: auto;
+	background: none; border: none;
+	color: white;
+	cursor: pointer;
+	transition: transform .1s ease-in, opacity .2s ease;
+}
+.app-header .color-mode-toggle:hover,
+.app-header .color-mode-toggle:focus {
+	outline: none; color: var(--light-yellow);
+}
+.app-header .color-mode-toggle:active {
+	transform: rotate(180deg);
+	opacity: 0;
+}
+
+.app-header .color-mode-toggle.light {
+	display: none;
+}
+body.dark .app-header .color-mode-toggle.dark {
+	display: none;
+}
+body.dark .app-header .color-mode-toggle.light {
+	display: unset;
 }
 
 .app-body {
@@ -226,10 +285,11 @@ br {
 	display: flex; flex-direction: column;
 	background-color: #A0E;
 	background-color: var(--violet);
+	color: var(--black);
 	padding: .5rem;
 	overflow: hidden;
 	border-radius: 2px;
-	transition: .3s background-color ease;
+	transition: .3s all ease;
 
 	-moz-box-shadow: 0 0 0 .125rem rgb(187, 102, 238), 0 0 0 .25rem #222, 0 .25rem .25rem .25rem #2225;
 	-webkit-box-shadow: 0 0 0 .125rem rgb(187, 102, 238), 0 0 0 .25rem #222, 0 .25rem .25rem .25rem #2225;
@@ -420,6 +480,10 @@ br {
 	padding: 1rem;
 	border-radius: .5rem;
 	box-shadow: 0 2px 3px 0 #2222220A;
+	transition: background-color 1s ease;
+}
+body.dark .goblets-section {
+	background: #222D;
 }
 
 #goblets-container {
@@ -502,7 +566,10 @@ br {
 	box-shadow: 0 0 .5rem .125rem var(--violet), 0 0rem 1rem .25rem var(--purple);
 	/*box-shadow: 0 .25rem 1rem 0 #2225;*/
 	animation: move-top .5s cubic-bezier(.25,1,.75,1.15);
-	transition: 500ms ease transform;
+	transition: 500ms ease transform, 1s ease background-color;
+}
+body.dark .game-end-msg {
+	background: #222D;
 }
 .game-end-msg.modal-clicked {
 	transform: scale(1.0625);
@@ -681,5 +748,15 @@ br {
 		margin-top: 0;
 		transform: translateY(0);
 		opacity: 1;
+	}
+}
+
+@keyframes fade-rotate {
+	from {
+		opacity: 0;
+		transform: rotate(-180deg);
+	} to {
+		opacity: 1;
+		transform: rotate(0);
 	}
 }

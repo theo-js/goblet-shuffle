@@ -99,6 +99,35 @@ function createPercentageBar (score, scoreToReach, socketID) {
 	percentageBar.appendChild(content);
 	return percentageBar;
 }
+function addPercentageBars (boolean) {
+	if (boolean === true) {
+		// Add percentage bars
+		Array.from(participantsUL.children).forEach(function (li) {
+			// Check if a percentage bar already exists
+			var barExists = document.getElementById(li.id + '_percentage');
+			if (!!barExists) return;
+
+			// Find player ID
+			var id = li.id.replace('player_', '');
+			var percentageBar = createPercentageBar(
+				0, // Since game mode cannot be changed during game, score is necessarily 0
+				settings.gameMode.scoreToReach,
+				id
+			);
+			// Append bar to li before player score
+			var score = document.getElementById(li.id + '_score');
+			if (score) {
+				li.insertBefore(percentageBar, score);
+			}
+		});
+	} else if (boolean === false) {
+		// Remove percentage bars
+		var bars = document.getElementsByClassName('percentage-bar');
+		Array.from(bars).forEach(function (bar) {
+			bar.parentElement.removeChild(bar);
+		});
+	}
+}
 function updatePlayerScore (
 	id, 
 	newScore, 
@@ -560,25 +589,7 @@ window.addEventListener('load', function () {
 						if (timeOutput) {
 							timeOutput.style.display = 'none';
 						}
-						// Add percentage bars
-						Array.from(participantsUL.children).forEach(function (li) {
-							// Check if a percentage bar already exists
-							var barExists = document.getElementById(li.id + '_percentage');
-							if (!!barExists) return;
-
-							// Find player ID
-							var id = li.id.replace('player_', '');
-							var percentageBar = createPercentageBar(
-								0, // Since game mode cannot be changed during game, score is necessarily 0
-								settings.gameMode.scoreToReach,
-								id
-							);
-							// Append bar to li before player score
-							var score = document.getElementById(li.id + '_score');
-							if (score) {
-								li.insertBefore(percentageBar, score);
-							}
-						});
+						addPercentageBars(true);
 						break;
 					} case GAME_MODE.COUNTDOWN: {
 						// Display timer
@@ -586,11 +597,7 @@ window.addEventListener('load', function () {
 							timeOutput.style.display = 'block';
 							timeOutput.className = 'fade-in';
 						}
-						// Remove percentage bars
-						var bars = document.getElementsByClassName('percentage-bar');
-						Array.from(bars).forEach(function (bar) {
-							bar.parentElement.removeChild(bar);
-						});
+						addPercentageBars(false);
 						break;
 					} default:
 				}

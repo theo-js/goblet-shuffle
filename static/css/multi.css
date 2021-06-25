@@ -114,7 +114,7 @@
 	background-color: transparent;
 	border: none; border-radius: 1px;
 	padding: 0 .25em;
-	max-width: 100px;
+	max-width: 100%;
 	text-decoration: underline;
 	cursor: pointer;
 }
@@ -128,6 +128,9 @@
 	background-color: white;
 	color: inherit;
 	text-decoration: none;
+}
+body.dark .player input.player-name:focus {
+	background-color: var(--black);
 }
 .player.admin {
 	order: -1; /* admin comes after me, at least as long as the game is not playing */
@@ -168,6 +171,10 @@
 	border-radius: inherit; border-top-left-radius: 0; border-top-right-radius: 0;
 	border-top: none;
 	color: inherit;
+	transition: background-color 1s ease;
+}
+body.dark .player.me .player-score {
+	background-color: var(--black);
 }
 
 
@@ -232,6 +239,7 @@
 
 .game-info-message {
 	display: flex; justify-content: space-around; align-items: center;
+	flex-wrap: wrap; gap: 1rem 0;
 }
 
 .chat-form {
@@ -265,7 +273,10 @@
 	outline: none;
 }
 .chat-form .chat-input:focus {
-	background-color: white;
+	background: linear-gradient(transparent, white);
+}
+body.dark .chat-form .chat-input:focus {
+	background: linear-gradient(transparent, var(--black));
 }
 .chat-form button {
 	padding: 0 .5rem;
@@ -349,11 +360,12 @@
 	#lurkers-list {
 		padding-right: 0;
 		border-left: .5px solid #2222;
+		transition: border-color 1s ease;
+	}
+	body.dark #lurkers-list {
+		border-left-color: #DDD2;
 	}
 	.player {
-		max-width: 100% !important;
-	}
-	.player-name {
 		max-width: 100% !important;
 	}
 
@@ -433,7 +445,7 @@
 
 @media screen and ( max-width: 500px ) {
 	.app-header h1 {
-		max-width: calc(100% - 53px - 3rem);
-		margin-right: 1rem;
+		max-width: calc(100% - 53px - 5rem);
+		margin-right: 3rem;
 	}
 }

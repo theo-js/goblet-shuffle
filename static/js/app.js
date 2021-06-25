@@ -40,6 +40,7 @@ function saveToClipboard (text) {
 		copyText.setSelectionRange(0, 99999); /* For mobile devices */
 		document.execCommand('copy');
 		document.body.removeChild(copyText);
+		alert(text)
 		return true;
 	} catch {
 		return false;
@@ -55,6 +56,25 @@ function getOffsetPage (el) {
 		el = el.offsetParent;
     }
     return { top: y, left: x };
+}
+
+function toggleColorMode () {
+	var isDark = document.body.classList.contains('dark');
+	if (isDark) {
+		// Set to light mode
+		document.body.classList.remove('dark');
+		localStorage['color-mode'] = 'light';
+	} else {
+		// Set to dark mode
+		document.body.classList.add('dark');
+		localStorage['color-mode'] = 'dark';
+	}
+	// Add animation to toggle btns
+	Array.from(document.getElementsByClassName('color-mode-toggle')).forEach(function (btn) {
+		if (!btn.style.animation) {
+			btn.style.animation = 'fade-rotate .3s ease-out';
+		}
+	});
 }
 
 
@@ -1071,6 +1091,12 @@ function openEndGameModal (boolean, msg) {
 				}
 			});
 		}
+	}
+
+	// Set initial color-mode
+	var useDark = localStorage['color-mode'] === 'dark' || window.matchMedia("(prefers-color-scheme: dark)").matches;
+	if (useDark) {
+		document.body.classList.add('dark');
 	}
 
 	// Set initial goblets
