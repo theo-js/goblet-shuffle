@@ -321,6 +321,32 @@ function resetBall () {
 	}
 }
 
+// Score gain/loss animation
+function scoreAnimation (
+		className, 
+		element, 
+		value, 
+		duration = 1000
+	) {
+	if ( !className || !element ) {
+		return;
+	}
+	var span = document.createElement('span');
+	span.className = 'score-anim ' + className;
+	span.textContent = value;
+	span.style.animationDuration = duration/4 + 'ms'; // Fade in
+
+	element.appendChild(span);
+
+	window.setTimeout(function () { // Fade out
+		span.classList.add('fade-out');
+		span.style.transition = duration/4 + 'ms all ease-out';
+	}, 3*duration/4);
+	window.setTimeout(function () { // Remove element
+		//element.removeChild(span);
+	}, duration);
+}
+
 // Game processes
 function enableOptions (enable) {
 	if (typeof enable !== 'boolean') {
@@ -633,6 +659,9 @@ function succeed (targetGoblets) {
 			score += scoreGain;
 			scoreOutput.textContent = score;
 
+			// Display score gain animation
+			scoreAnimation('gain', scoreOutput, scoreGain);
+
 			// Notify other players (multiplayer)
 			if (MULTIPLAYER && socket) {
 				socket.emit('player change', {
@@ -704,6 +733,9 @@ function fail (goblets) {
 				GAME_CONSTANTS.maxScoreToReach
 			)
 			scoreOutput.textContent = score;
+
+			// Display score loss animation
+			scoreAnimation('loss', scoreOutput, Math.floor(scoreLoss));
 
 			// Notify other players (multiplayer)
 			if (MULTIPLAYER && socket) {

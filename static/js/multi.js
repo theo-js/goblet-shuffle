@@ -132,12 +132,15 @@ function updatePlayerScore (
 	id, 
 	newScore, 
 	updateState = true, 
-	sort = true
+	sort = true,
+	anim = true
 ) {
 	// Set player's score in DOM
 	// Looking for player score to update in DOM
 	var playerScore = document.getElementById('player_' + id + '_score');
+	var oldScore;
 	if (playerScore) {
+		oldScore = parseInt(playerScore.textContent);
 		playerScore.textContent = newScore;
 	}
 
@@ -169,6 +172,16 @@ function updatePlayerScore (
 	// Sort participants
 	if (sort) {
 		sortParticipants();
+	}
+
+	// Player score animation
+	if (anim) {
+		var diff = newScore - oldScore;
+		scoreAnimation(
+			diff < 0 ? 'loss' : 'gain', 
+			playerScore, 
+			diff
+		);
 	}
 }
 
@@ -485,7 +498,7 @@ window.addEventListener('load', function () {
 		// Check if there are enough participants for a game
 	});
 
-	// PLayer left a room
+	// Player left a room
 	socket.on('player leave', function (socketID) {
 		removePlayer(socketID);
 	});
@@ -502,21 +515,21 @@ window.addEventListener('load', function () {
 		// Change name in players list
 		players = players.map(function (player) {
 			if (player.socketID === id) {
-				return { ...player, socketID: id };
+				return { ...player, name };
 			}
 			return player
 		});
 		// Change name in participants list
 		participants = participants.map(function (player) {
 			if (player.socketID === id) {
-				return { ...player, socketID: id };
+				return { ...player, name };
 			}
 			return player
 		});
 		// Change name in lurkers list
 		lurkers = lurkers.map(function (player) {
 			if (player.socketID === id) {
-				return { ...player, socketID: id };
+				return { ...player, name };
 			}
 			return player
 		});
@@ -660,8 +673,7 @@ window.addEventListener('load', function () {
 				updatePlayerScore(
 					player.socketID,
 					0, 
-					false, 
-					false
+					false, false, false
 				);
 
 				// Add all participants to list of lurkers

@@ -383,6 +383,7 @@ body.dark #particles {
 	font-size: 1.5rem;
 }
 .game-options > header #score {
+	position: relative;
 	color: white;
 	letter-spacing: 1px;
 }
@@ -471,6 +472,36 @@ body.dark #particles {
 #playBTN:active > span {
 	transform: scale(1.2);
 	transition: transform .075s ease;
+}
+
+.score-anim {
+	font-size: .75em; font-weight: 700;
+	display: inline-flex; align-items: center;
+	position: absolute; top: 0; bottom: 0; margin: auto;
+	right: 100%;
+	filter: drop-shadow(0 1px 0 var(--purple)) brightness(1.4);
+}
+.score-anim.gain {
+	color: var(--bs-success);
+	animation: translateBottom ease-out;
+}
+.score-anim.gain::before {
+	content: '+';
+}
+.score-anim.loss {
+	color: var(--bs-danger);
+	animation: translateTop ease-out;
+}
+.score-anim.loss::before {
+	content: '-';
+}
+.score-anim.gain.fade-out {
+	opacity: 0;
+	transform: translateY(-1rem);
+}
+.score-anim.loss.fade-out {
+	opacity: 0;
+	transform: translateY(1rem);
 }
 
 
@@ -762,5 +793,24 @@ body.dark .game-end-msg {
 	} to {
 		opacity: 1;
 		transform: rotate(0);
+	}
+}
+
+@keyframes translateTop {
+	from {
+		opacity: 0;
+		transform: translateY(-1rem);
+	} to {
+		opacity: 1;
+		transform: none;
+	}
+}
+@keyframes translateBottom {
+	from {
+		opacity: 0;
+		transform: translateY(1rem);
+	} to {
+		opacity: 1;
+		transform: none;
 	}
 }
