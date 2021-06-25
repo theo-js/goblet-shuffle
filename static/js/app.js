@@ -40,7 +40,6 @@ function saveToClipboard (text) {
 		copyText.setSelectionRange(0, 99999); /* For mobile devices */
 		document.execCommand('copy');
 		document.body.removeChild(copyText);
-		alert(text)
 		return true;
 	} catch {
 		return false;

@@ -257,6 +257,10 @@ body.dark .app-header .color-mode-toggle.light {
 	opacity: .75;
 	z-index: 1;
 }
+body.dark #particles {
+	opacity: .5;
+}
+
 .app-body > * {
 	z-index: 2;
 }
