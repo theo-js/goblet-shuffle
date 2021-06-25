@@ -67,7 +67,7 @@ body::before {
 	display: flex; justify-content: center; align-items: center;
 	background: #FFFA;
 	animation: fade .5s ease;
-	transition: opacity 500ms ease;
+	transition: opacity 500ms ease, background-color 1s ease;
 }
 body.dark .my-modal {
 	background: #222A;

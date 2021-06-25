@@ -268,15 +268,18 @@ body.dark .player.me .player-score {
 	background-color: transparent;
 	transition: .2s background-color ease;
 }
+body.dark .chat-form .chat-input {
+	color: white;
+}
 .chat-form .chat-input:focus {
 	border-bottom-color: var(--violet);
 	outline: none;
 }
 .chat-form .chat-input:focus {
-	background: linear-gradient(transparent, white);
+	background: white;
 }
 body.dark .chat-form .chat-input:focus {
-	background: linear-gradient(transparent, var(--black));
+	background: var(--black);
 }
 .chat-form button {
 	padding: 0 .5rem;
@@ -290,10 +293,17 @@ body.dark .chat-form .chat-input:focus {
 	border-radius: 0;
 	color: #222A;
 	font-size: 1.125rem;
-	transition: .2s color ease;
+	transition: .2s color ease, background-color .3s ease;
 }
+body.dark .chat-form .delete-btn {
+	background-color: var(--black);
+}
+
 .chat-form .delete-btn:hover {
 	color: var(--black);
+}
+body.dark .chat-form .delete-btn:hover {
+	color: white;
 }
 
 .player .msg-list {

@@ -134,6 +134,11 @@ function clearTimers () {
 }
 var countdownInterval = null;
 
+// Sound effects
+var successSE = new Audio('/static/audio/success.mp3');
+var victorySE = new Audio('/static/audio/victory.mp3');
+victorySE.volume = .75;
+
 // Goblet related functions
 function setGoblets (n) {
 	if (!isInGame) {		
@@ -612,6 +617,13 @@ function startCountDown (boolean) {
 function succeed (targetGoblets) {
 	return new Promise (function (resolve, reject) {
 		try {
+			// Play SE
+			try {
+				successSE.play();
+			} catch {
+				console.log('Failed to play success sound effect');
+			}
+
 			// Increment successes
 			successes++
 
@@ -879,6 +891,12 @@ function onPlay () {
 }
 
 function endGame (winner) {
+	// Play sound effect
+	try {
+		victorySE.play();
+	} catch {
+		console.log('Failed to play victory sound effect');
+	}
 	if (!MULTIPLAYER) {
 		// SOLO
 		switch (settings.gameMode.mode) {
