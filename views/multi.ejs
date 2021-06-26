@@ -140,6 +140,16 @@
 							<div class="goblet" data-offset-x="0" data-offset-y="0"></div>
 							<div class="ball init" id="ball"></div>
 						</div>
+						<button
+							id="skip-turn-btn"
+							class="btn btn-secondary"
+							title="Skip this turn"
+							onclick="skipThisTurn();"
+							disabled
+						>
+							<i class="fa fa-redo"></i>
+							<span class="hide400-">&nbsp;Skip</span>
+						</button>
 						<% if ( !room.isPlaying ) { %>
 							<div class="get-ready-section" id="get-ready-section">
 								<section class="join-game-section">

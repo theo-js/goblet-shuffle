@@ -508,7 +508,8 @@ body.dark #particles {
 .goblets-section {
 	position: relative;
 	grid-area: goblets;
-	display: flex; align-items: center;
+	display: flex; justify-content: center; align-items: center;
+	flex-direction: column;
 	min-height: 425px;
 	max-width: var(--max-mb-w);
 	background: #FFFD;
@@ -585,6 +586,20 @@ body.dark .goblets-section {
 .ball.init {
 	transform: translate(3em) !important;
 	opacity: 1 !important;
+}
+
+#skip-turn-btn {
+	font-size: 1rem;
+	margin-top: 1rem;
+	align-self: flex-end;
+	transition: all .2s ease;
+}
+#skip-turn-btn .fa {
+	transition: .2s ease transform;
+}
+#skip-turn-btn:hover .fa,
+#skip-turn-btn:focus .fa {
+	transform: rotate(270deg);
 }
 
 
@@ -702,6 +717,9 @@ body.dark .game-end-msg {
 	#goblets-container {
 		margin-top: 2rem;
 		font-size: 20vw;
+	}
+	#skip-turn-btn {
+		margin-top: 2rem;
 	}
 	.goblet {
 		margin: 0 auto;

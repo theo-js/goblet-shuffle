@@ -101,6 +101,7 @@ var gameSettingsSelectors = [
 ];
 
 var playBTN = document.getElementById('playBTN');
+var skipTurnBtn = document.getElementById('skip-turn-btn');
 var scoreOutput = document.getElementById('score');
 var timeOutput = document.getElementById('time-output');
 var timeOutputPara = document.getElementById('time-output-para');
@@ -312,12 +313,14 @@ async function pickGoblet (clickEvent) {
 }
 
 // Reset ball
-function resetBall () {
+function resetBall (init = true) {
 	var ballElem = document.getElementById('ball');
 	if (ballElem) {
 		ballElem.style.zIndex = 4;
 		ballElem.style.opacity = 1;
-		ballElem.classList.add('init');
+		if (init) {
+			ballElem.classList.add('init');
+		}
 	}
 }
 
@@ -643,6 +646,12 @@ function startCountDown (boolean) {
 function succeed (targetGoblets) {
 	return new Promise (function (resolve, reject) {
 		try {
+			// Disable skip turn btn and prevent picking goblets
+			canPickGoblet = false;
+			if (skipTurnBtn) {
+				skipTurnBtn.disabled = true;
+			}
+			
 			// Play SE
 			try {
 				successSE.play();
@@ -755,7 +764,12 @@ function fail (goblets) {
 					goblet.classList.remove('pickable');
 					goblet.classList.add('hidden');
 				})
-				canPickGoblet = true;
+
+				canPickGoblet = true; // Allow picking goblets
+				// Enable skip turn button
+				if (skipTurnBtn) {
+					skipTurnBtn.removeAttribute('disabled');
+				}
 			}, 300);
 			resolve();
 		} catch (err) {
@@ -814,7 +828,7 @@ function startNewTurn () {
 		}, 1500);
 
 		// Shuffle goblets
-		var currentCount = settings.shuffleCount;
+		var currentCount = settings.shuffleCount; // Amount of shuffles that still need to be done
 		function shuffleGobletsAtLeastOnce () {
 			shuffleGoblets().then(function () {
 				currentCount--;
@@ -832,6 +846,10 @@ function startNewTurn () {
 						Array.from(goblets).forEach(function (goblet) {
 							goblet.classList.add('pickable');
 						});
+						// Enable skip button
+						if (skipTurnBtn) {
+							skipTurnBtn.removeAttribute('disabled');
+						}
 					}
 				}
 			})
@@ -848,76 +866,84 @@ function startNewTurn () {
 	}, 300);
 }
 
+function skipThisTurn () {
+	if (canPickGoblet) {
+		// Prevent picking goblets and disable skip turn button
+		canPickGoblet = false;
+		if (skipTurnBtn) {
+			skipTurnBtn.disabled = true;
+		}
+
+		// Make ball visible without moving it to its initial position
+		resetBall(false);
+
+		// Go to next turn without changing theme color
+		turnDownGoblets();
+		startNewTurn();
+	}
+}
+
 function onPlay () {
 	if (typeof MULTIPLAYER !== undefined) {
-		if (/*MULTIPLAYER === false*/true) {
-			// Solo mode
-			clearTimers();
-			if (isInGame) {
-				// Stop game / give up
-				isInGame = false;
-				canPickGoblet = false;
-				enableOptions(true);
-				turnDownGoblets(false);
-				setGoblets(settings.goblets);
-				resetBall();
-				if (playBTN) {
-					playBTN.innerHTML = '<span>Start</span>';
-				}
-
-				// Reset game stats
-				score = 0;
-				scoreOutput.textContent = 0;
-				successes = 0;
-				fails = 0;
-				gameTime = 0;
-				window.clearInterval(gameTimeInterval);
-				gameTimeInterval = null;
-
-				// Reset goblets translation speed
-				Array.from(goblets).forEach(function (goblet) {
-					goblet.style.transition = '.3s all ease';
-					goblet.classList.remove('pickable');
-				});
-				
-				// Reset countdown
-				startCountDown(false);
-			} else {
-				// New game
-				isInGame = true;
-				enableOptions(false);
-				startCountDown(true);
-				startNewTurn();
-				if (playBTN) {
-					playBTN.innerHTML = '<span>Give up</span>';
-				}
-
-				// Scroll to goblets container
-				if (gobletsContainer) {
-					/*var top = getOffsetPage(gobletsContainer).top;
-					var margin = 17;
-					top -= margin * 14;
-					window.scroll({
-						top,
-						left: 0,
-						behavior: 'smooth'
-					});*/
-					gobletsContainer.scrollIntoView({
-						behaviour: 'smooth',
-						inline: 'start',
-						block: 'nearest'
-					});
-				}
-
-				// Measure game time
-				if (settings.gameMode.mode === GAME_MODE.REACH_SCORE) {
-					gameTimeInterval = window.setInterval(function () {
-						gameTime++;
-					}, 1000);
-				}
+		// Solo mode
+		clearTimers();
+		if (isInGame) {
+			// Stop game / give up
+			isInGame = false;
+			canPickGoblet = false;
+			enableOptions(true);
+			turnDownGoblets(false);
+			setGoblets(settings.goblets);
+			resetBall();
+			if (playBTN) {
+				playBTN.innerHTML = '<span>Start</span>';
 			}
+			if (skipTurnBtn) {
+				skipTurnBtn.disabled = true;
+			}
+
+			// Reset game stats
+			score = 0;
+			scoreOutput.textContent = 0;
+			successes = 0;
+			fails = 0;
+			gameTime = 0;
+			window.clearInterval(gameTimeInterval);
+			gameTimeInterval = null;
+
+			// Reset goblets translation speed
+			Array.from(goblets).forEach(function (goblet) {
+				goblet.style.transition = '.3s all ease';
+				goblet.classList.remove('pickable');
+			});
+			
+			// Reset countdown
+			startCountDown(false);
 		} else {
-			// Multiplayer mode
+			// New game
+			isInGame = true;
+			enableOptions(false);
+			startCountDown(true);
+			startNewTurn();
+			if (playBTN) {
+				playBTN.innerHTML = '<span>Give up</span>';
+			}
+
+			// Scroll to goblets container
+			if (gobletsContainer) {
+				gobletsContainer.scrollIntoView({
+					behaviour: 'smooth',
+					inline: 'start',
+					block: 'nearest'
+				});
+			}
+
+			// Measure game time
+			if (settings.gameMode.mode === GAME_MODE.REACH_SCORE) {
+				gameTimeInterval = window.setInterval(function () {
+					gameTime++;
+				}, 1000);
+			}
 		}
 	}
 }
