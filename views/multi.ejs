@@ -183,7 +183,7 @@
 						<nav class="game-options">
 							<header>
 								<div>
-									<h3 title="Score">Score</h3>
+									<h3 title="Your score">Score</h3>
 									<p style="margin: .5rem 0 0 0; text-align: right;">
 										<strong id="score">0</strong>
 									</p>
@@ -194,7 +194,7 @@
 										<%= room.settings.gameMode.mode === GAME_MODE.COUNTDOWN ? 'block' : 'none' %>
 									;"
 								>
-									<h3 title="Time" style="text-align: left;">Time</h3>
+									<h3 title="Time left" style="text-align: left;">Time</h3>
 									<p
 										class="time-field <%= room.isPlaying ? 'active' : '' %>"
 										id="time-output-para"
@@ -236,7 +236,9 @@
 										</button>
 										<ul style="margin: 0; padding: 0; list-style: none;" class="options-list collapsed" id="game-settings-options-list">
 											<li>
-												<label for="goblet-number">Goblets:</label>
+												<label for="goblet-number" title="How many goblets do you want to play with ?">
+													Goblets:
+												</label>
 												<input
 													type="number"
 													name="goblet-number"
@@ -248,7 +250,9 @@
 												>
 											</li>
 											<li>
-												<label for="shuffle-count">Shuffle count:</label>
+												<label for="shuffle-count" title="How many times should the goblets be rearranged ?">
+													Shuffle count:
+												</label>
 												<input
 													type="number"
 													name="shuffle-count"
@@ -260,7 +264,9 @@
 												>
 											</li>
 											<li>
-												<label for="shuffle-speed">Speed:</label>
+												<label for="shuffle-speed" title="How fast should the game be ?">
+													Speed:
+												</label>
 												<input
 													type="range"
 													name="shuffle-speed"
@@ -274,10 +280,10 @@
 												>
 											</li>
 											<li class="game-mode">
-												<h4>Mode</h4>
+												<h4 title="Select the game mode">Mode</h4>
 												<ul style="padding: 0; margin: 0;">
 													<li>
-														<label for="reach-score-mode" onclick="window.setTimeout(function () {
+														<label for="reach-score-mode" title="In this mode, the first player who can reach the chosen score wins" onclick="window.setTimeout(function () {
 															var target = document.getElementById('score-to-reach');
 															if (target && target.focus) {
 																 target.focus();
@@ -308,7 +314,7 @@
 														>
 													</li>
 													<li>
-														<label for="countdown-mode" onclick="window.setTimeout(function () {
+														<label for="countdown-mode" title="In this mode, player with the highest score at the end of the countdown wins" onclick="window.setTimeout(function () {
 															var target = document.getElementById('countdown-mode-m');
 															if (target && target.focus) {
 																 target.focus();
