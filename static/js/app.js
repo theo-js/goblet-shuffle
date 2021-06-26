@@ -328,7 +328,7 @@ function scoreAnimation (
 		value, 
 		duration = 1000
 	) {
-	if ( !className || !element ) {
+	if ( !className || !element || value === 0 ) {
 		return;
 	}
 	var span = document.createElement('span');
@@ -343,7 +343,7 @@ function scoreAnimation (
 		span.style.transition = duration/4 + 'ms all ease-out';
 	}, 3*duration/4);
 	window.setTimeout(function () { // Remove element
-		//element.removeChild(span);
+		element.removeChild(span);
 	}, duration);
 }
 

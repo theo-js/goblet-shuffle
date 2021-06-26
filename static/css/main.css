@@ -482,14 +482,14 @@ body.dark #particles {
 	filter: drop-shadow(0 1px 0 var(--purple)) brightness(1.4);
 }
 .score-anim.gain {
-	color: var(--bs-success);
+	color: var(--bs-success) !important;
 	animation: translateBottom ease-out;
 }
 .score-anim.gain::before {
 	content: '+';
 }
 .score-anim.loss {
-	color: var(--bs-danger);
+	color: var(--bs-danger) !important;
 	animation: translateTop ease-out;
 }
 .score-anim.loss::before {

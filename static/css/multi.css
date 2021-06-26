@@ -146,6 +146,9 @@ body.dark .player input.player-name:focus {
 	display: block; text-align: center;
 	position: relative;
 }
+.player .player-score .score-anim {
+	top: -2em; left: unset; right: 0;
+}
 .player .percentage-bar {
 	/* Display current score / score to reach */
 	position: relative; margin: auto;

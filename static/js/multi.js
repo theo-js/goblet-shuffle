@@ -177,10 +177,11 @@ function updatePlayerScore (
 	// Player score animation
 	if (anim) {
 		var diff = newScore - oldScore;
+		console.log( newScore,  oldScore)
 		scoreAnimation(
-			diff < 0 ? 'loss' : 'gain', 
-			playerScore, 
-			diff
+			diff < 0 ? 'loss' : 'gain', // ClassName
+			playerScore, // Integer that will be displayed
+			Math.abs(diff) // Sign is displayed with a pseudo-element
 		);
 	}
 }
