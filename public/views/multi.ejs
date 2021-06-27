@@ -1,4 +1,19 @@
 <%
+	// Filter players
+	const filterPlayer = player => {
+		/*
+			id (combination of socketID and remote address) will be used
+			to identify server-side, while socketID for client-side,
+			in order not to expose players' IP address
+		*/
+		const playerClone = Object.assign({}, player);
+		delete playerClone.uid;
+		delete playerClone.ip;
+		return playerClone;
+	};
+	room.players = room.players.map(player => filterPlayer(player));
+	room.admin = filterPlayer(room.admin);
+	
 	// Computed
 	// Room name
 	let roomName = 'Goblet shuffle';
