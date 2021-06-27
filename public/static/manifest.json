@@ -1,0 +1,29 @@
+{
+    "name": "Goblet Shuffle",
+    "short_name": "Goblet Shuffle",
+    "description": "Moving goblets game, play solo or with friends !",
+    "default_locale": "en",
+    "icons": [
+        {
+            "src": "/static/icons/goblet96.png",
+            "type": "image/png",
+            "sizes": "96x96"
+        },
+        {
+            "src": "/static/icons/goblet144.png",
+            "type": "image/png",
+            "sizes": "144x144"
+        }
+    ],
+    "theme": {
+        "colors": {
+            "frame": "#222",
+            "tab_background_text": "white",
+            "tab_text": "white",
+            "toolbar": "#222",
+            "bookmark_text": "#FE9"
+        }
+    },
+    "start_url": "/?source=pwa",
+    "display": "fullscreen"
+}

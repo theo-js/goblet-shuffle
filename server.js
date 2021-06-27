@@ -6,14 +6,13 @@ const initializeSockets = require('./sockets');
 
 // Views setup
 app.set('view engine', 'ejs');
-app.set('views', __dirname + '/views');
+app.set('views', __dirname + '/public/views');
 
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({
 	extended: true
 }));
-app.use('/static', express.static(`${__dirname}/static`));
 app.disable('x-powered-by');
 app.use((req, res, next) => {
 	// CORS middleware
@@ -22,8 +21,11 @@ app.use((req, res, next) => {
 	} else {
 		res.set('Access-Control-Allow-Origin', process.env.DOMAIN_NAME);
 	}
+	// Allow service worker
+	res.set('Service-Worker-Allowed', '/');
 	next();
 });
+app.use('/static', express.static(`${__dirname}/public/static`));
 
 // Websockets
 initializeSockets(server);

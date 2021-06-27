@@ -1,3 +1,5 @@
+'use strict';
+
 // GAME
 var participantsUL = document.getElementById('participants-list');
 var lurkersUL = document.getElementById('lurkers-list');

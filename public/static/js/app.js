@@ -1182,3 +1182,17 @@ function openEndGameModal (boolean, msg) {
 		goblet.onclick = pickGoblet;
 	});
 })();
+
+// Register to service worker
+if ('serviceWorker' in navigator) {
+	console.log('Service worker registration in progress');
+	navigator.serviceWorker.register('/static/serviceWorker.js', { scope: '/' })
+		.then(function (registration) {
+			console.log('Service worker registration complete');
+		})
+		.catch(function (e) {
+			console.log('Service worker registration failure');
+		});
+} else {
+	console.log('Service worker is not supported');
+}

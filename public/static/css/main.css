@@ -601,6 +601,9 @@ body.dark .goblets-section {
 #skip-turn-btn:focus .fa {
 	transform: rotate(270deg);
 }
+#skip-turn-btn:active .fa {
+	transform: rotate(360deg);
+}
 
 
 #game-info-msg {

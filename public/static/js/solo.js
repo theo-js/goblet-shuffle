@@ -1,3 +1,5 @@
+'use strict';
+
 var playerName = localStorage['player-name'] || '';
 var roomName = localStorage['room-name'] || '';
 
