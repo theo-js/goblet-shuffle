@@ -3,8 +3,8 @@ self.addEventListener('fetch', fetchEvent => {
         console.log('NAVIGATE MODE => event.respondWith')
         /*fetchEvent.respondWith((async () => {
                 return new Response('Hello world');
-        })());
-    }*/
+        })());*/
+    }
 });
 
 self.addEventListener('install', function (event) {
