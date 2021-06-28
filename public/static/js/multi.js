@@ -132,7 +132,8 @@ function addPercentageBars (boolean) {
 }
 function updatePlayerScore (
 	id, 
-	newScore, 
+	newScore,
+	diff,
 	updateState = true, 
 	sort = true,
 	anim = true
@@ -140,9 +141,7 @@ function updatePlayerScore (
 	// Set player's score in DOM
 	// Looking for player score to update in DOM
 	var playerScore = document.getElementById('player_' + id + '_score');
-	var oldScore;
 	if (playerScore) {
-		oldScore = parseInt(playerScore.textContent);
 		playerScore.textContent = newScore;
 	}
 
@@ -178,8 +177,6 @@ function updatePlayerScore (
 
 	// Player score animation
 	if (anim) {
-		var diff = newScore - oldScore;
-		console.log( newScore,  oldScore)
 		scoreAnimation(
 			diff < 0 ? 'loss' : 'gain', // ClassName
 			playerScore, // Integer that will be displayed
@@ -675,7 +672,7 @@ window.addEventListener('load', function () {
 				player.score = 0;
 				updatePlayerScore(
 					player.socketID,
-					0, 
+					0, 0,
 					false, false, false
 				);
 

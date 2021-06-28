@@ -349,6 +349,9 @@ module.exports = server => {
 
 							// Update player's score
 							try {
+								// Memorize previous score
+								const oldScore = global.rooms[roomIndex].players[playerIndex].score;
+								// Update current score with new score
 								global.rooms[roomIndex].players[playerIndex].score = newScore;
 							} catch {
 								return;
@@ -362,7 +365,10 @@ module.exports = server => {
 								// Trigger victory event when a player has reached score
 								if (newScore >= room.settings.gameMode.scoreToReach) {
 									io.to(roomID).emit(
-										'updated score', player.socketID, room.settings.gameMode.scoreToReach
+										'updated score',
+											player.socketID, // socketID
+											room.settings.gameMode.scoreToReach, // currentScore
+											room.settings.gameMode.scoreToReach - oldScore // diff (gain/loss)
 									);
 									io.to(roomID).emit(
 										'victory', player.socketID
@@ -381,7 +387,7 @@ module.exports = server => {
 
 							// Emit event (notify other players about new score)
 							io.to(roomID).emit(
-								'updated score', player.socketID, newScore
+								'updated score', player.socketID, newScore, validDiff
 							);
 						},
 						() => false
