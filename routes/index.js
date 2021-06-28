@@ -38,7 +38,7 @@ router.get('/:roomID', (req, res) => {
 			const isAdmin = room.admin.ip === ip;
 			res.render('multi', {
 				err: urlErrMsg(req.query.err),
-				room,
+				room: Object.assign({}, room), // Send copy of the room object
 				isAdmin,
 				DOMAIN,
 				PLAYER_ROLE,

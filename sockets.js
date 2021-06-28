@@ -120,7 +120,6 @@ module.exports = server => {
 					const ip = getIP(socket);
 
 					// Only admin can start games
-					console.log('user with IP: ' + ip + ' tries to start game')
 					if ( room && room.admin.ip === ip ) {
 						// Start countdown
 						const ms = GAME_START_COUNTDOWN * 1000;

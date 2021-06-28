@@ -1,8 +1,16 @@
 self.addEventListener('fetch', fetchEvent => {
     if (fetchEvent.request.mode === 'navigate') {
-        console.log('NAVIGATE MODE => event.respondWith')
         /*fetchEvent.respondWith((async () => {
+            try  {
+                const preloadResponse = await fetchEvent.preloadResponse;
+                if (preloadResponse) {
+                    return preloadResponse;
+                }
+
+                return await fetch(event.request);
+            } catch (e) {
                 return new Response('Hello world');
+            }
         })());*/
     }
 });

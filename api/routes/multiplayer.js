@@ -33,7 +33,6 @@ multiplayerRouter.post('/create-room', (req, res) => {
 	try {
 		// Validate IP
 		const ip = getIP(req);
-		console.log('creating room with admin\'s ip: ' + ip);
 		// Find out if this IP is admin in any of the rooms already
 		const userAdminInAnyRoom = global.rooms.find(room => {
 			try {
