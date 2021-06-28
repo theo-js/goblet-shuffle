@@ -334,10 +334,12 @@ module.exports = server => {
 							});
 							if (!player) return false;
 
+							// Compute score difference between new and old score
+							const diff = payload - player.score; //  newScore - prevScore
+							let validDiff = diff;
 							if (room.isPlaying) {
 								// Limit score gain/loss during game
-								const diff = payload - player.score; //  newScore - prevScore
-								const validDiff = limitNum(
+								validDiff = limitNum(
 									diff,
 									GAME_CONSTANTS.maxScoreLoss,
 									GAME_CONSTANTS.maxScoreGain
