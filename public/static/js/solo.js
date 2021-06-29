@@ -68,7 +68,7 @@ function getInviteModalHTMLContent () {
 		'<div class="hr" style="background: white;"></div>' +
 		'<div id="invite-form-error"></div>' +
 		'<fieldset class="invite-form-footer">' +
-			'<span onclick="openInviteModal(false)" class="close-btn btn btn-danger"><i class="fa fa-arrow-left"></i></span>' +
+			'<span onclick="openInviteModal(false)" class="close-btn prev btn btn-danger"><i class="fa fa-arrow-left"></i></span>' +
 			'<button id="submitBtn" class="button submit" ' + isInviteSubmitDisabledStr + '>Ready <i class="fa fa-arrow-right"></i></button>' +
 		'</fieldset>' + 
 	'</form>';
@@ -471,6 +471,16 @@ async function handleInviteFormSubmit (formEvent) {
 
 		} catch (err) {
 			console.log({err});
+			// Check if user is online
+			if (
+				typeof window.navigator.onLine !== 'undefined' && 
+				window.navigator.onLine === false
+			) {
+				// User is offline; ask to fix internet connection
+				return displayInviteFormError('There is something wrong with your internet connection; since multiplayer mode is only available online, fix the connection and try again');
+			}
+
+			// Send error to user
 			if (err.response && err.response.data) {
 
 				if (err.response.data.success && err.response.data.roomID && err.response.data.errcode) {
@@ -482,7 +492,7 @@ async function handleInviteFormSubmit (formEvent) {
 					openInviteModal(false);
 
 				} else if (err.response.data.msg) {
-					// Display error msg from server
+					// Received error msg from server
 					displayInviteFormError(err.response.data.msg);
 				}
 			} else if (err.message) displayInviteFormError(err.message);

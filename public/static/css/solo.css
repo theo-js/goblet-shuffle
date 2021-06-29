@@ -41,7 +41,7 @@ body.dark .options-section > .invite > button {
 	transition: transform ease .5s;
 }
 
-.invite-form .close-btn {
+.invite-form .close-btn.prev {
 	display: none;
 	position: fixed;
 	left: 0; bottom: 1rem;
@@ -49,7 +49,7 @@ body.dark .options-section > .invite > button {
 	padding: 1.333rem 2rem;
 	z-index: 2;
 }
-.invite-form .close-btn:hover {
+.invite-form .close-btn.prev:hover {
 	filter: unset;
 }
 
@@ -176,7 +176,7 @@ body.dark .options-section > .invite > button {
 		margin: 0;
 		border-radius: 0;
 	}
-	.invite-form .close-btn {
+	.invite-form .close-btn.prev {
 		display: inline-flex;
 	}
 	.invite-form .invite-form-footer {

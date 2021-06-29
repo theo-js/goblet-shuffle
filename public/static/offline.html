@@ -7,19 +7,38 @@
 		<meta name="color-scheme" content="light dark">
 		<meta name="description" content="Online moving goblets game, play solo or with friends !">
 		<link rel="shortcut icon" type="image/png" href="static/icons/goblet96.PNG">
-		<link rel="manifest" href="static/manifest.json">
 		<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css">
 		<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.1.1/css/all.min.css">
 		<link rel="stylesheet" type="text/css" href="static/css/main.css">
 		<link rel="stylesheet" type="text/css" href="static/css/solo.css">
-		<script defer type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+		<script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
 		<script type="text/javascript">
 			// Game constants
-			const GAME_CONSTANTS = <%- JSON.stringify(GAME_CONSTANTS) %>;
-			const GAME_MODE = <%- JSON.stringify(GAME_MODE) %>;
+			const GAME_CONSTANTS = {
+                maxPlayerNameLength: 40,
+                maxRoomNameLength: 50,
+                minGoblets: 3,
+                maxGoblets: 36,
+                minShuffleCount: 2,
+                maxShuffleCount: 25,
+                minShuffleSpeed: .2,
+                maxShuffleSpeed: 1,
+                minScoreToReach: 100,
+                defaultScoreToReach: 2000,
+                maxScoreToReach: 999999,
+                minCountdown: 5,
+                defaultCountdown: 30,
+                maxCountdown:  30*60,
+                maxScoreLoss: -1500,
+                maxScoreGain: 1500
+            };
+			const GAME_MODE = {
+                REACH_SCORE: 'REACH_SCORE',
+	            COUNTDOWN: 'COUNTDOWN'
+            };
 			const MULTIPLAYER = false;
 			const isAdmin = true;
-			const ROOM_ID_LENGTH = <%= ROOM_ID_LENGTH %>
+			const ROOM_ID_LENGTH = 10
 
 			// Game variables
 			// Settings
@@ -35,11 +54,7 @@
 			let initialTime = 30;
 
 			// Utils
-			<%- 
-				Object.values(utils).reduce((acc, func) => {
-					return acc + `${func.toString()}`;
-				}, '');
-			%>
+			function secondsToTime(n){if("number"!=typeof n||Number.isNaN(n)||n<0)return{m:1,s:0};n>GAME_CONSTANTS.maxCountdown&&(n=GAME_CONSTANTS.maxCountdown);const r=new Date(1e3*n);return{m:r.getMinutes(),s:r.getSeconds()}}function timeToStr(n){if(!n||"number"!=typeof n.m||Number.isNaN(n.m)||n.m<0||"number"!=typeof n.s||Number.isNaN(n.s)||n.s<0)return{m:"01",s:"00"};let r=n.m.toString(),t=n.s.toString();return 1===r.length&&(r="0"+r),1===t.length&&(t="0"+t),{m:r,s:t}}function secondsToTimeStr(n){return{...timeToStr(secondsToTime(parseFloat(n))),time:n}}function randomColor(n,r){return"rgb("+randomInt(n,r)+", "+randomInt(n,r)+", "+randomInt(n,r)+")"}function randomInt(n,r){return Math.round(Math.random()*(r-n)+n)}function avg(n,r){return(n+r)/2}function isValidNum(n,r,t,e=!0){return"number"==typeof n&&!Number.isNaN(parseFloat(n))&&(!(!Number.isNaN(parseFloat(r))&&!Number.isNaN(parseFloat(t)))||(e?!(n<r)&&!(n>t):!(n<=r)&&!(n>=t)))}function limitNum(n,r,t){return"number"==typeof n&&!Number.isNaN(n)&&(n<r?r:n>t?t:n)}function generateRoomID(n){for(var r=n||ROOM_ID_LENGTH||10,t="",e=0;e<r;e++)t+=randomChar();return t}function randomChar(){var n=["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z",1,2,3,4,5,6,7,8,9];return n[randomInt(0,n.length-1)]}
 		</script>
 		<title>Goblet Shuffle</title>
 	</head>
@@ -51,24 +66,6 @@
 				<button onclick="toggleColorMode();" title="Switch to light mode" class="color-mode-toggle light"><i class="fa fa-sun"></i></button>
 			</header>
 			<main class="app-body">
-				<% if (err) { %>
-					<p class="alert alert-danger" style="position: relative; margin-top: 1rem;">
-						<%= err %> :(
-						<button
-							onclick="(function (btn) {
-								if (btn.parentElement && btn.parentElement.parentElement) {
-									if (btn.parentElement.previousElementSibling) {
-										btn.parentElement.parentElement.removeChild(btn.parentElement.previousElementSibling);
-									}
-									btn.parentElement.parentElement.removeChild(btn.parentElement);
-								}
-							})(this);"
-							class="close-btn"
-						>
-						<i class="fa fa-times"></i>
-					</button>
-					</p>
-				<% } %>
 				<div class="game">
 					<section class="goblets-section">
 						<div id="goblets-container">
@@ -192,18 +189,18 @@
 														onchange="changeSetting('game-mode', this);"
 														name="game-mode"
 														id="reach-score-mode"
-														value="<%= GAME_MODE.REACH_SCORE %>"
+														value="REACH_SCORE"
 														style="display: none;"
 														checked
 													>
 													<input
 														type="number"
 														id="score-to-reach"
-														name="<%= GAME_MODE.REACH_SCORE %>"
-														min="<%= GAME_CONSTANTS.minScoreToReach %>"
-														max="<%= GAME_CONSTANTS.maxScoreToReach %>"
+														name="REACH_SCORE"
+														min="100"
+														max="999999"
 														step="10"
-														value="<%= GAME_CONSTANTS.defaultScoreToReach %>"
+														value="2000"
 														style="max-width: 4rem;"
 														oninput="changeSetting('score-to-reach', this);"
 													>
@@ -222,13 +219,13 @@
 														onchange="changeSetting('game-mode', this);"
 														name="game-mode"
 														id="countdown-mode"
-														value="<%= GAME_MODE.COUNTDOWN %>"
+														value="COUNTDOWN"
 														style="display: none;"
 													>
 													<fieldset class="time-field">
 														<input
 															type="number"
-															name="<%= GAME_MODE.COUNTDOWN %>"
+															name="COUNTDOWN"
 															min="0" max="30" 
 															value="0" 
 															id="countdown-mode-m" 
@@ -238,7 +235,7 @@
 														<span class="colon" style="font-weight: 700; color: #FFFA;">:</span>
 														<input
 															type="number"
-															name="<%= GAME_MODE.COUNTDOWN %>"
+															name="COUNTDOWN"
 															min="0" max="59"
 															value="30"
 															id="countdown-mode-s"

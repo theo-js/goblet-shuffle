@@ -301,6 +301,7 @@ body.dark .chat-form .chat-input:focus {
 }
 body.dark .chat-form .delete-btn {
 	background-color: var(--black);
+	color: #FFFA;
 }
 
 .chat-form .delete-btn:hover {

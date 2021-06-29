@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { getIP } = require('../utils');
+const { filterPlayer } = require('../api/routes/multiplayer');
 
 // Constants
 const {
@@ -36,9 +37,15 @@ router.get('/:roomID', (req, res) => {
 			// Find out if current user is admin
 			const ip = getIP(req);
 			const isAdmin = room.admin.ip === ip;
+
+			// Filter private data
+			const filteredRoom = Object.assign({}, room) // Make copy of the room object
+			filteredRoom.players = filteredRoom.players.map(player => filterPlayer(player));
+			filteredRoom.admin = filterPlayer(filteredRoom.admin);
+
 			res.render('multi', {
 				err: urlErrMsg(req.query.err),
-				room: Object.assign({}, room), // Send copy of the room object
+				room: filteredRoom,
 				isAdmin,
 				DOMAIN,
 				PLAYER_ROLE,
