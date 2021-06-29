@@ -349,9 +349,8 @@ module.exports = server => {
 							}
 
 							// Update player's score
+							const oldScore = global.rooms[roomIndex].players[playerIndex].score; // Memorize previous score
 							try {
-								// Memorize previous score
-								const oldScore = global.rooms[roomIndex].players[playerIndex].score;
 								// Update current score with new score
 								global.rooms[roomIndex].players[playerIndex].score = newScore;
 							} catch {
