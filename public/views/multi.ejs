@@ -497,7 +497,7 @@
 						<button
 							class="btn btn-secondary"
 							onclick="(function () {
-								if(saveToClipboard(location.href)) {
+								if(saveToClipboard(location.protocol + '/\/' + location.host + '/<%= room.id %>' )) {
 									alert('Copied !');
 								} else {
 									alert('Failed copying to clipboard')
