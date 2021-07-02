@@ -1,5 +1,5 @@
 const BASE = location.protocol + '//' + location.host;
-const PREFIX = 'V1';
+const PREFIX = 'V3';
 const CACHED_FILES = [
     `${BASE}/static/css/main.css`,
     `${BASE}/static/css/solo.css`,
@@ -14,7 +14,8 @@ const CACHED_FILES = [
     'https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js',
     'https://fonts.googleapis.com/css2?family=Parisienne&display=swap',
     'https://fonts.gstatic.com/s/parisienne/v8/E21i_d3kivvAkxhLEVZpQyhwDw.woff2',
-    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.1.1/webfonts/fa-solid-900.woff2'
+    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.1.1/webfonts/fa-solid-900.woff2',
+    'https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js'
 ];
 
 self.addEventListener('install', event => {
@@ -26,7 +27,6 @@ self.addEventListener('install', event => {
                 ...CACHED_FILES,
                 `${BASE}/static/offline.html`
             ]);
-            console.log(cache)
         })()
     )
 });

@@ -100,7 +100,7 @@
 			}, false);
 		</script>
 	</head>
-	<body>
+	<body class="scrollbar-black">
 		<div class="app">
 			<header class="app-header">
 				<a href="/" class="to-solo" title="Leave room">
@@ -385,7 +385,7 @@
 							>
 								Lurkers (<%= lurkers.length %>)
 							</h3>
-							<ul id="lurkers-list" class="players-list">
+							<ul id="lurkers-list" class="players-list scrollbar-grey">
 								<%
 									for (let i = 0; i < lurkers.length; i++) {
 										const player = lurkers[i];
@@ -396,10 +396,10 @@
 											id="player_<%= player.name %>_name" title="<%= player.name %> <%= adminClass.toUpperCase() %>">
 												<%= player.name %>
 											</h4>
-											<ul
+											<p
 												class="msg-list"
 												id="player_<%= player.socketID %>_msg_list"
-											></ul>
+											></p>
 										</li>
 								<%
 									}
@@ -415,7 +415,7 @@
 							>
 								Participants (<%= participants.length %>)
 							</h3>
-							<ul id="participants-list" class="players-list">
+							<ul id="participants-list" class="players-list scrollbar-grey">
 								<%
 									for (let i = 0; i < participants.length; i++) {
 										const player = participants[i];
@@ -465,7 +465,7 @@
 								id="chat-form-input"
 								maxLength="1000"
 								autocomplete="off"
-								placeholder="Type your message here"
+								placeholder="Send a message to <%= roomName %>"
 							/>
 							<button
 								class="btn btn-primary delete-btn"
@@ -488,6 +488,94 @@
 							</button>
 						</fieldset>
 					</form>
+					<aside class="chat-history" id="chat-history">
+						<header class="chat-history-header" onclick="(function () {
+							var toggleBtn = document.getElementById('chat-history-toggle-btn');
+							if (toggleBtn) {
+								if (toggleChatHistory()) {
+									toggleBtn.classList.add('active'); // Open history
+									// Focus on input
+									var inputID;
+									if (window.matchMedia('(max-width: 700px)').matches ) {
+										// Input is outside chat history
+										inputID = 'chat-form-input';
+									} else {
+										// Input is within chat history
+										inputID = 'chat-form-inside-input';
+									}
+									var input = document.getElementById(inputID);
+									if (input) {
+										input.focus();
+									}
+								} else {
+									toggleBtn.classList.remove('active'); // Close history
+								}
+							}
+						})();">
+							<button class="toggle-btn" id="chat-history-toggle-btn">
+								<i class="fa fa-chevron-up"></i>
+							</button>
+							<h3 class="chat-history-title">
+								Chat
+								<span id="chat-history_msg-count" data-count="0">
+									0
+								</span>
+							</h3>
+						</header>
+						<main class="chat-history-body closed" id="chat-history-body">
+							<ul
+								id="chat-history_msg-list"
+								class="scrollbar-grey"
+								aria-live="polite"
+							></ul>
+							<button
+								id="chat-history_scolldown-btn"
+								style="--offset-bottom: 3rem;"
+								onclick="(function () {
+									var chatHist = document.getElementById('chat-history_msg-list');
+									if (chatHist && chatHist.scroll) {
+										chatHist.scroll({
+											top: chatHist.scrollHeight,
+											left: 0, behavior: 'smooth'
+										});
+									}
+								})();"
+							>
+								<span class="text-content">Scroll down</span>
+								<i class="fa fa-arrow-down"></i>
+							</button>
+							<form class="chat-form chat-form-inside" id="chat-form-inside">
+								<fieldset class="chat-input-field">
+									<input
+										class="chat-input"
+										id="chat-form-inside-input"
+										maxLength="1000"
+										autocomplete="off"
+										placeholder="Send a message to <%= roomName %>"
+									/>
+									<button
+										class="btn btn-primary delete-btn"
+										onmousedown="(function (btn) {
+											var chatFormInput = document.getElementById('chat-form-input');
+											if (chatFormInput) {
+												chatFormInput.value = '';
+												window.setTimeout(function () {
+													if (chatFormInput) {
+														chatFormInput.focus();
+													}
+												}, 5);
+											}
+										})(this);"
+									>
+										<i class="fa fa-times"></i>
+									</button>
+									<button class="btn btn-primary send-btn">
+										<i class="fa fa-paper-plane"></i>
+									</button>
+								</fieldset>
+							</form>
+						</main>
+					</aside>
 				</div>
 				<% if (isAdmin) { %>
 					<article class="alert alert-info game-info-message">

@@ -5,6 +5,9 @@ var participantsUL = document.getElementById('participants-list');
 var lurkersUL = document.getElementById('lurkers-list');
 
 var getReadySection = document.getElementById('get-ready-section');
+var chatHistorySection = document.getElementById('chat-history');
+var chatHistoryBody = document.getElementById('chat-history-body');
+var chatHistory = document.getElementById('chat-history_msg-list');
 
 // Game start countdown
 var startMultiPlayerGameBtn = document.getElementById('start-multiplayer-game-btn');
@@ -241,6 +244,29 @@ function addPlayer (player, ul, addClasses) {
 				type: 'rename player',
 				payload: playerName.value
 			});
+
+			// Overwrite chat messages name in chat history
+			changePlayerNameInChatHistory (socket.id, playerName.value)
+
+			// Update state
+			players = players.map(function (player) {
+				if (player.socketID === socket.id) {
+					return { ... player, name: playerName.value };
+				}
+				return player;
+			});
+			lurkers = lurkers.map(function (player) {
+				if (player.socketID === socket.id) {
+					return { ... player, name: playerName.value };
+				}
+				return player;
+			});
+			participants = participants.map(function (player) {
+				if (player.socketID === socket.id) {
+					return { ... player, name: playerName.value };
+				}
+				return player;
+			});
 		}
 		form.onsubmit = function (e) {
 			e.preventDefault();
@@ -294,12 +320,12 @@ function addPlayer (player, ul, addClasses) {
 		li.appendChild(scoreStr);
 	}
 
-	// Append list of chat messages
-	var chatMsgList = document.createElement('ul');
-	chatMsgList.className = 'msg-list';
-	var chatMsgListID = 'player_' + player.socketID + '_msg_list';
-	chatMsgList.setAttribute('id', chatMsgListID);
-	li.appendChild(chatMsgList);
+	// Append last chat message
+	var lastChatMSG = document.createElement('p');
+	lastChatMSG.className = 'last-msg';
+	var lastChatMsgID = 'player_' + player.socketID + 'last-msg';
+	lastChatMSG.setAttribute('id', lastChatMsgID);
+	li.appendChild(lastChatMSG);
 
 	// Append li to ul
 	if (ul.appendChild) {
@@ -457,37 +483,287 @@ function handleMultiPlayerError (err) {
 }
 
 // CHAT
+// Handle forms submit
 var chatForm = document.getElementById('chat-form');
-if (chatForm) {
-	chatForm.onsubmit = handleChatFormSubmit;
-}
 var chatFormInput = document.getElementById('chat-form-input');
-function handleChatFormSubmit (e) {
+if (chatForm) {
+	chatForm.onsubmit = function (e) {
+		handleChatFormSubmit(e, chatFormInput);
+	};
+}
+// User can send msgs from within the 'chat history' as well as when it is closed
+var chatFormInside = document.getElementById('chat-form-inside');
+var chatFormInsideInput = document.getElementById('chat-form-inside-input');
+if (chatFormInside) {
+	chatFormInside.onsubmit = function (e) {
+		handleChatFormSubmit(e, chatFormInsideInput);
+	};
+}
+
+// Send msg
+function handleChatFormSubmit (e, input) {
 	e.preventDefault();
 	// Validation
-	if (!chatFormInput) return;
-	if (!chatFormInput.value) return;
+	if (!input) return;
+	if (!input.value) return;
 	if (!socket) return;
 
-	socket.emit('chat msg', chatFormInput.value);
+	socket.emit('chat msg', input.value);
 
-	chatFormInput.value = '';
+	input.value = '';
 }
 
-function handleChatMsgReception ({ socketID, timespan, msg }) {
+// Receive msg
+function handleChatMsgReception (msgObject) {
+	if (msgObject.socketID && msgObject.timestamp && msgObject.msg) {
+		displayMsgBubble(msgObject); // Last msg appears next to player's name
+		appendMsgToChatHistory(msgObject); // History of all received messages (not persisting)
+	}
+}
+
+// Display last msg next to player
+function displayMsgBubble ({ socketID, timestamp, msg}) {
 	/*var ulID = 'player_' + socketID + '_msg_list';
 	var ul = document.getElementById(ulID);
 	if (ul) {
 		var li = document.createElement('li');
-		var liID = 'msg_from_' + socketID + 'at_' + timespan;
+		var liID = 'msg_from_' + socketID + 'at_' + timestamp;
 		li.setAttribute('id', liID);
 		li.className = 'chat-msg';
 		li.textContent = msg;
 		ul.innerHTML = '';
 		ul.appendChild(li);
 	}*/
-	console.log(msg)
 }
+
+// Manage chat history
+// Check if user is trying to scroll up to read old msgs
+var isReadingOldChats = false;
+var chatHistoryScrollBtn = document.getElementById('chat-history_scolldown-btn');
+function handleChatHistoryScroll (scrollEv) {
+	var chatHist = scrollEv.target;
+	// Check what distance has been scrolled from the bottom of the chat history
+	var scrollBottom = chatHist.scrollHeight - (chatHist.scrollTop + chatHist.clientHeight);
+	var breakPoint = 100; // Distance from bottom in pxs from which software will consider that user tries to read old msgs
+	isReadingOldChats = scrollBottom >= breakPoint;
+	if ( isReadingOldChats ) {
+		chatHistoryScrollBtn.classList.add('visible')
+	} else {
+		chatHistoryScrollBtn.classList.remove('visible');
+	}
+}
+if ( chatHistory ) {
+	chatHistory.addEventListener('scroll', handleChatHistoryScroll);
+}
+// Observe chat messages and mark as read
+var chatHistoryObserverOptions = {
+	root: chatHistory,
+	rootMargin: '0px',
+	threshold: 0.1
+};
+var chatHistoryObserver = new IntersectionObserver(handleChatHistoryMsgIntersect, chatHistoryObserverOptions);
+function handleChatHistoryMsgIntersect (entries, observer) {
+	entries.forEach(function (entry) {
+		if (entry.isIntersecting) {
+			// Mark as read
+			entry.target.setAttribute('data-read', 'read');
+
+			// Stop observing
+			observer.unobserve(entry.target);
+
+			// Update count of unread messages
+			var msgCount = document.querySelector('#chat-history_msg-count');
+			if (msgCount && msgCount.dataset) {
+				var newCount = msgCount.dataset.count - 1;
+				msgCount.setAttribute('data-count', newCount);
+				msgCount.textContent = newCount;
+			}
+
+			// Change chat history scroll btn msg
+			if (chatHistoryScrollBtn) {
+				chatHistoryScrollBtn.classList.remove('new-msg');
+				var btnTextContent = chatHistoryScrollBtn.firstElementChild;
+				if (btnTextContent) btnTextContent.textContent = 'Scroll down';
+			}
+		}
+	});
+}
+// Add msg to chat history
+function appendMsgToChatHistory ({ socketID, timestamp, msg }) {
+	if (chatHistory) {
+		var li = document.createElement('li');
+		li.className = 'chat-msg ' + socketID;
+		li.id = 'msg_from_' + socketID + '_at_' + timestamp;
+		li.setAttribute('data-timestamp', timestamp);
+		li.setAttribute('data-read', 'read');
+
+		// Check if previous message was sent by the same person
+		var lis = Array.from(chatHistory.children);
+		var lastMsg = lis[lis.length - 1];
+		var isPrevMsgFromSamePlayer = false;
+		try {
+			var sameAuthorRegexp = new RegExp('^msg_from_' + socketID);
+			var isPrevMsgFromSamePlayer = lastMsg.id.match(sameAuthorRegexp);
+		} catch (e) {
+			isPrevMsgFromSamePlayer = false;
+		}
+		li.classList.add(isPrevMsgFromSamePlayer ? 'prev==author' : 'prev!=author');
+		// Check if previous message was sent more than x time ago
+		var firstSinceXTime = false;
+		if (lastMsg && lastMsg.dataset) {
+			var maxTimeDiff = 1 * 60 * 1000; // amount of time since last message after which the class will be added
+			var lastMsgTimestamp = lastMsg.dataset.timestamp;
+			var timeDiff = Date.now() - lastMsgTimestamp;
+			firstSinceXTime = timeDiff >= maxTimeDiff;
+			if (firstSinceXTime) {
+				li.classList.add('first-since-x-time');
+			}
+		}
+
+		// Append date of emission by the server
+		if (timestamp && typeof timestamp === 'number') {
+			var span = document.createElement('span');
+			span.className = 'date';
+			var date = new Date(timestamp);
+
+			// Format date
+			var hours = date.getHours().toString();
+			hours = (hours >= 0 && hours < 10) ? '0' + hours : hours // Add zero
+			var mins = date.getMinutes().toString();
+			mins = (mins >= 0 && mins < 10) ? '0' + mins : mins // Add zero
+			var textContent = hours + ':' + mins;
+
+			span.textContent = textContent;
+			li.appendChild(span);
+		}
+
+		// Append author
+		var author = players.find(function (player) {
+			return player.socketID === socketID;
+		});
+		if (
+			!!author && 
+			author.name &&
+			(!isPrevMsgFromSamePlayer || firstSinceXTime)
+		) {
+			var strong = document.createElement('strong');
+			strong.className = 'author ' + socketID;
+			strong.textContent = author.name;
+			li.appendChild(strong);
+		}
+
+		// Append msg content
+		var content = document.createElement('span');
+		content.className = 'content';
+		content.textContent = msg;
+		li.appendChild(content);
+
+		// Append msg to history
+		chatHistory.appendChild(li);
+
+		// Scroll down chat history
+		var mustScrollDown = (
+			!isReadingOldChats || 
+			socketID === socket.id
+		);
+		if (mustScrollDown) {
+			window.setTimeout(function () {
+				if (chatHistory && chatHistory.scroll) {
+					chatHistory.scroll({
+						top: chatHistory.scrollHeight,
+						left: 0,
+						behaviour: 'smooth'
+					});
+				}
+			}, 10);
+		}
+
+		// Message was sent by someone else
+		if (socketID != socket.id) {
+			// Msg is not read
+			li.setAttribute('data-read', 'not-read');
+			
+			// Increment count of unread msgs
+			var msgCount = document.querySelector('#chat-history_msg-count');
+			if (msgCount && msgCount.dataset) {
+				// Increment
+				var count = msgCount.dataset.count;
+				count++;
+				// Validate
+				if (!isValidNum(count)) {
+					count = 0;
+				}
+
+				msgCount.textContent = count;
+				msgCount.setAttribute('data-count', count);
+			}
+			// Observe new unread msg
+			chatHistoryObserver.observe(li);
+			// Change chat history scroll btn msg if user is reading old messages
+			if (chatHistoryScrollBtn) {
+				if (!chatHistoryScrollBtn.classList.contains('new-msg')) {
+					chatHistoryScrollBtn.classList.add('new-msg');
+				}
+				var content = chatHistoryScrollBtn.firstElementChild;
+				content.textContent = 'New messages';
+			}
+		}
+	}
+}
+
+// Overwrite the name of a player in chat history
+function changePlayerNameInChatHistory (socketID, newName) {
+	var authorNames = Array.from(
+		document.querySelectorAll('#chat-history_msg-list .chat-msg.' + socketID + ' .author')
+	);
+	authorNames.forEach(function (authorName) {
+		authorName.textContent = newName;
+	});
+}
+
+// Open/close chat history
+function toggleChatHistory () {
+	if (chatHistoryBody) {
+		isReadingOldChats = false;
+		var isClosed = chatHistoryBody.classList.contains('closed');
+		if (isClosed) {
+			// Open
+			chatHistoryBody.classList.remove('closed');
+			return true;
+		} else {
+			// Close
+			chatHistoryBody.classList.add('closed');
+			return false;
+		}
+	}
+}
+// Close chat on click outside
+document.body.addEventListener('click', function (e) {
+	// Detect click outside <aside id="chat-history"></aside>
+	var isClickOutsideHistory = detectClickOutside(e, chatHistorySection);
+	// Do not close if click is in chat form
+	var form = document.getElementById('chat-form');
+	var isClickOutsideForm = detectClickOutside(e, form);
+	// Do not close if click is on color mode selector
+	var isClickOutsideColModeToggler = detectClickOutside(
+		e, document.querySelector(
+			'.color-mode-toggle.' + (
+				document.body.classList.contains('dark') ? 'light' : 'dark'
+			)
+		)
+	);
+
+	if (
+		isClickOutsideHistory &&
+		isClickOutsideForm &&
+		isClickOutsideColModeToggler &&
+		!chatHistoryBody.classList.contains('closed')
+	) {
+		// Close
+		toggleChatHistory();
+	}
+}, true);
+
 
 // SOCKET EVENTS
 // React to websocket events
@@ -533,6 +809,9 @@ window.addEventListener('load', function () {
 			}
 			return player
 		});
+
+		// Overwrite name in chat history
+		changePlayerNameInChatHistory(player.socketID, name);
 	});
 
 	// Player's score was modified

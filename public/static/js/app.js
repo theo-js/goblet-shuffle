@@ -57,6 +57,22 @@ function getOffsetPage (el) {
     return { top: y, left: x };
 }
 
+function detectClickOutside (clickEvent, container) {
+	var isClickOutside = true;
+	var targetEl = clickEvent.target;
+	do {
+		if (targetEl == container) {
+			// This is a click inside
+			isClickOutside = false;
+        }
+        // Go up the DOM
+        targetEl = targetEl.parentNode;
+	} while (targetEl);
+
+	// Return result
+	return isClickOutside;
+}
+
 function toggleColorMode () {
 	var isDark = document.body.classList.contains('dark');
 	if (isDark) {

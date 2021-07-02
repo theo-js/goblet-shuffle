@@ -38,7 +38,7 @@ body {
 	position: relative;
 	margin: 0;
 	padding: 0;
-	font-family: Arial;
+	font-family: Arial, Helvetica, sans-serif;
 	min-height: 100vh;
 	color: #222;
 	color: var(--black);
@@ -71,6 +71,10 @@ body::before {
 }
 body.dark .my-modal {
 	background: #222A;
+}
+
+:focus::placeholder, :focus::-webkit-placeholder {
+	opacity: .666 !important;
 }
 
 .close-btn {
@@ -158,11 +162,58 @@ body.dark .alert {
 	-moz-border-radius: 99px;
 	border-radius: 99px;
 }
-.scrollbar-black::-webkit-scrollbar {
-	background: #222;
-	background: var(--black);
+
+.scrollbar-grey::-webkit-scrollbar {
+	width: .5rem; height: .5rem;
+	margin-bottom: .25rem; margin-right: .25rem;
 }
-.scrollbar-black::-webkit-scrollbar-thumb { background-color: white }
+.scrollbar-grey::-webkit-scrollbar-thumb {
+	background-color: #2223;
+	background-clip: padding-box;
+	border: 2px solid transparent;
+	
+	-webkit-border-radius: 99px;
+	-moz-border-radius: 99px;
+	border-radius: 99px;
+}
+body.dark .scrollbar-grey::-webkit-scrollbar-thumb {
+	background-color: #FFF3;
+}
+.scrollbar-grey::-webkit-scrollbar-thumb:hover {
+	background-color: #2225;
+}
+body.dark .scrollbar-grey::-webkit-scrollbar-thumb:hover {
+	background-color: #FFF5;
+}
+.scrollbar-grey::-webkit-scrollbar-thumb:active {
+	background-color: #2226;
+}
+body.dark .scrollbar-grey::-webkit-scrollbar-thumb:active {
+	background-color: #FFF6;
+}
+
+.scrollbar-black::-webkit-scrollbar {
+	width: .66rem; height: .66rem;
+	margin-bottom: .25rem; margin-right: .25rem;
+}
+.scrollbar-black::-webkit-scrollbar-track {
+	background-color: var(--black);
+}
+.scrollbar-black::-webkit-scrollbar-thumb {
+	background-color: white;
+	background-clip: padding-box;
+	border: 3px solid transparent;
+	
+	-webkit-border-radius: 99px;
+	-moz-border-radius: 99px;
+	border-radius: 99px;
+}
+.scrollbar-black::-webkit-scrollbar-thumb:hover {
+	background-color: var(--light-yellow);
+}
+.scrollbar-black::-webkit-scrollbar-thumb:active {
+	background-color: var(--pink-yellow-blend);
+}
 
 
 .app {
@@ -744,7 +795,6 @@ body.dark .game-end-msg {
 	}
 }
 
-
 @media screen and ( max-width: 500px ) {
 	.hide500- {
 		display: none;
@@ -753,6 +803,12 @@ body.dark .game-end-msg {
 @media screen and ( max-width: 400px ) {
 	.hide400- {
 		display: none;
+	}
+}
+
+@media screen and ( prefers-reduced-motion: reduce ) {
+	* {
+		scroll-behavior: auto;
 	}
 }
 
