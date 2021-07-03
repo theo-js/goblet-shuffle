@@ -224,46 +224,50 @@ function addPlayer (player, ul, addClasses) {
 	if (player.socketID === socket.id) {
 		// This player is me
 		li.classList.add('me');
+
 		// Player name is an input element
 		var form = document.createElement('form');
 		form.className = 'player-name-form';
 		playerName = document.createElement('input');
+		
 		function changeName () { // On player name change
 			playerName.blur();
 
-			if (!playerName.value) {
+			var newName = playerName.value.trim();
+
+			if (!newName) {
 				// Reset to previous name if input is empty
 				playerName.value = player.name;
 				return;
 			}
 
 			// Change name
-			localStorage['player-name'] = playerName.value;
-			playerName.title = playerName.value + ' (YOU)';
+			localStorage['player-name'] = newName;
+			playerName.title = newName + ' (YOU)';
 			socket.emit('player change', { 
 				type: 'rename player',
-				payload: playerName.value
+				payload: newName
 			});
 
 			// Overwrite chat messages name in chat history
-			changePlayerNameInChatHistory (socket.id, playerName.value)
+			changePlayerNameInChatHistory (socket.id, newName)
 
 			// Update state
 			players = players.map(function (player) {
 				if (player.socketID === socket.id) {
-					return { ... player, name: playerName.value };
+					return { ... player, name: newName };
 				}
 				return player;
 			});
 			lurkers = lurkers.map(function (player) {
 				if (player.socketID === socket.id) {
-					return { ... player, name: playerName.value };
+					return { ... player, name: newName };
 				}
 				return player;
 			});
 			participants = participants.map(function (player) {
 				if (player.socketID === socket.id) {
-					return { ... player, name: playerName.value };
+					return { ... player, name: newName };
 				}
 				return player;
 			});
@@ -539,7 +543,7 @@ function displayMsgBubble ({ socketID, timestamp, msg}) {
 // Manage chat history
 // Check if user is trying to scroll up to read old msgs
 var isReadingOldChats = false;
-var chatHistoryScrollBtn = document.getElementById('chat-history_scolldown-btn');
+var chatHistoryScrollBtn = document.getElementById('chat-history_scrolldown-btn');
 function handleChatHistoryScroll (scrollEv) {
 	var chatHist = scrollEv.target;
 	// Check what distance has been scrolled from the bottom of the chat history

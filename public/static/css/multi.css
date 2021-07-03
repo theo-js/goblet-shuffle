@@ -518,7 +518,7 @@ body.dark .chat-history .chat-msg .date {
 }
 
 
-#chat-history_scolldown-btn {
+#chat-history_scrolldown-btn {
 	position: absolute; left: 0; right: 0; margin: auto;
 	bottom: calc(31px + var(--offset-bottom));
 	width: fit-content;
@@ -529,45 +529,47 @@ body.dark .chat-history .chat-msg .date {
 	pointer-events: none; opacity: 0; transform: translateY(1rem);
 	transition: 1s ease all;
 }
-body.dark #chat-history_scolldown-btn {
+body.dark #chat-history_scrolldown-btn {
 	filter: drop-shadow(0 4px 2px #FFF2);
 }
-#chat-history_scolldown-btn.visible:focus,
-#chat-history_scolldown-btn.visible:hover {
+#chat-history_scrolldown-btn:focus {
+	outline: none;
+}
+#chat-history_scrolldown-btn.visible:focus,
+#chat-history_scrolldown-btn.visible:hover {
 	opacity: 1;
 	transition: 
 		1s ease all, 
 		.2s opacity ease, 
 		.2s filter ease;
-	outline: none;
 }
-#chat-history_scolldown-btn.visible:hover {
+#chat-history_scrolldown-btn.visible:hover {
 	filter: drop-shadow(0 4px 5px #2225) !important;
 }
-body.dark #chat-history_scolldown-btn.visible:hover {
+body.dark #chat-history_scrolldown-btn.visible:hover {
 	filter: drop-shadow(0 4px 5px #FFF4) !important;
 }
 
-#chat-history_scolldown-btn:focus .fa,
-#chat-history_scolldown-btn:hover .fa {
+#chat-history_scrolldown-btn:focus .fa,
+#chat-history_scrolldown-btn:hover .fa {
 	animation: translateBottom .5s linear infinite alternate-reverse;
 }
-#chat-history_scolldown-btn .fa {
+#chat-history_scrolldown-btn .fa {
 	position: absolute; left: 0; right: 0; top: calc(100% + .25rem);
 	margin: auto; width: fit-content;
 	font-size: 1.5rem;
 	color: var(--violet);
 }
 
-#chat-history_scolldown-btn.new-msg {
+#chat-history_scrolldown-btn.new-msg {
 	background-color: var(--purple);
 	border-color: var(--purple);
 }
-#chat-history_scolldown-btn.new-msg .fa {
+#chat-history_scrolldown-btn.new-msg .fa {
 	color: var(--purple);
 }
 
-#chat-history_scolldown-btn.visible {
+#chat-history_scrolldown-btn.visible {
 	pointer-events: initial;
 	opacity: .333;
 	transform: none;
@@ -717,7 +719,7 @@ body.dark #chat-history_scolldown-btn.visible:hover {
 		height: calc(100% - 1rem);
 	}
 
-	#chat-history_scolldown-btn {
+	#chat-history_scrolldown-btn {
 		bottom: var(--offset-bottom);
 	}
 }
