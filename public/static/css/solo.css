@@ -190,6 +190,14 @@ body.dark .options-section > .invite > button {
 	}
 }
 
+/* Mobile/tablets only */
+@media only screen and ( max-device-width: 1100px ) {
+	.options-section > .invite > button {
+		right: .75rem;
+	}
+}
+
+
 @keyframes invite-btn-scale {
 	to {
 		transform: scale(1.125) translate(-.25rem, .25rem);
