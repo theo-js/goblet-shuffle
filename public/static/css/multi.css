@@ -159,8 +159,68 @@ body.dark .player.me .player-score {
 	background-color: var(--black);
 }
 
-.player .last-msg {
-	position: absolute;
+.player .last-msg { /* Preview of last message */
+	position: absolute; top: .75rem; left: -.5rem;
+	max-width: 100%;
+	background-color: white; color: unset;
+	padding: 0; margin: 0;
+	border-radius: .5rem;
+	font-size: .75rem;
+	text-align: center;
+	max-height: 100%; min-width: 3em;
+	opacity: 0; pointer-events: none;
+	box-shadow: 0 1px 1px 0 #2224;
+	cursor: pointer;
+	transition: .5s all ease;
+}
+.player .last-msg .content {
+	overflow: hidden; display: inline-block;
+	-o-text-overflow: ellipsis; -ms-text-overflow: ellipsis; text-overflow: ellipsis;
+	white-space: nowrap;
+	width: 100%;
+	color: inherit;
+}
+body.dark .player .last-msg {
+	background-color: var(--black);
+	box-shadow: 0 1px 1px 0 #FFF3;
+}
+.player .last-msg[data-empty="no"] {
+	z-index: 2;
+	opacity: .66; pointer-events: initial;
+	padding: .25em .5em; transition: .3s all ease, .2s opacity ease;
+}
+.player .last-msg[data-empty="no"]:hover {
+	opacity: 1;
+	transform: translateY(-1px);
+}
+.player .last-msg:hover {
+	box-shadow: 0 2px 5px 0 #2225;
+}
+body.dark .player .last-msg:hover {
+	box-shadow: 0 2px 5px 0 #FFF4;
+}
+.player .last-msg::after { /* triangle */
+	content: '';
+	position: absolute; 
+	top: 0; bottom: 0; left: 100%; margin: auto;
+	height: fit-content;
+	border: 3px solid transparent; border-left-color: white;
+	transform: translateY(-1px);
+	transition: inherit;
+}
+body.dark .player .last-msg::after {
+	border-left-color: var(--black);
+}
+
+#participants-list .player .last-msg {
+	left: unset; right: -.5rem;
+}
+#participants-list .player .last-msg::after {
+	left: unset; right: 100%;
+	border-left-color: transparent; border-right-color: white !important;
+}
+body.dark #participants-list .player .last-msg::after {
+	border-right-color: var(--black) !important;
 }
 
 
@@ -628,6 +688,7 @@ body.dark #chat-history_scrolldown-btn.visible:hover {
 		width: calc(100% - .5rem);
 	}
 
+
 	.chat-form {
 		align-self: flex-end;
 	}
@@ -666,6 +727,7 @@ body.dark #chat-history_scrolldown-btn.visible:hover {
 		max-width: var(--max-mb-w);
 	}
 
+
 	.players-list {
 		flex-direction: row; align-items: center;
 		padding-left: 0; padding-right: 0;
@@ -680,6 +742,23 @@ body.dark #chat-history_scrolldown-btn.visible:hover {
 	.player {
 		max-width: 100px;
 	}
+
+	.player .last-msg {
+		left: unset; right: -.5rem;
+	}
+	.player .last-msg::after {
+		left: unset; right: 100%;
+		border-left-color: transparent !important; 
+		border-right-color: white !important;
+	}
+	body.dark .player .last-msg::after {
+		border-right-color: var(--black) !important;
+	}
+
+	#lurkers-list .player .last-msg {
+		top: .5rem;
+	}
+
 
 	.chat-form {
 		margin-top: 1rem;

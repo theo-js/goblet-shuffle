@@ -229,7 +229,7 @@ function addPlayer (player, ul, addClasses) {
 		var form = document.createElement('form');
 		form.className = 'player-name-form';
 		playerName = document.createElement('input');
-		
+
 		function changeName () { // On player name change
 			playerName.blur();
 
@@ -327,7 +327,7 @@ function addPlayer (player, ul, addClasses) {
 	// Append last chat message
 	var lastChatMSG = document.createElement('p');
 	lastChatMSG.className = 'last-msg';
-	var lastChatMsgID = 'player_' + player.socketID + 'last-msg';
+	var lastChatMsgID = 'player_' + player.socketID + '_last-msg';
 	lastChatMSG.setAttribute('id', lastChatMsgID);
 	li.appendChild(lastChatMSG);
 
@@ -526,18 +526,24 @@ function handleChatMsgReception (msgObject) {
 }
 
 // Display last msg next to player
-function displayMsgBubble ({ socketID, timestamp, msg}) {
-	/*var ulID = 'player_' + socketID + '_msg_list';
-	var ul = document.getElementById(ulID);
-	if (ul) {
-		var li = document.createElement('li');
-		var liID = 'msg_from_' + socketID + 'at_' + timestamp;
-		li.setAttribute('id', liID);
-		li.className = 'chat-msg';
-		li.textContent = msg;
-		ul.innerHTML = '';
-		ul.appendChild(li);
-	}*/
+function displayMsgBubble ({ socketID, msg}) {
+	var paraID = 'player_' + socketID + '_last-msg';
+	var para = document.getElementById(paraID);
+	if (para) {
+		para.setAttribute('data-empty', 'no');
+		para.innerHTML = ''; // Clear previous content
+		var span = document.createElement('span');
+		span.className = 'content';
+		span.textContent = msg.substring(0, 50);
+		para.title = msg;
+		para.appendChild(span);
+		// Delete text on click
+		para.onclick = function () {
+			para.setAttribute('data-empty', 'yes');
+			para.removeChild(span);
+			para.removeAttribute('title');
+		}
+	}
 }
 
 // Manage chat history

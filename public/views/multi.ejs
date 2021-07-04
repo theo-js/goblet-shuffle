@@ -397,8 +397,8 @@
 												<%= player.name %>
 											</h4>
 											<p
-												class="msg-list"
-												id="player_<%= player.socketID %>_msg_list"
+												class="last-msg"
+												id="player_<%= player.socketID %>_last-msg"
 											></p>
 										</li>
 								<%
@@ -447,10 +447,10 @@
 											<strong class="player-score" id="player_<%= player.socketID %>_score">
 												<%= player.score %>
 											</strong>
-											<ul
-												class="msg-list"
-												id="player_<%= player.socketID %>_msg_list"
-											></ul>
+											<p
+												class="last-msg"
+												id="player_<%= player.socketID %>_last-msg"
+											></p>
 										</li>
 								<%
 									}
