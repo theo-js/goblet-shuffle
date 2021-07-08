@@ -158,7 +158,7 @@ victorySE.volume = .75;
 
 // Goblet related functions
 function setGoblets (n) {
-	if (!isInGame) {		
+	if (!isInGame) {	
 		// Override global var (side effect)
 		settings.goblets = n;
 
@@ -192,7 +192,9 @@ function setGoblets (n) {
 		var totalDelay = 0;
 		var delayDuration = .4/(cols**2);
 
-		Array.from(goblets).forEach(function (goblet) {
+		Array.from(goblets).forEach(function (goblet, index) {
+			// Mark index
+			goblet.setAttribute('data-index', index);
 			// Attach event listeners
 			goblet.onclick = pickGoblet;
 			// Style
@@ -235,51 +237,74 @@ function turnDownGoblets (down) {
 }
 function getRandomGoblet () {
 	var randomGobletNum = randomInt(0, settings.goblets - 1);
-	var randomGoblet = Array.from(goblets)[randomGobletNum];
-	return {
-		goblet: randomGoblet,
-		gobletNum: randomGobletNum
-	}
+	return Array.from(goblets)[randomGobletNum];
 }
 function shuffleGoblets () {
 	return new Promise (function (resolve, reject) {
-		// Pick random goblets to interchange
-		var getRandomGobletResult = getRandomGoblet();
-		var fromGoblet = getRandomGobletResult.goblet;
-		var fromGobletNum = getRandomGobletResult.gobletNum;
+		if (!isInGame) return reject('Game was aborted');
 
-		getRandomGobletResult = getRandomGoblet();
-		var toGoblet = getRandomGobletResult.goblet;
-		var toGobletNum = getRandomGobletResult.gobletNum;
+		// Pick random goblets for permutation
+		var fromGoblet = getRandomGoblet();
+		var toGoblet = getRandomGoblet();
 		// If "from" goblet was picked twice, try again until a different one was picked
-		while (toGobletNum === fromGobletNum) {
-			getRandomGobletResult = getRandomGoblet();
-			toGoblet = getRandomGobletResult.goblet;
-			toGobletNum = getRandomGobletResult.gobletNum;
+		while (toGoblet.dataset.index === fromGoblet.dataset.index) {
+			toGoblet = getRandomGoblet();
 		}
+
+		// Interchange goblets' data-index attribute
+		var fromIndex = fromGoblet.dataset.index;
+		fromGoblet.setAttribute('data-index', toGoblet.dataset.index);
+		toGoblet.setAttribute('data-index', fromIndex);
 
 		// Get each goblet's coords
 		var from = getGobletOffset(fromGoblet);
 		var to = getGobletOffset(toGoblet);
 
 		// Calculate the translation to each other's position
-		var fromLeft = from.left - parseInt(fromGoblet.dataset.offsetX);
-		var toLeft = to.left - parseInt(toGoblet.dataset.offsetX);
-		var fromGobletTranslateX = toLeft - fromLeft;
-		var toGobletTranslateX = -1*(toLeft - fromLeft);
-		if (fromLeft > toLeft) {
-			fromGobletTranslateX = -1*(fromLeft - toLeft);
-			toGobletTranslateX = fromLeft - toLeft;
+		var fromGobletTranslateX, fromGobletTranslateY,
+		toGobletTranslateX, toGobletTranslateY;
+
+		if (settings.stackGoblets !== true) {
+			// Prevent goblets from being stacked on the same position
+			// x axis
+			fromGobletTranslateX = to.left - from.left + parseInt(fromGoblet.dataset.offsetX || 0);
+			toGobletTranslateX = from.left - to.left + parseInt(toGoblet.dataset.offsetX || 0);
+			// y axis
+			fromGobletTranslateY = to.top - from.top + parseInt(fromGoblet.dataset.offsetY || 0);
+			toGobletTranslateY = from.top - to.top + parseInt(toGoblet.dataset.offsetY || 0);
+
+			if (from.top === to.top) {
+				// Do not move on the y axis
+				fromGobletTranslateY = parseInt(fromGoblet.dataset.offsetY || 0);
+				toGobletTranslateY = parseInt(toGoblet.dataset.offsetY || 0);
+			}
+			if (from.left === to.left) {
+				// Do not move on the x axis
+				fromGobletTranslateX = parseInt(fromGoblet.dataset.offsetX || 0);
+				toGobletTranslateX = parseInt(toGoblet.dataset.offsetX || 0);
+			}
+		} else {
+			// Goblets can get stacked on the same position
+			var fromLeft = from.left - parseInt(fromGoblet.dataset.offsetX || 0);
+			var toLeft = to.left - parseInt(toGoblet.dataset.offsetX || 0);
+			fromGobletTranslateX = toLeft - fromLeft;
+			toGobletTranslateX = -1*(toLeft - fromLeft);
+			if (fromLeft > toLeft) {
+				fromGobletTranslateX = -1*(fromLeft - toLeft);
+				toGobletTranslateX = fromLeft - toLeft;
+			}
+
+			var fromTop = from.top - parseInt(fromGoblet.dataset.offsetY || 0);
+			var toTop = to.top - parseInt(toGoblet.dataset.offsetY || 0);
+			fromGobletTranslateY = toTop - fromTop;
+			toGobletTranslateY = -1*(toTop - fromTop);
+			if (fromTop > toTop) {
+				fromGobletTranslateY = -1*(fromTop - toTop);
+				toGobletTranslateY = fromTop - toTop;
+			}
 		}
-		var fromTop = from.top - parseInt(fromGoblet.dataset.offsetY);
-		var toTop = to.top - parseInt(toGoblet.dataset.offsetY);
-		var fromGobletTranslateY = toTop - fromTop;
-		var toGobletTranslateY = -1*(toTop - fromTop);
-		if (fromTop > toTop) {
-			fromGobletTranslateY = -1*(fromTop - toTop);
-			toGobletTranslateY = fromTop - toTop;
-		}
-		// Take new offset into account
+
+		// Memorize new offset
 		fromGoblet.setAttribute('data-offset-x', fromGobletTranslateX);
 		toGoblet.setAttribute('data-offset-x', toGobletTranslateX);
 		fromGoblet.setAttribute('data-offset-y', fromGobletTranslateY);
@@ -290,9 +315,18 @@ function shuffleGoblets () {
 		toGoblet.style.transform = 'translate(' + toGobletTranslateX + 'px, ' + toGobletTranslateY + 'px) rotate(180deg)';
 
 		// Move ball if one of the goblets has it (after goblet translation)
-		if (correctGoblet && (correctGoblet.gobletNum === fromGobletNum || correctGoblet.gobletNum === toGobletNum)) {
+		var oneGobletHasIt;
+		try {
+			oneGobletHasIt = (
+				correctGoblet.dataset.index === fromGoblet.dataset.index || 
+				correctGoblet.dataset.index === toGobletfromGoblet.dataset.index
+			);
+		} catch {
+			oneGobletHasIt = false;
+		}
+		if ( oneGobletHasIt ) {
 			ballScaleTM = window.setTimeout(function () {
-				var clientRect = getGobletOffset(correctGoblet.goblet);
+				var clientRect = getGobletOffset(correctGoblet);
 				ballOffset.left = clientRect.left;
 				ballOffset.top = clientRect.top;
 				// Move ball
@@ -315,16 +349,34 @@ async function pickGoblet (clickEvent) {
 		// Get all goblets that are in the same position
 		var targetOffset = getGobletOffset(clickEvent.target);
 		var targetGoblets = [];
-		Array.from(goblets).forEach(function (goblet, index) {
-			//goblet.classList.remove('pickable');
+		Array.from(goblets).forEach(function (goblet) {
 			var gobletOffset = getGobletOffset(goblet);
-			if (gobletOffset.left === targetOffset.left && gobletOffset.top === targetOffset.top) {
+			var errorBoundary = 10; // Will still consider goblet has same position if it does not has the exact same coordinates
+			var errorBoundaryMg = errorBoundary/2;
+			var haveGobletsSamePosition = (
+				isValidNum( // left coord
+					gobletOffset.left, // value
+					targetOffset.left - errorBoundaryMg, // min
+					targetOffset.left + errorBoundaryMg // max
+				) && 
+				isValidNum( // top coord
+					gobletOffset.top, // value
+					targetOffset.top - errorBoundaryMg, // min
+					targetOffset.top + errorBoundaryMg // max
+				)
+			);
+
+			if (haveGobletsSamePosition) {
+				/* 
+					This goblet has the same position has clicked goblet,
+					and thus must be targeted too
+				*/
 				targetGoblets.push(goblet);
 			}
 		});
 
 		// Find out if one of the target goblets has the ball
-		targetGoblets.includes(correctGoblet.goblet) ? await succeed(targetGoblets) : await fail(targetGoblets);
+		targetGoblets.includes(correctGoblet) ? await succeed(targetGoblets) : await fail(targetGoblets);
 	}
 }
 
@@ -770,24 +822,46 @@ function fail (goblets) {
 				});
 			}
 
-			// Fade goblets
+			// Fade picked goblets
 			goblets.forEach(function (goblet) {
-				goblet.style.transition = '.3s all ease !important';
-				goblet.style.opacity = 0;
-			});
-			gobletAnimTM = window.setTimeout(function () {
-				goblets.forEach(function (goblet) {
-					goblet.classList.remove('pickable');
-					goblet.classList.add('hidden');
-				})
+				// Fail animation
+				var animTime = 500;
+				var animDelay = 10;
+				goblet.classList.add('fail');
 
-				canPickGoblet = true; // Allow picking goblets
-				// Enable skip turn button
-				if (skipTurnBtn) {
-					skipTurnBtn.removeAttribute('disabled');
-				}
-			}, 300);
-			resolve();
+				window.setTimeout(function () {
+					goblet.style.transition = animTime + 'ms all cubic-bezier(.29,.36,.2,.99)';
+					var rotation = randomInt(0, 719);
+					var translationX = randomInt(-25, 25);
+					var translationY = randomInt(-25, 25);
+					var offsetX = parseInt(goblet.dataset.offsetX) || 0;
+					var offsetY = parseInt(goblet.dataset.offsetY) || 0;
+					var translation = (offsetX + translationX) + 'px, ' + (offsetY + translationY) + 'px';
+					goblet.style.transform = 'translate(' + translation + ') ' + 
+						'rotate(' + rotation + 'deg) ' + 
+						'scale(.5)';
+					goblet.style.opacity = 0;
+				}, animDelay);
+
+				// Add/remove classes after animation
+				window.setTimeout(function () {
+					goblet.classList.remove('pickable');
+					goblet.classList.remove('fail');
+					if (!goblet.classList.contains('hidden')) {
+						goblet.classList.add('hidden');
+					}
+				}, animTime + animDelay);
+			});
+
+			// Allow picking goblets
+			canPickGoblet = true;
+
+			// Enable skip turn button
+			if (skipTurnBtn) {
+				skipTurnBtn.removeAttribute('disabled');
+			}
+
+			resolve()
 		} catch (err) {
 			reject();
 		}
@@ -800,17 +874,10 @@ function startNewTurn () {
 		turnDownGoblets(true)
 
 		// Pick random goblet
-		var getRandomGobletResult = getRandomGoblet();
-		var randomGoblet = getRandomGobletResult.goblet;
-		var randomGobletNum = getRandomGobletResult.gobletNum;
-		correctGoblet = {
-			goblet: randomGoblet,
-			gobletNum: randomGobletNum
-		};
-
+		correctGoblet = getRandomGoblet();
 
 		// Calculate goblet position
-		var offset = getGobletOffset(randomGoblet);
+		var offset = getGobletOffset(correctGoblet);
 		var left = offset.left;
 		var top = offset.top;
 		ballOffset = { left: left, top: top };
@@ -827,21 +894,27 @@ function startNewTurn () {
 		}
 
 		// Lift goblet
-		randomGoblet.style.transition = '.6s ease all';
-		randomGoblet.style.animation = 'blink .25s linear infinite alternate';
-		randomGoblet.style.transform = 'rotate(180deg) translateY(.5em)';
+		correctGoblet.style.transition = '.6s ease all';
+		correctGoblet.style.animation = 'blink .25s linear infinite alternate';
+		correctGoblet.style.transform = 'rotate(180deg) translateY(.5em)';
 		ballZIndexTM = window.setTimeout(function () {
 			ballElem.style.zIndex = 2;
 			ballElem.style.transform = 'translate(' + left + 'px, ' + top + 'px)';
 			ballElem.style.opacity = 0;
-			randomGoblet.style.transform = null;
+			correctGoblet.style.transform = null;
 		}, 900);
 
 		// Put goblet down
 		gobletAnimTM = window.setTimeout(function () {
-			randomGoblet.style.animation = null;
-			randomGoblet.style.transition = '.3s ease all';
+			correctGoblet.style.animation = null;
+			correctGoblet.style.transition = '.3s ease all';
 		}, 1500);
+
+		// Set appropriate translation speed
+		Array.from(goblets).forEach(function (goblet) {
+			goblet.style.transition = .5*settings.shuffleSpeed + 's all ease';
+			goblet.style.opacity = .5;
+		});
 
 		// Shuffle goblets
 		var currentCount = settings.shuffleCount; // Amount of shuffles that still need to be done
@@ -868,17 +941,10 @@ function startNewTurn () {
 						}
 					}
 				}
-			})
-		}
-		shuffleTM = window.setTimeout(function () {
-			// Set appropriate translation speed
-			Array.from(goblets).forEach(function (goblet) {
-				goblet.style.transition = .5*settings.shuffleSpeed + 's all ease';
-				goblet.style.opacity = .5;
 			});
-			// Shuffle
-			shuffleGobletsAtLeastOnce();
-		}, 1800);
+		}
+		// Shuffle
+		shuffleTM = window.setTimeout(shuffleGobletsAtLeastOnce, 1800);
 	}, 300);
 }
 
@@ -900,66 +966,63 @@ function skipThisTurn () {
 }
 
 function onPlay () {
-	if (typeof MULTIPLAYER !== undefined) {
-		// Solo mode
-		clearTimers();
-		if (isInGame) {
-			// Stop game / give up
-			isInGame = false;
-			canPickGoblet = false;
-			enableOptions(true);
-			turnDownGoblets(false);
-			setGoblets(settings.goblets);
-			resetBall();
-			if (playBTN) {
-				playBTN.innerHTML = '<span>Start</span>';
-			}
-			if (skipTurnBtn) {
-				skipTurnBtn.disabled = true;
-			}
+	clearTimers();
+	if (isInGame) {
+		// Stop game / give up
+		isInGame = false;
+		canPickGoblet = false;
+		enableOptions(true);
+		turnDownGoblets(false);
+		setGoblets(settings.goblets);
+		resetBall();
+		if (playBTN) {
+			playBTN.innerHTML = '<span>Start</span>';
+		}
+		if (skipTurnBtn) {
+			skipTurnBtn.disabled = true;
+		}
 
-			// Reset game stats
-			score = 0;
-			scoreOutput.textContent = 0;
-			successes = 0;
-			fails = 0;
-			gameTime = 0;
-			window.clearInterval(gameTimeInterval);
-			gameTimeInterval = null;
+		// Reset game stats
+		score = 0;
+		scoreOutput.textContent = 0;
+		successes = 0;
+		fails = 0;
+		gameTime = 0;
+		window.clearInterval(gameTimeInterval);
+		gameTimeInterval = null;
 
-			// Reset goblets translation speed
-			Array.from(goblets).forEach(function (goblet) {
-				goblet.style.transition = '.3s all ease';
-				goblet.classList.remove('pickable');
+		// Reset goblets translation speed
+		Array.from(goblets).forEach(function (goblet) {
+			goblet.style.transition = '.3s all ease';
+			goblet.classList.remove('pickable');
+		});
+		
+		// Reset countdown
+		startCountDown(false);
+	} else {
+		// New game
+		isInGame = true;
+		enableOptions(false);
+		startCountDown(true);
+		startNewTurn();
+		if (playBTN) {
+			playBTN.innerHTML = '<span>Give up</span>';
+		}
+
+		// Scroll to goblets container
+		if (gobletsContainer) {
+			gobletsContainer.scrollIntoView({
+				behaviour: 'smooth',
+				inline: 'start',
+				block: 'nearest'
 			});
-			
-			// Reset countdown
-			startCountDown(false);
-		} else {
-			// New game
-			isInGame = true;
-			enableOptions(false);
-			startCountDown(true);
-			startNewTurn();
-			if (playBTN) {
-				playBTN.innerHTML = '<span>Give up</span>';
-			}
+		}
 
-			// Scroll to goblets container
-			if (gobletsContainer) {
-				gobletsContainer.scrollIntoView({
-					behaviour: 'smooth',
-					inline: 'start',
-					block: 'nearest'
-				});
-			}
-
-			// Measure game time
-			if (settings.gameMode.mode === GAME_MODE.REACH_SCORE) {
-				gameTimeInterval = window.setInterval(function () {
-					gameTime++;
-				}, 1000);
-			}
+		// Measure game time
+		if (settings.gameMode.mode === GAME_MODE.REACH_SCORE) {
+			gameTimeInterval = window.setInterval(function () {
+				gameTime++;
+			}, 1000);
 		}
 	}
 }

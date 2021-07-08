@@ -601,18 +601,25 @@ body.dark .goblets-section {
 .goblet.down {
 	transform: rotate(180deg);
 	animation: none;
-	animation-delay: 0 !important;
+	animation-delay: 0s !important;
 }
 .goblet.hidden {
 	pointer-events: none;
 	opacity: 0 !important;
 	transition: .3s all ease;
 }
-.goblet.pickable {
-	cursor: pointer;
-}
 .goblet.pickable:hover {
 	animation: blink .25s linear infinite alternate;
+	cursor: pointer;
+}
+.goblet.pickable.fail:hover {
+	animation: none;
+}
+.goblet.pickable.fail {
+	cursor: default;
+}
+.goblet.fail {
+	pointer-events: none;
 }
 
 .ball {

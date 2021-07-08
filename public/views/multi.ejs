@@ -69,6 +69,7 @@
 			let isAdmin = <%= isAdmin %>;
 			let isPlaying = <%= room.isPlaying %>;
 			let settings = <%- JSON.stringify(room.settings) %>;
+			settings.stackGoblets = false;
 			let gameStartTime = <%= JSON.stringify(room.gameStart) %>;
 			let gameStartCountdownTime = <%= JSON.stringify(room.gameStartCountdown) %>;
 			let gameStartCountdown = <%= initialGameStartCountdown %>;
