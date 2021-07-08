@@ -1,11 +1,11 @@
 const BASE = location.protocol + '//' + location.host;
-const PREFIX = 'V3';
+const PREFIX = 'V4';
 const CACHED_FILES = [
     `${BASE}/static/css/main.css`,
     `${BASE}/static/css/solo.css`,
     `${BASE}/static/js/app.js`,
     `${BASE}/static/js/solo.js`,
-    `${BASE}/static/icons/goblet96.PNG`,
+    `${BASE}/static/icons/goblet96.png`,
     `${BASE}/static/audio/success.mp3`,
     `${BASE}/static/audio/victory.mp3`,
     `${BASE}/static/particles.json`,
