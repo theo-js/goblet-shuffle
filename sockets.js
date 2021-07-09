@@ -475,6 +475,15 @@ module.exports = server => {
 								type, value: validated
 							});
 							break;
+						} case 'stackGoblets':
+						  case 'gobletsDiversity': {
+							const checked = typeof value === 'boolean' ? value : false; // Defaults to false
+
+							global.rooms[roomIndex].settings[type] = checked;
+							socket.broadcast.to(roomID).emit('game setting changed', {
+								type, value: checked
+							});
+							break;
 						} case 'game-mode': {
 							const isValidMode = Object.keys(GAME_MODE).includes(value);
 							if (!isValidMode) {

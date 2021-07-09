@@ -100,6 +100,8 @@ var goblets = document.getElementsByClassName('goblet');
 var gobletsNumSelector = document.getElementById('gobletsNumSelector');
 var shuffleCountSelector = document.getElementById('shuffleCountSelector');
 var shuffleSpeedSelector = document.getElementById('shuffleSpeedSelector');
+var stackGobletsSelector = document.getElementById('stackGobletsSelector');
+var gobletsDiversitySelector = document.getElementById('gobletsDiversitySelector');
 var reachScoreModeSelector = document.getElementById('reach-score-mode');
 var scoreToReachSelector = document.getElementById('score-to-reach')
 var countdownModeSelector = document.getElementById('countdown-mode');
@@ -108,7 +110,9 @@ var countdownSelectorS = document.getElementById('countdown-mode-s');
 var gameSettingsSelectors = [
 	gobletsNumSelector, 
 	shuffleCountSelector, 
-	shuffleSpeedSelector, 
+	shuffleSpeedSelector,
+	stackGobletsSelector,
+	gobletsDiversitySelector, 
 	reachScoreModeSelector, 
 	scoreToReachSelector,
 	countdownModeSelector,
@@ -172,7 +176,7 @@ function setGoblets (n) {
 
 		// Make grid responsive
 		var cols = Math.ceil(Math.sqrt(n));
-		gobletsContainer.className = cols + '-cols';
+		gobletsContainer.className = '_' + cols + '_cols ' + (settings.gobletsDiversity ? 'diverse' : '');
 		gobletsContainer.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
 		function resizeGoblets () {
 			if (window.matchMedia('( max-width: 450px )').matches ) {
@@ -392,6 +396,21 @@ function resetBall (init = true) {
 	}
 }
 
+// Toggle 'diversity' class on #gobletsContainer
+function toggleGobletsDiversityClass (boolean) {
+	if (gobletsContainer) {
+		if (boolean) {
+			// Add diverse class
+			if (!gobletsContainer.classList.contains('diverse')) {
+				gobletsContainer.classList.add('diverse');
+			}
+		} else {
+			// Remove class
+			gobletsContainer.classList.remove('diverse');
+		}
+	}
+}
+
 // Score gain/loss animation
 function scoreAnimation (
 		className, 
@@ -495,6 +514,26 @@ function changeSetting(type, element) {
 					} else if (isAdmin && socket) {
 						// In multiplayer mode, emit event
 						socket.emit('room setting change', { type, value });
+					}
+				}
+				break;
+			} case 'stackGoblets':
+			  case 'gobletsDiversity': {
+				// Validate value
+				if (typeof element.checked === 'boolean') {
+					settings[type] = element.checked;
+					
+					if (!MULTIPLAYER) {
+						// Memorize setting
+						localStorage[type] = element.checked;
+					} else if (isAdmin && socket) {
+						// In multiplayer mode, emit event
+						socket.emit('room setting change', { type, value: element.checked });
+					}
+
+					// Add/remove diverse class to goblets container
+					if (type === 'gobletsDiversity') {
+						toggleGobletsDiversityClass(element.checked);
 					}
 				}
 				break;
@@ -831,7 +870,7 @@ function fail (goblets) {
 
 				window.setTimeout(function () {
 					goblet.style.transition = animTime + 'ms all cubic-bezier(.29,.36,.2,.99)';
-					var rotation = randomInt(0, 719);
+					var rotation = randomInt(-540, 900);
 					var translationX = randomInt(-25, 25);
 					var translationY = randomInt(-25, 25);
 					var offsetX = parseInt(goblet.dataset.offsetX) || 0;
@@ -1205,6 +1244,28 @@ function openEndGameModal (boolean, msg) {
 		)) {
 			settings.shuffleSpeed = lsShuffleSpeed;
 			shuffleSpeedSelector.value = lsShuffleSpeed;
+		}
+		// Goblets stacking
+		var lsStackGoblets = localStorage['stackGoblets'];
+		if (lsStackGoblets === 'true' || lsStackGoblets === 'false') {
+			var checked = lsStackGoblets === 'true';
+			settings.stackGoblets = checked;
+			if (checked) {
+				stackGobletsSelector.checked = true;
+			}
+		}
+		// Goblets diversity (true -> goblets don't look the same)
+		var lsGobletsDiversity = localStorage['gobletsDiversity'];
+		if (lsGobletsDiversity === 'true' || lsGobletsDiversity === 'false') {
+			var checked = lsGobletsDiversity === 'true';
+			settings.gobletsDiversity = checked;
+			if (checked) {
+				gobletsDiversitySelector.checked = true;
+				// Add diverse class to goblets container
+				if (gobletsContainer && !gobletsContainer.classList.contains('diverse')) {
+					gobletsContainer.classList.add('diverse');
+				}
+			}
 		}
 		// Score
 		var lsScoreToReach = parseInt(localStorage['score-to-reach']);

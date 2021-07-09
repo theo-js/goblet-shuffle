@@ -380,7 +380,9 @@ async function handleInviteFormSubmit (formEvent) {
 			var mySettings = {
 				goblets: roomSettingsGobletsValue,
 				shuffleCount: roomSettingsShuffleCountValue,
-				shuffleSpeed: roomSettingsShuffleSpeedValue
+				shuffleSpeed: roomSettingsShuffleSpeedValue,
+				stackGoblets: settings.stackGoblets,
+				gobletsDiversity: settings.gobletsDiversity
 			};
 
 			// Validate game mode

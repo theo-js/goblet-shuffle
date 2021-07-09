@@ -55,7 +55,14 @@ multiplayerRouter.post('/create-room', (req, res) => {
 		const room = req.body;
 		const { id, name, admin, settings} = room;
 		let adminName = admin.name.trim();
-		const { goblets, shuffleCount, shuffleSpeed, gameMode } = settings;
+		const {
+			goblets, 
+			shuffleCount, 
+			shuffleSpeed, 
+			gameMode,
+			stackGoblets,
+			gobletsDiversity
+		} = settings;
 
 		if (!id || id.length !== ROOM_ID_LENGTH || !validateStr(id)) {
 			return res.status(400).json({ success: false, msg: 'Invalid room id' });
@@ -143,7 +150,11 @@ multiplayerRouter.post('/create-room', (req, res) => {
 			isPlaying: false,
 			gameStart: null,
 			gameStartCountdown: null,
-			settings,
+			settings: {
+				...settings,
+				stackGoblets: typeof stackGoblets === 'boolean' ? stackGoblets : false, // defaults to false
+				gobletsDiversity: typeof gobletsDiversity === 'boolean' ? gobletsDiversity : false // defaults to false
+			},
 			admin: {
 				...room.admin,
 				ip,

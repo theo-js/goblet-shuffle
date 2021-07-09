@@ -873,27 +873,34 @@ window.addEventListener('load', function () {
 	// Admin changed the game settings
 	socket.on('game setting changed', function ({ type, value }) {
 		switch (type) {
-			case 'goblets-count': {
+			case 'goblets-count':
 				settings.goblets = value;
 				setGoblets(value);
 				break;
-			} case 'shuffle-count': {
+			case 'shuffle-count':
 				settings.shuffleCount = value;
 				break;
-			} case 'shuffle-speed': {
+			case 'shuffle-speed':
 				settings.shuffleSpeed = value;
 				break;
-			} case 'game-mode': {
+			case 'stackGoblets':
+			case 'gobletsDiversity':
+				settings[type] = value;
+				if (type === 'gobletsDiversity') {
+					toggleGobletsDiversityClass(value);
+				}
+				break;
+			case 'game-mode':
 				settings.gameMode.mode = value;
 				switch (value) {
-					case GAME_MODE.REACH_SCORE: {
+					case GAME_MODE.REACH_SCORE:
 						// Hide timer
 						if (timeOutput) {
 							timeOutput.style.display = 'none';
 						}
 						addPercentageBars(true);
 						break;
-					} case GAME_MODE.COUNTDOWN: {
+					case GAME_MODE.COUNTDOWN:
 						// Display timer
 						if (timeOutput) {
 							timeOutput.style.display = 'block';
@@ -901,13 +908,13 @@ window.addEventListener('load', function () {
 						}
 						addPercentageBars(false);
 						break;
-					} default:
+					default:
 				}
 				break;
-			} case 'score-to-reach': {
+			case 'score-to-reach':
 				settings.gameMode = { mode: GAME_MODE.REACH_SCORE, scoreToReach: value };
 				break;
-			} case 'countdown': {
+			case 'countdown': {
 				settings.gameMode = { mode: GAME_MODE.COUNTDOWN, countdown: value };
 				// Update timer
 				if (timeOutputM && timeOutputS) {

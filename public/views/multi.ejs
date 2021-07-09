@@ -69,7 +69,6 @@
 			let isAdmin = <%= isAdmin %>;
 			let isPlaying = <%= room.isPlaying %>;
 			let settings = <%- JSON.stringify(room.settings) %>;
-			settings.stackGoblets = false;
 			let gameStartTime = <%= JSON.stringify(room.gameStart) %>;
 			let gameStartCountdownTime = <%= JSON.stringify(room.gameStartCountdown) %>;
 			let gameStartCountdown = <%= initialGameStartCountdown %>;
@@ -291,6 +290,30 @@
 													id="shuffleSpeedSelector"
 													style="transform: rotate(180deg);"
 												>
+											</li>
+											<li style="margin-bottom: 1rem; display: flex; justify-content: space-around;">
+												<label class="switch" for="stackGobletsSelector" title="Should the goblets be able to stack up on the same spot ?">
+													<input
+														type="checkbox" 
+														id="stackGobletsSelector"
+														onchange="changeSetting('stackGoblets', this);"
+													>
+													<span class="switch-handle">
+														<span class="on">Stack</span>
+														<span class="off">Not stack</span>
+													</span>
+												</label>
+												<label class="switch" for="gobletsDiversitySelector" title="Should all goblets look the same ?">
+													<input
+														type="checkbox" 
+														id="gobletsDiversitySelector"
+														onchange="changeSetting('gobletsDiversity', this);"
+													>
+													<span class="switch-handle">
+														<span class="on">Two types</span>
+														<span class="off">Even</span>
+													</span>
+												</label>
 											</li>
 											<li class="game-mode">
 												<h4 title="Select the game mode">Mode</h4>

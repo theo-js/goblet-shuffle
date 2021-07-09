@@ -215,6 +215,62 @@ body.dark .scrollbar-grey::-webkit-scrollbar-thumb:active {
 	background-color: var(--pink-yellow-blend);
 }
 
+/* Custom switch checkbox */
+label.switch {
+	position: relative;
+	display: inline-block;
+	margin: 0 .5rem;
+	box-sizing: content-box;
+	width: 3rem; height: 1.5rem;
+	border: 2px solid var(--pink); border-radius: 99px;
+}
+label.switch:hover {
+	border-color: #FFFA;
+}
+label.switch input[type="checkbox"] {
+	display: none;
+}
+label.switch input[type="checkbox"] + .switch-handle {
+	position: absolute; left: .25rem; top: .25rem;
+	height: 1rem; width: 1rem;
+	box-sizing: border-box;
+	display: flex; justify-content: center; align-items: center;
+	background-color: white; border-radius: 50%;
+	transition: .2s all ease;
+}
+label.switch input[type="checkbox"] + .switch-handle > * {
+	display: flex; justify-content: center; align-items: center;
+	text-align: center;
+	font-size: .75rem; font-weight: 900;
+	letter-spacing: 1px; line-height: 100%;
+	transition: inherit;
+	width: 100%;
+	filter: drop-shadow(0 1px 0 var(--pink));
+}
+label.switch:hover input[type="checkbox"] + .switch-handle > *,
+label.switch input[type="checkbox"]:focus + .switch-handle > * {
+	filter: drop-shadow(0 1px 0 var(--purple)) !important;
+}
+label.switch input[type="checkbox"] + .switch-handle .on,
+label.switch input[type="checkbox"]:checked + .switch-handle .off {
+	opacity: 0; user-select: none;
+	width: 0;
+}
+/* Switch checkbox is checked */
+label.switch input[type="checkbox"]:checked + .switch-handle {
+	transform: translate(1.5rem);
+}
+label.switch input[type="checkbox"]:checked + .switch-handle .on {
+	opacity: 1; user-select: initial;
+	width: 100%;
+}
+/* Switch checkbox is disabled */
+label.switch input[type="checkbox"]:disabled + .switch-handle {
+	background-color: rgba(255, 255, 255, .5);
+}
+label.switch:hover input[type="checkbox"]:disabled + .switch-handle > * {
+	filter: drop-shadow(0 1px 0 var(--pink)) !important;
+}
 
 .app {
 	position: relative;
@@ -369,7 +425,7 @@ body.dark #particles {
 }
 .game-options .options-list {
 	overflow: hidden;
-	max-height: 230px;
+	max-height: 247px;
 	transition: all .1s linear;
 }
 .game-options .options-list.collapsed {
@@ -395,15 +451,15 @@ body.dark #particles {
 .game-options .options-list input[type="number"] {
 	text-align: center;
 	border: none;
-	border-bottom: 1px solid white;
+	border-bottom: 1px solid #FFFA;
 	color: white;
 	background: none;
 	max-width: 2.75em;
 	transition: .3s opacity ease;
 }
 .game-options .options-list input[type="number"]:focus {
-	outline-color: rgb(255, 238, 153);
-	outline-color: var(--light-yellow);
+	outline: none;
+	border-color: white;
 }
 .game-options .options-list input[type="range"] {
 	margin: 0 auto;
@@ -621,6 +677,19 @@ body.dark .goblets-section {
 .goblet.fail {
 	pointer-events: none;
 }
+
+
+/* Invert colors of even goblets when 'gobletsDiversity' option is checked */
+#goblets-container.diverse._2_cols .goblet:nth-child(1),
+#goblets-container.diverse._2_cols .goblet:nth-child(4),
+#goblets-container.diverse._3_cols .goblet:nth-child(even),
+#goblets-container.diverse._4_cols .goblet:nth-child(3n - 2),
+#goblets-container.diverse._5_cols .goblet:nth-child(even),
+#goblets-container.diverse._6_cols .goblet:nth-child(3n - 1) {
+	background: linear-gradient(to right, #2025 0%, #2020 25%, #2025 75%), linear-gradient(to top, #E0A 66%, #A0E);
+	background: linear-gradient(to right, #2025 0%, #2020 25%, #2025 75%), linear-gradient(to top, var(--purple) 66%, var(--violet));
+}
+
 
 .ball {
 	z-index: 4;
