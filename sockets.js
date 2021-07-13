@@ -567,15 +567,15 @@ module.exports = server => {
 					const room = global.rooms[roomIndex];
 					// Send to all players
 					room.players.forEach(player => {
-						const isNotSender = player.ip !== senderIp;
-						if (isNotSender) {
-							sendPushNotif(player.ip, JSON.stringify({
-								title: 'New message',
-								author: filterPlayer(player),
-								msg: unescapedMSG,
-								timestamp
-							}));
-						}
+						const isSender = player.ip === senderIp;
+						//if (isSender) return;
+
+						sendPushNotif(player.ip, JSON.stringify({
+							title: 'New message',
+							author: filterPlayer(player),
+							msg: unescapedMSG,
+							timestamp
+						}));
 					});
 				},
 				() => false
