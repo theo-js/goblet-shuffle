@@ -12,10 +12,8 @@ const {
 	} = require('./constants');
 const { randomInt } = require('./utils/math');
 const { validateStr, limitNum } = require('./utils/validate');
-
-function getIP (socket) {
-	return socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
-}
+const getIP = require('./utils/getIP').getIPFromSocket;
+const { sendPushNotif } = require('./api/routes/push');
 
 module.exports = server => {
 	// Timers
@@ -60,7 +58,8 @@ module.exports = server => {
 						uid, ip,
 						socketID: socket.id,
 						participates: false,
-						score: 0
+						score: 0,
+						receiveNotifications: false
 					};
 
 					// Check if player is admin
@@ -125,6 +124,18 @@ module.exports = server => {
 						const ms = GAME_START_COUNTDOWN * 1000;
 						io.to(roomID).emit('game start countdown');
 						global.rooms[roomIndex].gameStartCountdown = Date.now();
+
+						// Warn non admins about game start
+						room.players.forEach(player => {
+							const isAdmin = room.admin.ip === player.ip;
+							if (isAdmin) return;
+
+							sendPushNotif(player.ip, JSON.stringify({
+								title: 'Game start',
+								msg: `A game will start in ${GAME_START_COUNTDOWN} seconds`,
+								timestamp: Date.now()
+							}));
+						});
 
 						gameStartTimer[roomID] = setTimeout(() => {
 							try {
@@ -540,11 +551,35 @@ module.exports = server => {
 		socket.on('chat msg', (unescapedMSG) => {
 			if (!unescapedMSG) return;
 			// No need to verify socket belongs to a player who is in this room
+			const timestamp = Date.now();
 			io.to(roomID).emit('chat msg', {
 				socketID: socket.id,
 				msg: unescapedMSG,
-				timestamp: Date.now()
+				timestamp
 			});
+
+			// Send notification to all other players of the room
+			getRoomIndex(
+				roomID,
+				roomIndex => {
+					const senderIp = getIP(socket);
+					// Get current room
+					const room = global.rooms[roomIndex];
+					// Send to all players
+					room.players.forEach(player => {
+						const isNotSender = player.ip !== senderIp;
+						if (isNotSender) {
+							sendPushNotif(player.ip, JSON.stringify({
+								title: 'New message',
+								author: filterPlayer(player),
+								msg: unescapedMSG,
+								timestamp
+							}));
+						}
+					});
+				},
+				() => false
+			);
 		});
 
 		// Disconnect

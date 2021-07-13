@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { getIP } = require('../utils');
+const getIP = require('../utils/getIP').getIPFromHttpReq;
 const { filterPlayer } = require('../api/routes/multiplayer');
 
 // Constants

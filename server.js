@@ -32,11 +32,13 @@ initializeSockets(server);
 
 // Routes
 const { multiplayerRouter } = require('./api/routes/multiplayer');
+const { pushRouter } = require('./api/routes/push');
 const rootRouter = require('./routes');
 app.use('/api/multiplayer', multiplayerRouter);
+app.use('/api/push', pushRouter);
 app.use('', rootRouter);
 
 const PORT = process.env.PORT || 4000;
-server.listen(PORT, () => console.log(`App running on http://localhost:${PORT}`));
+server.listen(PORT, () => console.log(`App running on ${process.env.DOMAIN_NAME || 'http://localhost'}:${PORT}`));
 
 module.exports = app;

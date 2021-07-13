@@ -444,6 +444,32 @@ body.dark .chat-form-inside .chat-input:focus {
 	transform: scale(0);
 }
 
+.receive-notif {
+	margin: 0 .75rem; padding: 0;
+	border: none; background-color: transparent;
+	color: white; 
+	font-size: .75rem; font-style: italic;
+	transition: .2s all ease;
+}
+.receive-notif:hover {
+	color: var(--light-yellow);
+}
+.receive-notif:disabled {
+	opacity: .5;
+}
+.receive-notif:disabled:hover {
+	color: unset;
+}
+.receive-notif.subscribed,
+.receive-notif.subscribed:hover {
+	color: var(--bs-teal);
+}
+.receive-notif.subscribed::after {
+	content: '\2714';
+	display: inline-block;
+	transform: translateY(-.125rem);
+}
+
 .chat-history-body {
 	position: absolute; bottom: 100%; width: 100%;
 	height: 9999px; max-height: 325px;

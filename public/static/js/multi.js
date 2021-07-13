@@ -774,6 +774,82 @@ document.body.addEventListener('click', function (e) {
 	}
 }, true);
 
+// Register to push notifications
+(function () {
+	var chatHistoryHeader = document.querySelector('#chat-history > header'); // Element on which receive notifications btn will be appended
+	if (
+		!chatHistoryHeader ||
+		!('Notification' in window) ||
+		!('serviceWorker' in navigator) 
+		|| Notification.permission !== 'default'
+	) {
+		return;
+	}
+
+	var btn = document.createElement('button');
+	btn.className = 'receive-notif';
+	btn.textContent = 'Receive notifications';
+	btn.addEventListener('click', handleClick);
+	chatHistoryHeader.appendChild(btn);
+	function handleClick (e) {
+		e.stopPropagation();
+		askPermission();
+	}
+
+	async function askPermission () {
+		var permission = await Notification.requestPermission();
+		if (permission === 'granted') {
+			registerServiceWorker();
+		}
+	}
+
+	async function registerServiceWorker () {
+		var swRegistration = await navigator.serviceWorker.ready;
+		// Get subscription
+		var subscription = await swRegistration.pushManager.getSubscription();
+		
+		if (!subscription) {
+			subscription = await swRegistration.pushManager.subscribe({
+				userVisibleOnly: true,
+				applicationServerKey: await getPublicKey()
+			});
+			await saveSubscription(subscription);
+		}
+
+		btn.className = 'receive-notif subscribed';
+		btn.disabled = true;
+		btn.textContent = 'Subscribed';
+		btn.removeEventListener('click', handleClick);
+	}
+
+	async function getPublicKey () {
+		try {
+			var res = await fetch('/api/push/key', {
+				method: 'GET',
+				headers: {
+					Accept: 'application/json'
+				}
+			});
+			var key = await res.json();
+			return key;
+		} catch (err) {
+			return null;
+		}
+	}
+
+	async function saveSubscription (subscription) {
+		await fetch('/api/push/subscribe', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json;charset=UTF-8',
+				'Accept': 'application/json',
+				mode: 'cors'
+			},
+			body: JSON.stringify(subscription)
+		});
+	}
+})();
+
 
 // SOCKET EVENTS
 // React to websocket events

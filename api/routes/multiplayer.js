@@ -1,5 +1,5 @@
 const multiplayerRouter = require('express').Router();
-const { getIP } = require('../../utils');
+const getIP = require('../../utils/getIP').getIPFromHttpReq;
 const { validateStr, isValidNum } = require('../../utils/validate');
 const {
 	GAME_CONSTANTS,

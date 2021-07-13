@@ -1,5 +1,5 @@
 const BASE = location.protocol + '//' + location.host;
-const PREFIX = 'V4';
+const PREFIX = 'V7';
 const CACHED_FILES = [
     `${BASE}/static/css/main.css`,
     `${BASE}/static/css/solo.css`,
@@ -20,6 +20,7 @@ const CACHED_FILES = [
 
 self.addEventListener('install', event => {
     self.skipWaiting();
+    // Cache files
     event.waitUntil(
         (async () => {
             const cache = await caches.open(PREFIX);
@@ -68,4 +69,11 @@ self.addEventListener('fetch', fetchEvent => {
         // Send cached version of the file
         fetchEvent.respondWith(caches.match(fetchEvent.request.url));
     }
+});
+
+self.addEventListener('push', pushEvent => {
+    console.log('Received a push event');
+    console.log(pushEvent)
+    var data = pushEvent.data ? pushEvent.data.json() : {};
+    console.log(data)
 });
