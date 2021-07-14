@@ -1,5 +1,5 @@
 const BASE = location.protocol + '//' + location.host;
-const PREFIX = 'V20';
+const PREFIX = 'V21';
 const CACHED_FILES = [
     `${BASE}/static/css/main.css`,
     `${BASE}/static/css/solo.css`,
@@ -76,9 +76,7 @@ self.addEventListener('push', async pushEvent => {
 
     // Do not show notification if any client is visible
     const windowClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    console.log(windowClients)
     const isAnyClientVisible = windowClients.some(client => client.visibilityState === 'visible');
-    console.log('isAnyClientVisible: ', isAnyClientVisible)
     if (isAnyClientVisible) {
         return;
     }
@@ -112,8 +110,6 @@ self.addEventListener('push', async pushEvent => {
 
 self.addEventListener('notificationclick', event => {
     const { notification, action } = event;
-    console.log(action)
-    console.log(notification)
     notification.close();
     event.waitUntil(
         openUrl(`${BASE}/${notification.data.room || ''}`)

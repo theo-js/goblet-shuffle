@@ -129,10 +129,10 @@ module.exports = server => {
 						// Warn non admins about game start
 						room.players.forEach(player => {
 							const isAdmin = room.admin.ip === player.ip;
-							//if (isAdmin) return;
+							if (isAdmin) return;
 
 							sendPushNotif(player.ip, JSON.stringify({
-								title: 'Game start',
+								title: `${room.name}:`,
 								body: `Get ready, a game will start in ${GAME_START_COUNTDOWN} seconds`,
 								timestamp: Date.now(),
 								data: {
@@ -573,7 +573,7 @@ module.exports = server => {
 					// Send to all players
 					room.players.forEach(player => {
 						const isSender = player.ip === senderIp;
-						//if (isSender) return;
+						if (isSender) return;
 
 						sendPushNotif(player.ip, JSON.stringify({
 							title: `${player.name}:`,
