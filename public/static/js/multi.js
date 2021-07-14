@@ -749,6 +749,11 @@ function toggleChatHistory () {
 }
 // Close chat on click outside
 document.body.addEventListener('click', function (e) {
+	// Do nothing if chat is already closed
+	if (chatHistoryBody.classList.contains('closed')) {
+		return;
+	}
+
 	// Detect click outside <aside id="chat-history"></aside>
 	var isClickOutsideHistory = detectClickOutside(e, chatHistorySection);
 	// Do not close if click is in chat form
@@ -762,12 +767,20 @@ document.body.addEventListener('click', function (e) {
 			)
 		)
 	);
+	// Do not close if click is on player msg bubble
+	var isClickOutsideMsgBubble = function () {
+		var msgs = Array.from(document.querySelectorAll('.player .last-msg, .player .last-msg *'));
+		if (msgs.includes(e.target)) {
+			return false;
+		}
+		return true;
+	};
 
 	if (
 		isClickOutsideHistory &&
 		isClickOutsideForm &&
 		isClickOutsideColModeToggler &&
-		!chatHistoryBody.classList.contains('closed')
+		isClickOutsideMsgBubble()
 	) {
 		// Close
 		toggleChatHistory();

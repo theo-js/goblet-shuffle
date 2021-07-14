@@ -8,7 +8,8 @@ const {
 	PLAYER_ROLE, 
 	GAME_START_COUNTDOWN, 
 	GAME_MODE,
-	ROOM_TTL
+	ROOM_TTL,
+	NOTIFICATION_TYPES
 	} = require('./constants');
 const { randomInt } = require('./utils/math');
 const { validateStr, limitNum } = require('./utils/validate');
@@ -128,12 +129,16 @@ module.exports = server => {
 						// Warn non admins about game start
 						room.players.forEach(player => {
 							const isAdmin = room.admin.ip === player.ip;
-							if (isAdmin) return;
+							//if (isAdmin) return;
 
 							sendPushNotif(player.ip, JSON.stringify({
 								title: 'Game start',
-								msg: `A game will start in ${GAME_START_COUNTDOWN} seconds`,
-								timestamp: Date.now()
+								body: `Get ready, a game will start in ${GAME_START_COUNTDOWN} seconds`,
+								timestamp,
+								data: {
+									type: NOTIFICATION_TYPES.GAME_START,
+									room: roomID
+								}
 							}));
 						});
 
@@ -571,10 +576,14 @@ module.exports = server => {
 						//if (isSender) return;
 
 						sendPushNotif(player.ip, JSON.stringify({
-							title: 'New message',
-							author: filterPlayer(player),
-							msg: unescapedMSG,
-							timestamp
+							title: `${player.name}:`,
+							body: unescapedMSG,
+							timestamp,
+							data: {
+								type: NOTIFICATION_TYPES.CHAT_MSG,
+								author: filterPlayer(player),
+								room: roomID
+							}
 						}));
 					});
 				},

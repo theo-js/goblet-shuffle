@@ -1,5 +1,5 @@
 const BASE = location.protocol + '//' + location.host;
-const PREFIX = 'V7';
+const PREFIX = 'V18';
 const CACHED_FILES = [
     `${BASE}/static/css/main.css`,
     `${BASE}/static/css/solo.css`,
@@ -50,7 +50,7 @@ self.addEventListener('activate', event => {
     );
 });
 
-self.addEventListener('fetch', fetchEvent => {
+self.addEventListener('fetch', async fetchEvent => {
     if (fetchEvent.request.mode === 'navigate') {
         fetchEvent.respondWith((async () => {
             try  {
@@ -72,8 +72,67 @@ self.addEventListener('fetch', fetchEvent => {
 });
 
 self.addEventListener('push', pushEvent => {
-    console.log('Received a push event');
-    console.log(pushEvent)
-    var data = pushEvent.data ? pushEvent.data.json() : {};
-    console.log(data)
+    var data = pushEvent.data ? pushEvent.data.json() : { data: { type: 'none', timestamp: Date.now() } };
+
+    // Do not show notification if any client is visible
+    let isAnyClientVisible;
+    pushEvent.waitUntil(
+        (async () => {
+            const windowClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+            isAnyClientVisible = windowClients.some(client => client.visibilityState === 'visible');
+        })()
+    );
+    if (isAnyClientVisible) {
+        return;
+    }
+
+    // Set notification actions depending on notification type
+    var actions;
+    switch (data.data.type) {
+        case 'CHAT_MSG' :
+            actions = [
+                {
+                    action: 'CHAT_MSG_REPLY',
+                    title: 'Reply'
+                }
+            ];
+            break;
+        default:
+            actions = []
+    }
+
+    // Show notification
+    pushEvent.waitUntil(
+        self.registration.showNotification(data.title, {
+            badge: '/static/icons/goblet96.png',
+            body: data.body,
+            timestamp: data.timestamp,
+            tag: `${data.data.type}_${data.timestamp}`,
+            data: data.data
+        })
+    );
 });
+
+self.addEventListener('notificationclick', event => {
+    const { notification, action } = event;
+    console.log(action)
+    console.log(notification)
+    notification.close();
+    event.waitUntil(
+        openUrl(`${BASE}/${notification.data.room || ''}`)
+    );
+});
+
+async function openUrl (url) {
+    const windowClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (let i = 0; i < windowClients.length; i++) {
+        const client = windowClients[i];
+        if (client.url === url && 'focus' in client) {
+            return client.focus();
+        }
+    }
+    if (self.clients.openWindow) {
+        return self.clients.openWindow(url);
+    }
+    return null;
+}

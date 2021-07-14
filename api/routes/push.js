@@ -43,6 +43,7 @@ async function sendPushNotif (ip, payload) {
         return true;
     } catch (err) {
         console.log(err)
+        delete global.subscriptions[ip]; // Unregister user
         return false;
     }
 }
