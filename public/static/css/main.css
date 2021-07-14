@@ -28,6 +28,7 @@ html {
 	box-sizing: border-box;
 	outline-color: rgb(238, 102, 187);
 	outline-color: var(--pink);
+	scroll-padding-block-end: 1rem;
 }
 * {
 	box-sizing: inherit;
