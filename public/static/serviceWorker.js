@@ -1,5 +1,5 @@
 const BASE = location.protocol + '//' + location.host;
-const PREFIX = 'V18';
+const PREFIX = 'V19';
 const CACHED_FILES = [
     `${BASE}/static/css/main.css`,
     `${BASE}/static/css/solo.css`,
@@ -79,9 +79,11 @@ self.addEventListener('push', pushEvent => {
     pushEvent.waitUntil(
         (async () => {
             const windowClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+            console.log(windowClients)
             isAnyClientVisible = windowClients.some(client => client.visibilityState === 'visible');
         })()
     );
+    console.log('isAnyClientVisible: ', isAnyClientVisible)
     if (isAnyClientVisible) {
         return;
     }

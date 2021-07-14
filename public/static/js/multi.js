@@ -602,7 +602,7 @@ function handleChatHistoryMsgIntersect (entries, observer) {
 function appendMsgToChatHistory ({ socketID, timestamp, msg }) {
 	if (chatHistory) {
 		var li = document.createElement('li');
-		li.className = 'chat-msg ' + socketID;
+		li.className = 'chat-msg _' + socketID;
 		li.id = 'msg_from_' + socketID + '_at_' + timestamp;
 		li.setAttribute('data-timestamp', timestamp);
 		li.setAttribute('data-read', 'read');
@@ -724,7 +724,7 @@ function appendMsgToChatHistory ({ socketID, timestamp, msg }) {
 // Overwrite the name of a player in chat history
 function changePlayerNameInChatHistory (socketID, newName) {
 	var authorNames = Array.from(
-		document.querySelectorAll('#chat-history_msg-list .chat-msg.' + socketID + ' .author')
+		document.querySelectorAll('#chat-history_msg-list .chat-msg._' + socketID + ' .author')
 	);
 	authorNames.forEach(function (authorName) {
 		authorName.textContent = newName;
