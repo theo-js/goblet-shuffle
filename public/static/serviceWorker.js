@@ -1,5 +1,5 @@
 const BASE = location.protocol + '//' + location.host;
-const PREFIX = 'V19';
+const PREFIX = 'V20';
 const CACHED_FILES = [
     `${BASE}/static/css/main.css`,
     `${BASE}/static/css/solo.css`,
@@ -71,18 +71,13 @@ self.addEventListener('fetch', async fetchEvent => {
     }
 });
 
-self.addEventListener('push', pushEvent => {
+self.addEventListener('push', async pushEvent => {
     var data = pushEvent.data ? pushEvent.data.json() : { data: { type: 'none', timestamp: Date.now() } };
 
     // Do not show notification if any client is visible
-    let isAnyClientVisible;
-    pushEvent.waitUntil(
-        (async () => {
-            const windowClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-            console.log(windowClients)
-            isAnyClientVisible = windowClients.some(client => client.visibilityState === 'visible');
-        })()
-    );
+    const windowClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    console.log(windowClients)
+    const isAnyClientVisible = windowClients.some(client => client.visibilityState === 'visible');
     console.log('isAnyClientVisible: ', isAnyClientVisible)
     if (isAnyClientVisible) {
         return;

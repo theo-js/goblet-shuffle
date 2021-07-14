@@ -134,7 +134,7 @@ module.exports = server => {
 							sendPushNotif(player.ip, JSON.stringify({
 								title: 'Game start',
 								body: `Get ready, a game will start in ${GAME_START_COUNTDOWN} seconds`,
-								timestamp,
+								timestamp: Date.now(),
 								data: {
 									type: NOTIFICATION_TYPES.GAME_START,
 									room: roomID
