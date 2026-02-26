@@ -1,1 +1,1 @@
-[https://goblet-shuffle.herokuapp.com/](https://goblet-shuffle.herokuapp.com/)
+[https://goblet-shuffle.vercel.app/](https://goblet-shuffle.vercel.app/)
